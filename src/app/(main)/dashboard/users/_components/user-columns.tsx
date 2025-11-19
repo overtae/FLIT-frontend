@@ -27,19 +27,13 @@ export type User = {
   joinDate: string;
 };
 
-const categoryLabels: Record<User["category"], string> = {
-  customer: "고객",
-  shop: "매장",
-  florist: "플로리스트",
-  seceder: "탈퇴",
-};
-
 export const userColumns: ColumnDef<User>[] = [
   {
     accessorKey: "grade",
     header: "등급",
     cell: ({ row }) => {
-      return <Badge variant="secondary">{row.getValue("grade")}</Badge>;
+      const grade: string = row.getValue("grade");
+      return <Badge variant="secondary">{grade}</Badge>;
     },
   },
   {

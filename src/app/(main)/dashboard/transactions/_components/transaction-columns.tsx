@@ -35,6 +35,19 @@ const paymentMethodLabels: Record<Transaction["paymentMethod"], string> = {
   pos: "POS 결제",
 };
 
+const getPaymentMethodLabel = (method: Transaction["paymentMethod"]): string => {
+  switch (method) {
+    case "card":
+      return paymentMethodLabels.card;
+    case "transfer":
+      return paymentMethodLabels.transfer;
+    case "pos":
+      return paymentMethodLabels.pos;
+    default:
+      return method;
+  }
+};
+
 export const transactionColumns: ColumnDef<Transaction>[] = [
   {
     accessorKey: "orderNumber",
@@ -70,7 +83,7 @@ export const transactionColumns: ColumnDef<Transaction>[] = [
     accessorKey: "paymentAmount",
     header: "결제금액",
     cell: ({ row }) => {
-      const amount = row.getValue("paymentAmount");
+      const amount = row.original.paymentAmount;
       return <span>{amount.toLocaleString()}원</span>;
     },
   },
@@ -86,15 +99,16 @@ export const transactionColumns: ColumnDef<Transaction>[] = [
     accessorKey: "paymentMethod",
     header: "결제방법",
     cell: ({ row }) => {
-      const method = row.getValue("paymentMethod");
-      return <Badge variant="outline">{paymentMethodLabels[method]}</Badge>;
+      const method = row.original.paymentMethod;
+      return <Badge variant="outline">{getPaymentMethodLabel(method)}</Badge>;
     },
   },
   {
     accessorKey: "category",
     header: "구분",
     cell: ({ row }) => {
-      return <Badge variant="secondary">{row.getValue("category")}</Badge>;
+      const category = row.original.category;
+      return <Badge variant="secondary">{category}</Badge>;
     },
   },
   {

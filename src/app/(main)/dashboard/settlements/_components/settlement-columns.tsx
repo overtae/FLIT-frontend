@@ -37,6 +37,32 @@ const statusColors: Record<Settlement["status"], "default" | "secondary" | "dest
   cancelled: "destructive",
 };
 
+const getStatusLabel = (status: Settlement["status"]): string => {
+  switch (status) {
+    case "pending":
+      return statusLabels.pending;
+    case "completed":
+      return statusLabels.completed;
+    case "cancelled":
+      return statusLabels.cancelled;
+    default:
+      return status;
+  }
+};
+
+const getStatusVariant = (status: Settlement["status"]): "default" | "secondary" | "destructive" => {
+  switch (status) {
+    case "pending":
+      return statusColors.pending;
+    case "completed":
+      return statusColors.completed;
+    case "cancelled":
+      return statusColors.cancelled;
+    default:
+      return "default";
+  }
+};
+
 export const settlementColumns: ColumnDef<Settlement>[] = [
   {
     accessorKey: "nickname",
@@ -54,7 +80,7 @@ export const settlementColumns: ColumnDef<Settlement>[] = [
     accessorKey: "totalRevenue",
     header: "총매출",
     cell: ({ row }) => {
-      const amount = row.getValue("totalRevenue");
+      const amount = row.original.totalRevenue;
       return <span>{amount.toLocaleString()}원</span>;
     },
   },
@@ -62,7 +88,7 @@ export const settlementColumns: ColumnDef<Settlement>[] = [
     accessorKey: "commission",
     header: "수수료",
     cell: ({ row }) => {
-      const amount = row.getValue("commission");
+      const amount = row.original.commission;
       return <span>{amount.toLocaleString()}원</span>;
     },
   },
@@ -70,7 +96,7 @@ export const settlementColumns: ColumnDef<Settlement>[] = [
     accessorKey: "revenueExcludingCommission",
     header: "수수료 제외",
     cell: ({ row }) => {
-      const amount = row.getValue("revenueExcludingCommission");
+      const amount = row.original.revenueExcludingCommission;
       return <span>{amount.toLocaleString()}원</span>;
     },
   },
@@ -78,7 +104,7 @@ export const settlementColumns: ColumnDef<Settlement>[] = [
     accessorKey: "deliveryFee",
     header: "배달료",
     cell: ({ row }) => {
-      const amount = row.getValue("deliveryFee");
+      const amount = row.original.deliveryFee;
       return <span>{amount.toLocaleString()}원</span>;
     },
   },
@@ -86,8 +112,8 @@ export const settlementColumns: ColumnDef<Settlement>[] = [
     accessorKey: "status",
     header: "상태",
     cell: ({ row }) => {
-      const status = row.getValue("status");
-      return <Badge variant={statusColors[status]}>{statusLabels[status]}</Badge>;
+      const status = row.original.status;
+      return <Badge variant={getStatusVariant(status)}>{getStatusLabel(status)}</Badge>;
     },
   },
   {
