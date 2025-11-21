@@ -46,7 +46,7 @@ interface TransactionListProps {
   subCategory?: string;
 }
 
-export function TransactionList({ category, subCategory }: TransactionListProps) {
+export function TransactionList({ category }: TransactionListProps) {
   const [data] = useState<Transaction[]>(() => {
     let filtered = mockTransactions;
     if (category) {

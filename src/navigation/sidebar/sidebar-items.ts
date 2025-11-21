@@ -4,12 +4,9 @@ import {
   ShoppingCart,
   TrendingUp,
   Receipt,
-  Bell,
   Megaphone,
   Store,
   HeadphonesIcon,
-  Calendar,
-  Clock,
   type LucideIcon,
 } from "lucide-react";
 

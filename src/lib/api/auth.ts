@@ -1,0 +1,136 @@
+"use server";
+
+import { redirect } from "next/navigation";
+
+import type { ErrorResponse, RefreshTokenRequest, SignInRequest, SignInResponse, User } from "@/types/auth";
+
+import { clearTokens, getAccessToken, getRefreshToken, setTokens } from "./client";
+import { API_BASE_URL, API_ENDPOINTS } from "./config";
+
+function parseErrorResponse(error: unknown): ErrorResponse {
+  if (error && typeof error === "object" && "response" in error) {
+    const axiosError = error as { response?: { data?: ErrorResponse } };
+    return (
+      axiosError.response?.data ?? {
+        message: "알 수 없는 오류가 발생했습니다.",
+      }
+    );
+  }
+  return {
+    message: "알 수 없는 오류가 발생했습니다.",
+  };
+}
+
+export async function signIn(credentials: SignInRequest) {
+  try {
+    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.auth.signin}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(credentials),
+    });
+
+    if (!response.ok) {
+      const errorData: ErrorResponse = await response.json();
+      return { success: false, error: errorData };
+    }
+
+    const data: SignInResponse = await response.json();
+    const { accessToken, refreshToken } = data;
+
+    await setTokens(accessToken, refreshToken);
+
+    return { success: true, data: { accessToken, refreshToken } };
+  } catch (error) {
+    return { success: false, error: parseErrorResponse(error) };
+  }
+}
+
+export async function signOut() {
+  await clearTokens();
+  redirect("/auth/login");
+}
+
+async function fetchUserInfo(accessToken: string): Promise<Response> {
+  return fetch(`${API_BASE_URL}${API_ENDPOINTS.auth.me}`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+    cache: "no-store",
+  });
+}
+
+async function retryFetchUserWithRefresh(): Promise<User | null> {
+  const refreshToken = await getRefreshToken();
+  if (!refreshToken) {
+    return null;
+  }
+
+  const refreshResult = await refreshAccessToken(refreshToken);
+  if (!refreshResult.success) {
+    return null;
+  }
+
+  const accessToken = await getAccessToken();
+  if (!accessToken) {
+    return null;
+  }
+
+  const retryResponse = await fetchUserInfo(accessToken);
+  if (!retryResponse.ok) {
+    return null;
+  }
+
+  return await retryResponse.json();
+}
+
+export async function getCurrentUser(): Promise<User | null> {
+  try {
+    const accessToken = await getAccessToken();
+
+    if (!accessToken) {
+      return null;
+    }
+
+    const response = await fetchUserInfo(accessToken);
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        return await retryFetchUserWithRefresh();
+      }
+      return null;
+    }
+
+    return await response.json();
+  } catch {
+    return null;
+  }
+}
+
+export async function refreshAccessToken(refreshToken: string) {
+  try {
+    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.auth.refresh}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ refreshToken } as RefreshTokenRequest),
+    });
+
+    if (!response.ok) {
+      return { success: false };
+    }
+
+    const data: SignInResponse = await response.json();
+    const { accessToken, refreshToken: newRefreshToken } = data;
+
+    await setTokens(accessToken, newRefreshToken);
+
+    return { success: true, data };
+  } catch {
+    return { success: false };
+  }
+}

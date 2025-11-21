@@ -1,15 +1,13 @@
-import Link from "next/link";
-
 import { Globe } from "lucide-react";
 
 import { APP_CONFIG } from "@/config/app-config";
 
-import { LoginForm } from "../../_components/login-form";
-import { GoogleButton } from "../../_components/social-auth/google-button";
-import { KakaoButton } from "../../_components/social-auth/kakao-button";
-import { NaverButton } from "../../_components/social-auth/naver-button";
+import { LoginForm } from "../_components/login-form";
+import { GoogleButton } from "../_components/social-auth/google-button";
+import { KakaoButton } from "../_components/social-auth/kakao-button";
+import { NaverButton } from "../_components/social-auth/naver-button";
 
-export default function LoginV2() {
+export default function Login() {
   return (
     <>
       <div className="mx-auto flex w-full flex-col justify-center space-y-8 sm:w-[350px]">
@@ -27,15 +25,6 @@ export default function LoginV2() {
             <span className="bg-background text-muted-foreground relative z-10 px-2">또는</span>
           </div>
           <LoginForm />
-        </div>
-      </div>
-
-      <div className="absolute top-5 flex w-full justify-end px-10">
-        <div className="text-muted-foreground text-sm">
-          계정이 없으신가요?{" "}
-          <Link className="text-foreground" href="register">
-            회원가입
-          </Link>
         </div>
       </div>
 

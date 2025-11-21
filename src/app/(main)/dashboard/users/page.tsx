@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 
-import { useRouter } from "next/navigation";
-
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -14,7 +12,6 @@ import { UserList } from "./_components/user-list";
 import { UserOverview } from "./_components/user-overview";
 
 export default function UsersPage() {
-  const router = useRouter();
   const [showPasswordDialog, setShowPasswordDialog] = useState(true);
 
   return (
