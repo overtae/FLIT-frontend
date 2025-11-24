@@ -1,0 +1,28 @@
+<svg width="103" height="161" viewBox="0 0 103 161" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <g filter="url(#filter0_d_1_12020)">
+        <path d="M62.7736 41.7432C63.0758 41.7555 63.3718 41.7678 63.674 41.7678C74.4236 41.7678 83.1379 33.0535 83.1379 22.3039C83.1379 11.5544 74.4236 2.84 63.674 2.84C63.3718 2.84 63.0696 2.84616 62.7736 2.86467V2.84H42.915C20.7806 2.84616 2.84003 20.2687 2.84003 41.7678H21.6132L62.7736 41.7432Z" fill="url(#paint0_linear_1_12020)"/>
+        <path d="M63.674 59.9123C63.3718 59.9123 63.0696 59.9184 62.7736 59.9369V59.9123H2.84003L2.8647 119.846C2.85236 120.148 2.84003 120.444 2.84003 120.746C2.84003 131.496 11.5544 140.21 22.3039 140.21C33.0535 140.21 41.7679 131.496 41.7679 120.746C41.7679 120.444 41.7617 120.142 41.7432 119.846H41.7679V99.9872C41.7679 99.5987 41.7494 99.2101 41.737 98.8278L62.7798 98.8154C63.082 98.8278 63.378 98.8401 63.6802 98.8401C74.4298 98.8401 83.1441 90.1257 83.1441 79.3762C83.1441 68.6266 74.4298 59.9123 63.6802 59.9123H63.674Z" fill="url(#paint1_linear_1_12020)"/>
+    </g>
+    <path d="M55.2125 135.332V119.377H60.7939V135.332H55.2125Z" fill="black"/>
+    <path d="M63.9886 124.163V119.377H69.57V124.163H63.9886ZM63.9886 135.332V125.224H69.57V135.332H63.9886Z" fill="black"/>
+    <path d="M78.0808 129.479C78.1363 130.158 78.494 130.516 79.1416 130.546H81.2693V135.332H79.1416C75.7125 135.332 73.6588 133.988 72.9804 131.299C72.8324 130.707 72.7584 130.102 72.7584 129.479V119.371H78.0746V122.56H81.2631V127.346H78.0746V129.473L78.0808 129.479Z" fill="black"/>
+    <defs>
+        <filter id="filter0_d_1_12020" x="2.67029e-05" y="-3.8147e-06" width="102.984" height="160.05" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+            <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+            <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+            <feOffset dx="8.5" dy="8.5"/>
+            <feGaussianBlur stdDeviation="5.67"/>
+            <feColorMatrix type="matrix" values="0 0 0 0 0.0156863 0 0 0 0 0 0 0 0 0 0 0 0 0 0.23 0"/>
+            <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_1_12020"/>
+            <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_1_12020" result="shape"/>
+        </filter>
+        <linearGradient id="paint0_linear_1_12020" x1="20.0652" y1="5.07872" x2="103.767" y2="88.7871" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#DE2379"/>
+            <stop offset="1" stop-color="#E9714A"/>
+        </linearGradient>
+        <linearGradient id="paint1_linear_1_12020" x1="3.2779" y1="60.3501" x2="59.9243" y2="116.997" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#DE2379"/>
+            <stop offset="1" stop-color="#E9714A"/>
+        </linearGradient>
+    </defs>
+</svg>

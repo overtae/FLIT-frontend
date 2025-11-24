@@ -6,9 +6,13 @@ import { cn } from "@/lib/utils";
 
 export function GoogleButton({ className, ...props }: React.ComponentProps<typeof Button>) {
   return (
-    <Button variant="secondary" className={cn(className)} {...props}>
-      <SimpleIcon icon={siGoogle} className="size-4" />
-      Continue with Google
+    <Button
+      variant="outline"
+      size="icon"
+      className={cn("h-12 w-12 rounded-full border-2 border-gray-200 bg-white hover:bg-gray-50", className)}
+      {...props}
+    >
+      <SimpleIcon icon={siGoogle} className="size-5" />
     </Button>
   );
 }

@@ -9,16 +9,14 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { PrimaryButton } from "@/app/(main)/auth/_components/primary-button";
+import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { signIn } from "@/lib/api/auth";
 
 const FormSchema = z.object({
   email: z.string().min(1, { message: "아이디를 입력해주세요." }),
   password: z.string().min(1, { message: "비밀번호를 입력해주세요." }),
-  remember: z.boolean().optional(),
 });
 
 export function LoginForm() {
@@ -31,7 +29,6 @@ export function LoginForm() {
     defaultValues: {
       email: "",
       password: "",
-      remember: false,
     },
   });
 
@@ -74,15 +71,21 @@ export function LoginForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="w-full space-y-4">
         <FormField
           control={form.control}
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>아이디</FormLabel>
               <FormControl>
-                <Input id="email" type="text" placeholder="아이디를 입력하세요" autoComplete="username" {...field} />
+                <Input
+                  id="email"
+                  type="text"
+                  placeholder="아이디"
+                  autoComplete="username"
+                  className="h-12 rounded-full border-gray-200 px-4 focus:outline-none"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -93,13 +96,13 @@ export function LoginForm() {
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>비밀번호</FormLabel>
               <FormControl>
                 <Input
                   id="password"
                   type="password"
-                  placeholder="비밀번호를 입력하세요"
+                  placeholder="비밀번호"
                   autoComplete="current-password"
+                  className="h-12 rounded-full border-gray-200 px-4 focus:outline-none"
                   {...field}
                 />
               </FormControl>
@@ -107,28 +110,15 @@ export function LoginForm() {
             </FormItem>
           )}
         />
-        <FormField
-          control={form.control}
-          name="remember"
-          render={({ field }) => (
-            <FormItem className="flex flex-row items-center">
-              <FormControl>
-                <Checkbox
-                  id="login-remember"
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                  className="size-4"
-                />
-              </FormControl>
-              <FormLabel htmlFor="login-remember" className="text-muted-foreground ml-1 text-sm font-medium">
-                30일간 로그인 상태 유지
-              </FormLabel>
-            </FormItem>
-          )}
-        />
-        <Button className="w-full" type="submit" disabled={isLoading}>
-          {isLoading ? "로그인 중..." : "로그인"}
-        </Button>
+        <div className="flex justify-center">
+          <PrimaryButton
+            className="text-primary h-12 w-fit cursor-pointer border-0 px-24"
+            type="submit"
+            disabled={isLoading}
+          >
+            Login
+          </PrimaryButton>
+        </div>
       </form>
     </Form>
   );

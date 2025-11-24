@@ -1,6 +1,7 @@
-import { Globe } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
 
-import { APP_CONFIG } from "@/config/app-config";
+import { PrimaryButton } from "@/app/(main)/auth/_components/primary-button";
 
 import { LoginForm } from "../_components/login-form";
 import { GoogleButton } from "../_components/social-auth/google-button";
@@ -9,32 +10,54 @@ import { NaverButton } from "../_components/social-auth/naver-button";
 
 export default function Login() {
   return (
-    <>
-      <div className="mx-auto flex w-full flex-col justify-center space-y-8 sm:w-[350px]">
-        <div className="space-y-2 text-center">
-          <h1 className="text-3xl font-medium">로그인</h1>
-          <p className="text-muted-foreground text-sm">계정 정보를 입력해주세요.</p>
-        </div>
-        <div className="space-y-4">
-          <div className="grid grid-cols-3 gap-2">
-            <GoogleButton className="w-full" />
-            <NaverButton className="w-full" />
-            <KakaoButton className="w-full" />
+    <div className="flex flex-col">
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="mx-auto flex w-full max-w-md flex-col items-center justify-center space-y-8 px-6">
+          {/* 로고 */}
+          <div className="pb-4">
+            <Image src={"/assets/logo-flit.svg"} alt={"logo"} width={100} height={100} />
           </div>
-          <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
-            <span className="bg-background text-muted-foreground relative z-10 px-2">또는</span>
+
+          {/* 로그인 폼 */}
+          <div className="w-full">
+            <LoginForm />
           </div>
-          <LoginForm />
+
+          {/* 소셜 로그인 */}
+          <div className="w-full space-y-4">
+            <p className="text-center text-sm text-gray-600 select-none">SNS 계정으로 로그인하기</p>
+            <div className="flex justify-center gap-3">
+              <NaverButton />
+              <KakaoButton />
+              <GoogleButton />
+            </div>
+          </div>
+
+          {/* 회원가입 */}
+          <Link href="/" className="w-full">
+            <button className="w-full rounded-full border-2 border-gray-200 bg-white py-3 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50">
+              간편 회원가입하기
+            </button>
+          </Link>
         </div>
       </div>
 
-      <div className="absolute bottom-5 flex w-full justify-between px-10">
-        <div className="text-sm">{APP_CONFIG.copyright}</div>
-        <div className="flex items-center gap-1 text-sm">
-          <Globe className="text-muted-foreground size-4" />
-          ENG
+      {/* 하단 핑크색 영역 */}
+      <div className="flex min-h-[50vh] items-center justify-center bg-pink-50">
+        <div className="flex w-full max-w-4xl items-center justify-center gap-8 px-6">
+          {/* 로고 */}
+          <div className="pb-4">
+            <Image src={"/assets/logo-filter.svg"} alt={"logo"} width={150} height={100} />
+          </div>
+
+          {/* 버튼 */}
+          <Link href="/">
+            <PrimaryButton className="text-primary bg-pink-50 px-24 py-6 text-base font-medium">
+              입점 바로 가기
+            </PrimaryButton>
+          </Link>
         </div>
       </div>
-    </>
+    </div>
   );
 }

@@ -44,6 +44,9 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+
+  --color-main: var(--main);
+  --color-main-accent: var(--main-accent);
 }
 
 /* Default theme styles (used when no data-theme-preset is set or when 'default' is selected).
@@ -81,6 +84,9 @@ These serve as the fallback; there is no separate default.css file. */
   --sidebar-ring: oklch(0.708 0 0);
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
+
+  --main: #da4359;
+  --main-accent: rgba(220, 71, 52, 0.8);
 }
 
 .dark {
@@ -115,6 +121,9 @@ These serve as the fallback; there is no separate default.css file. */
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+
+  --color-main: var(--main);
+  --color-main-accent: var(--main-accent);
 }
 
 @layer utilities {
@@ -158,6 +167,10 @@ These serve as the fallback; there is no separate default.css file. */
 
   body {
     @apply bg-background text-foreground;
+  }
+
+  button {
+    @apply cursor-pointer;
   }
 }
 
