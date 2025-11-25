@@ -1,5 +1,4 @@
 import {
-  Home,
   Users,
   ShoppingCart,
   TrendingUp,
@@ -36,16 +35,6 @@ export interface NavGroup {
 }
 
 export const sidebarItems: NavGroup[] = [
-  {
-    id: 1,
-    items: [
-      {
-        title: "홈",
-        url: "/dashboard",
-        icon: Home,
-      },
-    ],
-  },
   {
     id: 2,
     label: "관리",

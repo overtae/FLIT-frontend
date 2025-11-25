@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, LogOut, UserPen } from "lucide-react";
+import { ChevronDown, CircleUser, LogOut } from "lucide-react";
 
 import {
   DropdownMenu,
@@ -36,13 +36,13 @@ export function AccountDropdown({
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="min-w-48 rounded-lg" side="bottom" align="end" sideOffset={4}>
-        <DropdownMenuItem onClick={handleEditProfile}>
-          <UserPen className="size-4" />
+        <DropdownMenuItem onClick={handleEditProfile} className="cursor-pointer">
+          <CircleUser />
           정보 수정
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">
-          <LogOut className="size-4" />
+        <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
+          <LogOut />
           로그아웃
         </DropdownMenuItem>
       </DropdownMenuContent>
