@@ -22,6 +22,27 @@ export async function clearTokens(): Promise<void> {
   const cookieStore = await cookies();
   cookieStore.delete("accessToken");
   cookieStore.delete("refreshToken");
+  cookieStore.delete("verificationToken");
+}
+
+export async function getVerificationToken(): Promise<string | undefined> {
+  const cookieStore = await cookies();
+  return cookieStore.get("verificationToken")?.value;
+}
+
+export async function setVerificationToken(verificationToken: string): Promise<void> {
+  const cookieStore = await cookies();
+  cookieStore.set("verificationToken", verificationToken, TOKEN_COOKIE_OPTIONS.verificationToken);
+}
+
+export async function getPasswordVerified(): Promise<boolean> {
+  const cookieStore = await cookies();
+  return cookieStore.get("passwordVerified")?.value === "true";
+}
+
+export async function setPasswordVerified(): Promise<void> {
+  const cookieStore = await cookies();
+  cookieStore.set("passwordVerified", "true", TOKEN_COOKIE_OPTIONS.passwordVerified);
 }
 
 export async function fetchWithAuth(endpoint: string, options: RequestInit = {}): Promise<Response> {

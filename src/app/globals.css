@@ -72,7 +72,7 @@ These serve as the fallback; there is no separate default.css file. */
   --chart-1: oklch(0.3211 0 0);
   --chart-2: oklch(0.4495 0 0);
   --chart-3: oklch(0.5693 0 0);
-  --chart-4: oklch(0.6830 0 0);
+  --chart-4: oklch(0.683 0 0);
   --chart-5: oklch(0.7921 0 0);
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
@@ -180,4 +180,42 @@ html {
 
 .disable-transitions * {
   transition: none !important;
+}
+
+.text-stroke-1 {
+  text-shadow:
+    -1px -1px 0 var(--border),
+    1px -1px 0 var(--border),
+    -1px 1px 0 var(--border),
+    1px 1px 0 var(--border);
+}
+
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+.custom-scrollbar:hover {
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 4px;
+}
+
+.custom-scrollbar:hover::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
 }

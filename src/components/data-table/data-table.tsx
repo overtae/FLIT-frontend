@@ -56,7 +56,7 @@ function renderTableBody<TData, TValue>({
     );
   }
   return table.getRowModel().rows.map((row) => (
-    <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
+    <TableRow key={row.id} data-state={row.getIsSelected() && "selected"} className="cursor-default">
       {row.getVisibleCells().map((cell) => (
         <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
       ))}
@@ -90,7 +90,7 @@ export function DataTable<TData, TValue>({
     <Table>
       <TableHeader className="bg-muted sticky top-0 z-10">
         {table.getHeaderGroups().map((headerGroup) => (
-          <TableRow key={headerGroup.id}>
+          <TableRow key={headerGroup.id} className="cursor-default">
             {headerGroup.headers.map((header) => {
               return (
                 <TableHead key={header.id} colSpan={header.colSpan}>

@@ -7,6 +7,7 @@ export const API_ENDPOINTS = {
     refresh: "/api/auth/refresh",
     me: "/api/auth/me",
     verifyPassword: "/api/auth/verify-password",
+    checkVerification: "/api/auth/check-verification",
   },
 } as const;
 
@@ -25,5 +26,13 @@ export const TOKEN_COOKIE_OPTIONS = {
   refreshToken: {
     ...COOKIE_OPTIONS,
     maxAge: 60 * 60 * 24 * 30,
+  },
+  verificationToken: {
+    ...COOKIE_OPTIONS,
+    maxAge: 60 * 15,
+  },
+  passwordVerified: {
+    ...COOKIE_OPTIONS,
+    maxAge: 60 * 60 * 24,
   },
 } as const;

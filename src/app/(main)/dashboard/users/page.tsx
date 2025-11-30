@@ -34,7 +34,7 @@ export default function UsersPage() {
           <TabsTrigger value="list">User List</TabsTrigger>
         </TabsList>
         <TabsContent value="all" className="mt-6">
-          <UserOverview />
+          <UserOverview category="all" />
         </TabsContent>
         <TabsContent value="list" className="mt-6">
           <UserList />

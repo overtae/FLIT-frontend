@@ -44,6 +44,7 @@ export const sidebarItems: NavGroup[] = [
         url: "/dashboard/users",
         icon: Users,
         subItems: [
+          { title: "All Users", url: "/dashboard/users/all" },
           { title: "Customer", url: "/dashboard/users/customer" },
           { title: "Shop", url: "/dashboard/users/shop" },
           { title: "Florist", url: "/dashboard/users/florist" },

@@ -10,7 +10,7 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { API_BASE_URL, API_ENDPOINTS } from "@/lib/api/config";
+import { verifyPassword } from "@/lib/api/auth";
 
 const passwordSchema = z.object({
   password: z.string().min(1, { message: "비밀번호를 입력해주세요." }),
@@ -19,10 +19,11 @@ const passwordSchema = z.object({
 interface PasswordVerificationProps {
   title: string;
   description: string;
+  page?: string;
   onVerified: () => void;
 }
 
-export function PasswordVerification({ title, description, onVerified }: PasswordVerificationProps) {
+export function PasswordVerification({ title, description, page, onVerified }: PasswordVerificationProps) {
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<z.infer<typeof passwordSchema>>({
@@ -35,21 +36,13 @@ export function PasswordVerification({ title, description, onVerified }: Passwor
   const onSubmit = async (data: z.infer<typeof passwordSchema>) => {
     setIsLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.auth.verifyPassword}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({ password: data.password }),
-      });
+      const result = await verifyPassword(data.password, page);
 
-      if (!response.ok) {
-        const error = await response.json();
-        toast.error(error.error ?? "비밀번호가 일치하지 않습니다.");
+      if (!result.success) {
+        toast.error(result.error ?? "비밀번호가 일치하지 않습니다.");
         form.setError("password", {
           type: "server",
-          message: "비밀번호가 일치하지 않습니다.",
+          message: result.error ?? "비밀번호가 일치하지 않습니다.",
         });
         return;
       }
