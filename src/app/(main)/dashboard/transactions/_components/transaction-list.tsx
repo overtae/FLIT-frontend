@@ -1,103 +1,215 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
-import { Download, Search, Filter } from "lucide-react";
+import { Search } from "lucide-react";
 
 import { DataTable } from "@/components/data-table/data-table";
-import { DataTablePagination } from "@/components/data-table/data-table-pagination";
-import { DataTableViewOptions } from "@/components/data-table/data-table-view-options";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardAction } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useDataTableInstance } from "@/hooks/use-data-table-instance";
 
-import { transactionColumns, Transaction } from "./transaction-columns";
-
-const mockTransactions: Transaction[] = [
-  {
-    id: "1",
-    orderNumber: "ORD-2024-001",
-    from: "매장A",
-    to: "고객B",
-    productName: "장미 꽃다발",
-    paymentAmount: 50000,
-    orderDate: "2024-01-15",
-    paymentDate: "2024-01-15",
-    paymentMethod: "card",
-    category: "order",
-  },
-  {
-    id: "2",
-    orderNumber: "ORD-2024-002",
-    from: "플로리스트C",
-    to: "매장D",
-    productName: "화분 식물",
-    paymentAmount: 30000,
-    orderDate: "2024-01-14",
-    paymentDate: "2024-01-14",
-    paymentMethod: "transfer",
-    category: "order-request",
-  },
-];
+import { mockTransactions } from "./mock-transactions";
+import { createTransactionColumns } from "./transaction-columns";
+import { TransactionDetailModal } from "./transaction-detail-modal";
+import { TransactionFilter } from "./transaction-filter";
+import { TransactionPagination } from "./transaction-pagination";
+import { Transaction, PaymentMethod, TransactionType } from "./transaction-types";
 
 interface TransactionListProps {
-  category?: string;
-  subCategory?: string;
+  category: "order" | "order-request" | "canceled";
+  subCategory?: "all" | "shop" | "florist" | "order-request";
 }
 
-export function TransactionList({ category }: TransactionListProps) {
-  const [data] = useState<Transaction[]>(() => {
-    let filtered = mockTransactions;
-    if (category) {
-      filtered = filtered.filter((t) => t.category === category);
-    }
-    return filtered;
-  });
+export function TransactionList({ category, subCategory }: TransactionListProps) {
   const [search, setSearch] = useState("");
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [filters, setFilters] = useState<{
+    types?: TransactionType[];
+    paymentMethods?: PaymentMethod[];
+    refundStatuses?: string[];
+    date?: Date;
+  }>({});
+
+  const filteredData = useMemo(() => {
+    let data = mockTransactions.filter((t) => {
+      if (category === "order") {
+        return t.subCategory === subCategory || subCategory === "all";
+      } else if (category === "order-request") {
+        return true;
+      } else if (category === "canceled") {
+        const hasRefundStatus = t.refundStatus !== undefined;
+        if (subCategory && subCategory !== "order-request") {
+          return hasRefundStatus && t.subCategory === subCategory;
+        }
+        return hasRefundStatus;
+      }
+      return true;
+    });
+
+    if (search) {
+      const searchLower = search.toLowerCase();
+      data = data.filter(
+        (t) =>
+          t.orderNumber.toLowerCase().includes(searchLower) ||
+          t.from.toLowerCase().includes(searchLower) ||
+          t.to.toLowerCase().includes(searchLower) ||
+          t.productName.toLowerCase().includes(searchLower),
+      );
+    }
+
+    if (filters.types && filters.types.length > 0) {
+      data = data.filter((t) => filters.types!.includes(t.type));
+    }
+
+    if (filters.paymentMethods && filters.paymentMethods.length > 0) {
+      data = data.filter((t) => filters.paymentMethods!.includes(t.paymentMethod));
+    }
+
+    if (filters.refundStatuses && filters.refundStatuses.length > 0) {
+      data = data.filter((t) => t.refundStatus && filters.refundStatuses!.includes(t.refundStatus));
+    }
+
+    if (filters.date) {
+      const filterDate = filters.date.toISOString().split("T")[0];
+      const filterYearMonth = filterDate.substring(0, 7);
+      data = data.filter((t) => {
+        const orderDate = t.orderDate.replace(/\./g, "-");
+        const yearMonth = orderDate.substring(0, 7);
+        return yearMonth === filterYearMonth;
+      });
+    }
+
+    return data;
+  }, [category, subCategory, search, filters]);
+
+  const handleViewDetail = (transaction: Transaction) => {
+    setSelectedTransaction(transaction);
+    setIsModalOpen(true);
+  };
+
+  const handleDownload = (transaction: Transaction) => {
+    const data = [
+      ["주문번호", "From", "To", "상품명", "결제금액", "주문접수일", "결제일", "결제방법", "구분"],
+      [
+        transaction.orderNumber,
+        transaction.from,
+        transaction.to,
+        transaction.productName,
+        transaction.paymentAmount.toString(),
+        transaction.orderDate,
+        transaction.paymentDate,
+        transaction.paymentMethod,
+        transaction.type,
+      ],
+    ];
+
+    const csvContent = data.map((row) => row.join(",")).join("\n");
+    const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `${transaction.orderNumber}.csv`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const columns = useMemo(
+    () =>
+      createTransactionColumns({
+        onViewDetail: handleViewDetail,
+        onDownload: handleDownload,
+        category,
+      }),
+    [category],
+  );
 
   const table = useDataTableInstance({
-    data,
-    columns: transactionColumns,
+    data: filteredData,
+    columns,
     getRowId: (row) => row.id,
   });
 
+  const handleDownloadAll = () => {
+    const selectedRows = table.getFilteredSelectedRowModel().rows;
+    if (selectedRows.length === 0) return;
+
+    const transactionsToDownload = selectedRows.map((row) => row.original);
+
+    const data = [
+      ["주문번호", "From", "To", "상품명", "결제금액", "주문접수일", "결제일", "결제방법", "구분"],
+      ...transactionsToDownload.map((t) => [
+        t.orderNumber,
+        t.from,
+        t.to,
+        t.productName,
+        t.paymentAmount.toString(),
+        t.orderDate,
+        t.paymentDate,
+        t.paymentMethod,
+        t.type,
+      ]),
+    ];
+
+    const csvContent = data.map((row) => row.join(",")).join("\n");
+    const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `주문목록_${new Date().toISOString().split("T")[0]}.csv`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>거래 목록</CardTitle>
-        <CardDescription>
-          주문번호, from, to, 상품명+이미지, 결제금액, 주문접수일, 결제일, 결제방법, 구분
-        </CardDescription>
-        <CardAction>
-          <div className="flex items-center gap-2">
-            <div className="relative max-w-sm flex-1">
-              <Search className="text-muted-foreground absolute top-2.5 left-2 h-4 w-4" />
-              <Input
-                placeholder="검색..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-8"
-              />
+    <>
+      <Card className="flex min-h-full flex-col border-0 shadow-none">
+        <CardHeader className="px-0 pb-4">
+          <div className="flex items-center justify-end">
+            <div className="flex items-center gap-2">
+              <div className="relative w-[300px]">
+                <Input
+                  placeholder=""
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="h-9 rounded-full border-gray-200 bg-gray-50 pr-10 pl-4"
+                />
+                <Search className="text-muted-foreground absolute top-2.5 right-3 h-4 w-4" />
+              </div>
+              <TransactionFilter type={category} onFilterChange={setFilters} />
             </div>
-            <Button variant="outline" size="sm">
-              <Filter className="mr-2 h-4 w-4" />
-              필터
-            </Button>
-            <DataTableViewOptions table={table} />
-            <Button variant="outline" size="sm">
-              <Download className="mr-2 h-4 w-4" />
-              엑셀 다운로드
-            </Button>
           </div>
-        </CardAction>
-      </CardHeader>
-      <CardContent className="flex size-full flex-col gap-4">
-        <div className="overflow-hidden rounded-md border">
-          <DataTable table={table} columns={transactionColumns} />
-        </div>
-        <DataTablePagination table={table} />
-      </CardContent>
-    </Card>
+        </CardHeader>
+        <CardContent className="flex flex-1 flex-col p-0">
+          <div className="flex-1 rounded-md">
+            <DataTable table={table} columns={columns} />
+          </div>
+          <div className="flex items-center justify-between border-t px-4 py-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDownloadAll}
+              disabled={table.getFilteredSelectedRowModel().rows.length === 0}
+            >
+              전체 다운로드
+            </Button>
+            <TransactionPagination table={table} />
+          </div>
+        </CardContent>
+      </Card>
+
+      <TransactionDetailModal
+        open={isModalOpen}
+        onOpenChange={setIsModalOpen}
+        transaction={selectedTransaction}
+        category={category}
+      />
+    </>
   );
 }

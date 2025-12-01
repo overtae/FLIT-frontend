@@ -11,7 +11,6 @@ import { UserList } from "../../_components/user-list";
 import { UserOverview } from "../../_components/user-overview";
 
 const validCategories = ["all", "customer", "shop", "florist", "seceder"];
-const PAGE_NAME = "users";
 
 interface UsersCategoryContentProps {
   category: string;
@@ -47,31 +46,11 @@ export function UsersCategoryContent({ category, initialVerified }: UsersCategor
     <div className="space-y-6">
       {category === "seceder" && (
         <Tabs defaultValue="all" className="w-full">
-          <TabsList className="mb-4 h-auto gap-8 bg-transparent p-0">
-            <TabsTrigger
-              value="all"
-              className="relative h-auto w-24 border-0 bg-transparent px-0 pt-2 pb-0 text-xl font-bold text-gray-400 shadow-none before:absolute before:top-0 before:right-0 before:left-0 before:h-1 before:bg-gray-500 before:opacity-0 before:content-[''] data-[state=active]:bg-transparent data-[state=active]:text-rose-500 data-[state=active]:shadow-none data-[state=active]:before:opacity-100"
-            >
-              All
-            </TabsTrigger>
-            <TabsTrigger
-              value="customer"
-              className="relative h-auto border-0 bg-transparent px-0 pt-2 pb-0 text-xl font-bold text-gray-400 shadow-none before:absolute before:top-0 before:right-0 before:left-0 before:h-1 before:bg-gray-500 before:opacity-0 before:content-[''] data-[state=active]:bg-transparent data-[state=active]:text-rose-500 data-[state=active]:shadow-none data-[state=active]:before:opacity-100"
-            >
-              Customer
-            </TabsTrigger>
-            <TabsTrigger
-              value="shop"
-              className="relative h-auto border-0 bg-transparent px-0 pt-2 pb-0 text-xl font-bold text-gray-400 shadow-none before:absolute before:top-0 before:right-0 before:left-0 before:h-1 before:bg-gray-500 before:opacity-0 before:content-[''] data-[state=active]:bg-transparent data-[state=active]:text-rose-500 data-[state=active]:shadow-none data-[state=active]:before:opacity-100"
-            >
-              Shop
-            </TabsTrigger>
-            <TabsTrigger
-              value="florist"
-              className="relative h-auto border-0 bg-transparent px-0 pt-2 pb-0 text-xl font-bold text-gray-400 shadow-none before:absolute before:top-0 before:right-0 before:left-0 before:h-1 before:bg-gray-500 before:opacity-0 before:content-[''] data-[state=active]:bg-transparent data-[state=active]:text-rose-500 data-[state=active]:shadow-none data-[state=active]:before:opacity-100"
-            >
-              Florist
-            </TabsTrigger>
+          <TabsList>
+            <TabsTrigger value="all">All</TabsTrigger>
+            <TabsTrigger value="customer">Customer</TabsTrigger>
+            <TabsTrigger value="shop">Shop</TabsTrigger>
+            <TabsTrigger value="florist">Florist</TabsTrigger>
           </TabsList>
           <TabsContent value="all">
             <UserOverview category="all" />
@@ -87,7 +66,7 @@ export function UsersCategoryContent({ category, initialVerified }: UsersCategor
           </TabsContent>
         </Tabs>
       )}
-      <UserOverview category={category} />
+      {category !== "seceder" && <UserOverview category={category} />}
       {category !== "all" && category !== "seceder" && <UserList category={category} />}
     </div>
   );
