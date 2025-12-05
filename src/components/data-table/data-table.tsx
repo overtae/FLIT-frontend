@@ -1,3 +1,5 @@
+"use client";
+
 import * as React from "react";
 
 import {
@@ -16,6 +18,7 @@ import { SortableContext, verticalListSortingStrategy, arrayMove } from "@dnd-ki
 import { ColumnDef, flexRender, type Table as TanStackTable } from "@tanstack/react-table";
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 
 import { DraggableRow } from "./draggable-row";
 
@@ -24,6 +27,7 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   dndEnabled?: boolean;
   onReorder?: (newData: TData[]) => void;
+  onRowClick?: (row: TData) => void;
 }
 
 function renderTableBody<TData, TValue>({
@@ -31,11 +35,13 @@ function renderTableBody<TData, TValue>({
   columns,
   dndEnabled,
   dataIds,
+  onRowClick,
 }: {
   table: TanStackTable<TData>;
   columns: ColumnDef<TData, TValue>[];
   dndEnabled: boolean;
   dataIds: UniqueIdentifier[];
+  onRowClick?: (row: TData) => void;
 }) {
   if (!table.getRowModel().rows.length) {
     return (
@@ -55,13 +61,30 @@ function renderTableBody<TData, TValue>({
       </SortableContext>
     );
   }
-  return table.getRowModel().rows.map((row) => (
-    <TableRow key={row.id} data-state={row.getIsSelected() && "selected"} className="cursor-default">
-      {row.getVisibleCells().map((cell) => (
-        <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
-      ))}
-    </TableRow>
-  ));
+  return table.getRowModel().rows.map((row) => {
+    const isSelected = row.getIsSelected();
+    return (
+      <TableRow
+        key={row.id}
+        data-state={isSelected ? "selected" : undefined}
+        className={cn(onRowClick ? "cursor-pointer" : "cursor-default", isSelected && "bg-muted")}
+        onClick={() => onRowClick?.(row.original)}
+      >
+        {row.getVisibleCells().map((cell) => {
+          const isSelectCell = cell.column.id === "select";
+          return (
+            <TableCell
+              key={cell.id}
+              onClick={isSelectCell ? (e) => e.stopPropagation() : undefined}
+              onMouseDown={isSelectCell ? (e) => e.stopPropagation() : undefined}
+            >
+              {flexRender(cell.column.columnDef.cell, cell.getContext())}
+            </TableCell>
+          );
+        })}
+      </TableRow>
+    );
+  });
 }
 
 export function DataTable<TData, TValue>({
@@ -69,6 +92,7 @@ export function DataTable<TData, TValue>({
   columns,
   dndEnabled = false,
   onReorder,
+  onRowClick,
 }: DataTableProps<TData, TValue>) {
   const dataIds: UniqueIdentifier[] = table.getRowModel().rows.map((row) => Number(row.id) as UniqueIdentifier);
   const sortableId = React.useId();
@@ -76,7 +100,7 @@ export function DataTable<TData, TValue>({
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
-    if (active && over && active.id !== over.id && onReorder) {
+    if (active && over && active.id !== over.id && onReorder !== undefined) {
       const oldIndex = dataIds.indexOf(active.id);
       const newIndex = dataIds.indexOf(over.id);
 
@@ -102,7 +126,7 @@ export function DataTable<TData, TValue>({
         ))}
       </TableHeader>
       <TableBody className="**:data-[slot=table-cell]:first:w-8">
-        {renderTableBody({ table, columns, dndEnabled, dataIds })}
+        {renderTableBody({ table, columns, dndEnabled, dataIds, onRowClick })}
       </TableBody>
     </Table>
   );

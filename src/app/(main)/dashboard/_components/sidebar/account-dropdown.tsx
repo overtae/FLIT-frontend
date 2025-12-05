@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import { ChevronDown, CircleUser, LogOut } from "lucide-react";
 
 import {
@@ -23,10 +25,6 @@ export function AccountDropdown({
     await signOut();
   };
 
-  const handleEditProfile = () => {
-    console.log("정보 수정");
-  };
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -36,9 +34,11 @@ export function AccountDropdown({
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="min-w-48 rounded-lg" side="bottom" align="end" sideOffset={4}>
-        <DropdownMenuItem onClick={handleEditProfile} className="cursor-pointer">
-          <CircleUser />
-          정보 수정
+        <DropdownMenuItem className="cursor-pointer">
+          <Link href="/dashboard/profile" className="flex gap-2">
+            <CircleUser />
+            정보 수정
+          </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">

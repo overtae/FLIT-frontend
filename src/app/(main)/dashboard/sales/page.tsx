@@ -9,8 +9,8 @@ export default function SalesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">매출관리</h1>
-        <p className="text-muted-foreground mt-2">매출 정보를 분석하세요</p>
+        <h1 className="text-foreground text-xl font-bold">매출관리</h1>
+        <p className="text-secondary-foreground mt-2 text-sm">매출 정보를 분석하세요</p>
       </div>
 
       <Tabs defaultValue="revenue" className="w-full">

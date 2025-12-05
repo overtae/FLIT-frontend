@@ -1,131 +1,258 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 
-import { Download, Search, Filter, Calendar } from "lucide-react";
+import { useRouter } from "next/navigation";
 
+import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subWeeks, isWithinInterval } from "date-fns";
+import { Download, Search, Filter } from "lucide-react";
+
+import { mockSettlements } from "@/_mock/settlements";
 import { DataTable } from "@/components/data-table/data-table";
 import { DataTablePagination } from "@/components/data-table/data-table-pagination";
-import { DataTableViewOptions } from "@/components/data-table/data-table-view-options";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardAction } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useDataTableInstance } from "@/hooks/use-data-table-instance";
 
-import { settlementColumns, Settlement } from "./settlement-columns";
+import { SettlementCalendar } from "./settlement-calendar";
+import { createSettlementColumns, Settlement } from "./settlement-columns";
 
-const mockSettlements: Settlement[] = [
-  {
-    id: "1",
-    nickname: "매장A",
-    phone: "010-1234-5678",
-    email: "shop@example.com",
-    totalRevenue: 1000000,
-    commission: 100000,
-    revenueExcludingCommission: 900000,
-    deliveryFee: 50000,
-    status: "completed",
-    settlementDate: "2024-01-15",
-  },
-  {
-    id: "2",
-    nickname: "플로리스트B",
-    phone: "010-2345-6789",
-    email: "florist@example.com",
-    totalRevenue: 800000,
-    commission: 80000,
-    revenueExcludingCommission: 720000,
-    deliveryFee: 40000,
-    status: "pending",
-    settlementDate: "2024-01-20",
-  },
-];
+const getSettlementDates = (settlements: Settlement[]): Date[] => {
+  const dateSet = new Set<string>();
+  settlements.forEach((settlement) => {
+    dateSet.add(settlement.settlementDate);
+  });
+  return Array.from(dateSet)
+    .map((dateStr) => {
+      const [year, month, day] = dateStr.split("-").map(Number);
+      return new Date(year, month - 1, day);
+    })
+    .sort((a, b) => a.getTime() - b.getTime());
+};
+
+const getDateRangeForPeriod = (period: "1week" | "2week" | "month"): { start: Date; end: Date } => {
+  const now = new Date();
+  switch (period) {
+    case "1week":
+      return {
+        start: startOfWeek(now),
+        end: endOfWeek(now),
+      };
+    case "2week":
+      return {
+        start: startOfWeek(subWeeks(now, 1)),
+        end: endOfWeek(now),
+      };
+    case "month":
+      return {
+        start: startOfMonth(now),
+        end: endOfMonth(now),
+      };
+  }
+};
 
 export function SettlementList() {
-  const [data] = useState<Settlement[]>(mockSettlements);
+  const router = useRouter();
+  const [selectedPeriod, setSelectedPeriod] = useState<"1week" | "2week" | "month">("1week");
+  const [selectedTypes, setSelectedTypes] = useState<("shop" | "florist")[]>(["shop", "florist"]);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [search, setSearch] = useState("");
 
+  const dateRange = useMemo(() => getDateRangeForPeriod(selectedPeriod), [selectedPeriod]);
+
+  const periodFilteredSettlements = useMemo(() => {
+    return mockSettlements.filter((settlement) => {
+      const [year, month, day] = settlement.settlementDate.split("-").map(Number);
+      const settlementDate = new Date(year, month - 1, day);
+      return isWithinInterval(settlementDate, dateRange);
+    });
+  }, [dateRange]);
+
+  const settlementDates = useMemo(() => getSettlementDates(periodFilteredSettlements), [periodFilteredSettlements]);
+
+  const filteredData = useMemo(() => {
+    let data = periodFilteredSettlements;
+
+    if (selectedTypes.length > 0) {
+      data = data.filter((settlement) => selectedTypes.includes(settlement.type));
+    }
+
+    if (selectedDate) {
+      const selectedDateStr = format(selectedDate, "yyyy-MM-dd");
+      data = data.filter((settlement) => {
+        return settlement.settlementDate === selectedDateStr;
+      });
+    }
+
+    if (search) {
+      const searchLower = search.toLowerCase();
+      data = data.filter(
+        (settlement) =>
+          settlement.nickname.toLowerCase().includes(searchLower) ||
+          settlement.nicknameId.toLowerCase().includes(searchLower) ||
+          settlement.phone.includes(search) ||
+          settlement.email.toLowerCase().includes(searchLower),
+      );
+    }
+
+    return data;
+  }, [periodFilteredSettlements, selectedTypes, selectedDate, search]);
+
+  const handleDownload = (settlement: Settlement) => {
+    const data = [
+      ["닉네임(ID)", "번호", "mail", "총매출", "수수료", "수수료 제외", "배달료", "상태"],
+      [
+        `${settlement.nickname} (${settlement.nicknameId})`,
+        settlement.phone,
+        settlement.email,
+        settlement.totalRevenue.toString(),
+        settlement.commission.toString(),
+        settlement.revenueExcludingCommission.toString(),
+        settlement.deliveryFee.toString(),
+        settlement.status,
+      ],
+    ];
+
+    const csvContent = data.map((row) => row.join(",")).join("\n");
+    const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `정산_${settlement.nickname}_${format(new Date(), "yyyy-MM-dd")}.csv`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleDownloadAll = () => {
+    const selectedRows = table.getFilteredSelectedRowModel().rows;
+    if (selectedRows.length === 0) return;
+
+    const settlementsToDownload = selectedRows.map((row) => row.original);
+
+    const data = [
+      ["닉네임(ID)", "번호", "mail", "총매출", "수수료", "수수료 제외", "배달료", "상태"],
+      ...settlementsToDownload.map((s) => [
+        `${s.nickname} (${s.nicknameId})`,
+        s.phone,
+        s.email,
+        s.totalRevenue.toString(),
+        s.commission.toString(),
+        s.revenueExcludingCommission.toString(),
+        s.deliveryFee.toString(),
+        s.status,
+      ]),
+    ];
+
+    const csvContent = data.map((row) => row.join(",")).join("\n");
+    const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `정산목록_${format(new Date(), "yyyy-MM-dd")}.csv`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleRowClick = (settlement: Settlement) => {
+    router.push(`/dashboard/settlements/${settlement.id}`);
+  };
+
+  const columns = useMemo(() => createSettlementColumns({ onDownload: handleDownload }), []);
+
   const table = useDataTableInstance({
-    data,
-    columns: settlementColumns,
+    data: filteredData,
+    columns,
     getRowId: (row) => row.id,
   });
 
-  return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>정산 캘린더</CardTitle>
-          <CardDescription>정산일, 오늘 날짜 표기</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4" />
-              <span>정산일: 매주 월요일</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4" />
-              <span>오늘: 2024-01-15</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+  const handleTypeToggle = (type: "shop" | "florist") => {
+    setSelectedTypes((prev) => (prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]));
+  };
 
-      <Card>
-        <CardHeader>
-          <CardTitle>정산 목록</CardTitle>
-          <CardDescription>닉네임, 번호, 메일, 총매출, 수수료, 수수료 제외, 배달료, 상태</CardDescription>
-          <CardAction>
-            <div className="flex items-center gap-2">
-              <Select defaultValue="1week">
-                <SelectTrigger className="w-32">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1week">1주</SelectItem>
-                  <SelectItem value="2week">2주</SelectItem>
-                  <SelectItem value="month">월</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select defaultValue="store">
-                <SelectTrigger className="w-32">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="store">Store</SelectItem>
-                  <SelectItem value="florist">Florist</SelectItem>
-                </SelectContent>
-              </Select>
-              <div className="relative max-w-sm flex-1">
-                <Search className="text-muted-foreground absolute top-2.5 left-2 h-4 w-4" />
-                <Input
-                  placeholder="검색..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="pl-8"
-                />
-              </div>
-              <Button variant="outline" size="sm">
-                <Filter className="mr-2 h-4 w-4" />
-                필터
-              </Button>
-              <DataTableViewOptions table={table} />
-              <Button variant="outline" size="sm">
-                <Download className="mr-2 h-4 w-4" />
-                엑셀 다운로드
-              </Button>
-            </div>
-          </CardAction>
-        </CardHeader>
-        <CardContent className="flex size-full flex-col gap-4">
-          <div className="overflow-hidden rounded-md border">
-            <DataTable table={table} columns={settlementColumns} />
+  return (
+    <div className="w-full space-y-6">
+      <div className="grid grid-cols-2 gap-3">
+        <div className="flex flex-col gap-6">
+          <Tabs
+            value={selectedPeriod}
+            onValueChange={(value) => {
+              setSelectedPeriod(value as "1week" | "2week" | "month");
+              setSelectedDate(null);
+            }}
+          >
+            <TabsList>
+              <TabsTrigger value="1week">1week</TabsTrigger>
+              <TabsTrigger value="2week">2week</TabsTrigger>
+              <TabsTrigger value="month">Month</TabsTrigger>
+            </TabsList>
+          </Tabs>
+
+          <div className="flex items-center gap-4">
+            <Checkbox
+              id="shop"
+              checked={selectedTypes.includes("shop")}
+              onCheckedChange={() => handleTypeToggle("shop")}
+            />
+            <label htmlFor="shop" className="cursor-pointer text-sm font-medium">
+              shop
+            </label>
+            <Checkbox
+              id="florist"
+              checked={selectedTypes.includes("florist")}
+              onCheckedChange={() => handleTypeToggle("florist")}
+            />
+            <label htmlFor="florist" className="cursor-pointer text-sm font-medium">
+              florist
+            </label>
           </div>
+
+          <div className="flex items-center gap-2">
+            <div className="relative max-w-sm flex-1">
+              <Search className="text-muted-foreground absolute top-2.5 left-2 h-4 w-4" />
+              <Input
+                placeholder="검색..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-8"
+              />
+            </div>
+            <Button variant="outline" size="sm">
+              <Filter className="mr-2 h-4 w-4" />
+              필터
+            </Button>
+          </div>
+        </div>
+
+        <div className="h-full">
+          <SettlementCalendar
+            selectedDate={selectedDate}
+            onDateSelect={(date) => {
+              setSelectedDate(date);
+            }}
+            settlementDates={settlementDates}
+            className="h-full"
+          />
+        </div>
+      </div>
+
+      <div className="w-full">
+        <div className="overflow-hidden rounded-md border">
+          <DataTable table={table} columns={columns} onRowClick={handleRowClick} />
+        </div>
+        <div className="mt-2 flex items-center justify-between space-x-2">
+          <Button variant="outline" size="sm" onClick={handleDownloadAll}>
+            <Download className="mr-2 h-4 w-4" />
+            전체 다운로드
+          </Button>
           <DataTablePagination table={table} />
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

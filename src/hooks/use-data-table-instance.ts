@@ -14,6 +14,8 @@ import {
   useReactTable,
   RowSelectionState,
   OnChangeFn,
+  PaginationState,
+  Table,
 } from "@tanstack/react-table";
 
 type UseDataTableInstanceProps<TData, TValue> = {
@@ -31,88 +33,35 @@ export function useDataTableInstance<TData, TValue>({
   data,
   columns,
   enableRowSelection = true,
-  defaultPageIndex,
-  defaultPageSize,
+  defaultPageIndex = 0,
+  defaultPageSize = 10,
   getRowId,
   rowSelection: controlledRowSelection,
   onRowSelectionChange: controlledOnRowSelectionChange,
-}: UseDataTableInstanceProps<TData, TValue>) {
+}: UseDataTableInstanceProps<TData, TValue>): Table<TData> {
   const [internalRowSelection, setInternalRowSelection] = React.useState<RowSelectionState>({});
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [pagination, setPagination] = React.useState({
-    pageIndex: defaultPageIndex ?? 0,
-    pageSize: defaultPageSize ?? 10,
+  const [pagination, setPagination] = React.useState<PaginationState>({
+    pageIndex: defaultPageIndex,
+    pageSize: defaultPageSize,
   });
-
-  const isMountedRef = React.useRef(false);
-
-  React.useEffect(() => {
-    isMountedRef.current = true;
-    return () => {
-      isMountedRef.current = false;
-    };
-  }, []);
 
   const rowSelection = controlledRowSelection ?? internalRowSelection;
 
-  const handleRowSelectionChange = React.useCallback<OnChangeFn<RowSelectionState>>(
+  const handleRowSelectionChange: OnChangeFn<RowSelectionState> = React.useCallback(
     (updater) => {
-      if (!isMountedRef.current) return;
       if (controlledOnRowSelectionChange) {
         controlledOnRowSelectionChange(updater);
       } else {
         setInternalRowSelection((prev) => {
-          if (typeof updater === "function") {
-            return updater(prev);
-          }
-          return updater;
+          return typeof updater === "function" ? updater(prev) : updater;
         });
       }
     },
     [controlledOnRowSelectionChange],
   );
-
-  const handleSortingChange = React.useCallback<OnChangeFn<SortingState>>((updater) => {
-    if (!isMountedRef.current) return;
-    setSorting((prev) => {
-      if (typeof updater === "function") {
-        return updater(prev);
-      }
-      return updater;
-    });
-  }, []);
-
-  const handleColumnFiltersChange = React.useCallback<OnChangeFn<ColumnFiltersState>>((updater) => {
-    if (!isMountedRef.current) return;
-    setColumnFilters((prev) => {
-      if (typeof updater === "function") {
-        return updater(prev);
-      }
-      return updater;
-    });
-  }, []);
-
-  const handleColumnVisibilityChange = React.useCallback<OnChangeFn<VisibilityState>>((updater) => {
-    if (!isMountedRef.current) return;
-    setColumnVisibility((prev) => {
-      if (typeof updater === "function") {
-        return updater(prev);
-      }
-      return updater;
-    });
-  }, []);
-
-  const handlePaginationChange = React.useCallback((updater: React.SetStateAction<typeof pagination>) => {
-    if (!isMountedRef.current) return;
-    setPagination((prev) => {
-      if (typeof updater === "function") {
-        return updater(prev);
-      }
-      return updater;
-    });
-  }, []);
 
   const table = useReactTable({
     data,
@@ -125,17 +74,18 @@ export function useDataTableInstance<TData, TValue>({
       pagination,
     },
     enableRowSelection,
-    getRowId:
-      getRowId ??
-      ((row: TData) => {
-        const rowWithId = row as { id?: string | number };
-        return rowWithId.id?.toString() ?? "";
-      }),
+    getRowId: (row, index) => {
+      if (getRowId) {
+        return getRowId(row, index);
+      }
+      const rowWithId = row as { id?: string | number };
+      return rowWithId.id?.toString() ?? index.toString();
+    },
     onRowSelectionChange: handleRowSelectionChange,
-    onSortingChange: handleSortingChange,
-    onColumnFiltersChange: handleColumnFiltersChange,
-    onColumnVisibilityChange: handleColumnVisibilityChange,
-    onPaginationChange: handlePaginationChange,
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
+    onColumnVisibilityChange: setColumnVisibility,
+    onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),

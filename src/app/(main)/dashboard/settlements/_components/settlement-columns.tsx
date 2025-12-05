@@ -1,20 +1,16 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal, Eye, Download } from "lucide-react";
+import { Download } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export type Settlement = {
   id: string;
   nickname: string;
+  nicknameId: string;
   phone: string;
   email: string;
   totalRevenue: number;
@@ -23,6 +19,7 @@ export type Settlement = {
   deliveryFee: number;
   status: "pending" | "completed" | "cancelled";
   settlementDate: string;
+  type: "shop" | "florist";
 };
 
 const statusLabels: Record<Settlement["status"], string> = {
@@ -63,84 +60,129 @@ const getStatusVariant = (status: Settlement["status"]): "default" | "secondary"
   }
 };
 
-export const settlementColumns: ColumnDef<Settlement>[] = [
-  {
-    accessorKey: "nickname",
-    header: "닉네임",
-  },
-  {
-    accessorKey: "phone",
-    header: "번호",
-  },
-  {
-    accessorKey: "email",
-    header: "메일",
-  },
-  {
-    accessorKey: "totalRevenue",
-    header: "총매출",
-    cell: ({ row }) => {
-      const amount = row.original.totalRevenue;
-      return <span>{amount.toLocaleString()}원</span>;
-    },
-  },
-  {
-    accessorKey: "commission",
-    header: "수수료",
-    cell: ({ row }) => {
-      const amount = row.original.commission;
-      return <span>{amount.toLocaleString()}원</span>;
-    },
-  },
-  {
-    accessorKey: "revenueExcludingCommission",
-    header: "수수료 제외",
-    cell: ({ row }) => {
-      const amount = row.original.revenueExcludingCommission;
-      return <span>{amount.toLocaleString()}원</span>;
-    },
-  },
-  {
-    accessorKey: "deliveryFee",
-    header: "배달료",
-    cell: ({ row }) => {
-      const amount = row.original.deliveryFee;
-      return <span>{amount.toLocaleString()}원</span>;
-    },
-  },
-  {
-    accessorKey: "status",
-    header: "상태",
-    cell: ({ row }) => {
-      const status = row.original.status;
-      return <Badge variant={getStatusVariant(status)}>{getStatusLabel(status)}</Badge>;
-    },
-  },
-  {
-    id: "actions",
-    cell: ({ row }) => {
-      const settlement = row.original;
+interface CreateSettlementColumnsProps {
+  onDownload: (settlement: Settlement) => void;
+}
 
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">메뉴 열기</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => console.log("상세보기", settlement.id)}>
-              <Eye className="mr-2 h-4 w-4" />
-              상세보기
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => console.log("엑셀 다운로드", settlement.id)}>
-              <Download className="mr-2 h-4 w-4" />
-              엑셀 다운로드
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
+export function createSettlementColumns({ onDownload }: CreateSettlementColumnsProps): ColumnDef<Settlement>[] {
+  return [
+    {
+      id: "select",
+      header: ({ table }) => (
+        <div
+          className="flex items-center justify-center"
+          onClick={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
+        >
+          <Checkbox
+            checked={table.getIsAllPageRowsSelected()}
+            onCheckedChange={(value) => {
+              table.toggleAllPageRowsSelected(!!value);
+            }}
+            onClick={(e) => e.stopPropagation()}
+            aria-label="전체 선택"
+          />
+        </div>
+      ),
+      cell: ({ row }) => (
+        <div
+          className="flex items-center justify-center"
+          onClick={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
+        >
+          <Checkbox
+            checked={row.getIsSelected()}
+            onCheckedChange={(value) => {
+              row.toggleSelected(!!value);
+            }}
+            onClick={(e) => e.stopPropagation()}
+            aria-label="행 선택"
+          />
+        </div>
+      ),
+      enableSorting: false,
+      enableHiding: false,
     },
-  },
-];
+    {
+      accessorKey: "nickname",
+      header: "닉네임(ID)",
+      cell: ({ row }) => {
+        const settlement = row.original;
+        return (
+          <span>
+            {settlement.nickname} ({settlement.nicknameId})
+          </span>
+        );
+      },
+    },
+    {
+      accessorKey: "phone",
+      header: "번호",
+    },
+    {
+      accessorKey: "email",
+      header: "mail",
+    },
+    {
+      accessorKey: "totalRevenue",
+      header: "총매출",
+      cell: ({ row }) => {
+        const amount = row.original.totalRevenue;
+        return <span>{amount.toLocaleString()}원</span>;
+      },
+    },
+    {
+      accessorKey: "commission",
+      header: "수수료",
+      cell: ({ row }) => {
+        const amount = row.original.commission;
+        return <span>{amount.toLocaleString()}원</span>;
+      },
+    },
+    {
+      accessorKey: "revenueExcludingCommission",
+      header: "수수료 제외",
+      cell: ({ row }) => {
+        const amount = row.original.revenueExcludingCommission;
+        return <span>{amount.toLocaleString()}원</span>;
+      },
+    },
+    {
+      accessorKey: "deliveryFee",
+      header: "배달료",
+      cell: ({ row }) => {
+        const amount = row.original.deliveryFee;
+        return <span>{amount.toLocaleString()}원</span>;
+      },
+    },
+    {
+      accessorKey: "status",
+      header: "상태",
+      cell: ({ row }) => {
+        const status = row.original.status;
+        return <Badge variant={getStatusVariant(status)}>{getStatusLabel(status)}</Badge>;
+      },
+    },
+    {
+      id: "download",
+      header: "다운로드",
+      cell: ({ row }) => {
+        const settlement = row.original;
+        return (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDownload(settlement);
+            }}
+            className="h-8 w-8 p-0"
+          >
+            <Download className="h-4 w-4" />
+            <span className="sr-only">다운로드</span>
+          </Button>
+        );
+      },
+    },
+  ];
+}

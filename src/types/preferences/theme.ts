@@ -33,6 +33,14 @@ export const THEME_PRESET_OPTIONS = [
     },
   },
   {
+    label: "Flit",
+    value: "flit",
+    primary: {
+      light: "oklch(0.61 0.19 23.50)",
+      dark: "oklch(0.61 0.19 23.50)",
+    },
+  },
+  {
     label: "Soft Pop",
     value: "soft-pop",
     primary: {

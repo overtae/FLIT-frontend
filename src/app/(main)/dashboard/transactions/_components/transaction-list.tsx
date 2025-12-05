@@ -6,7 +6,6 @@ import { Search } from "lucide-react";
 
 import { DataTable } from "@/components/data-table/data-table";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useDataTableInstance } from "@/hooks/use-data-table-instance";
 
@@ -37,9 +36,11 @@ export function TransactionList({ category, subCategory }: TransactionListProps)
     let data = mockTransactions.filter((t) => {
       if (category === "order") {
         return t.subCategory === subCategory || subCategory === "all";
-      } else if (category === "order-request") {
+      }
+      if (category === "order-request") {
         return true;
-      } else if (category === "canceled") {
+      }
+      if (category === "canceled") {
         const hasRefundStatus = t.refundStatus !== undefined;
         if (subCategory && subCategory !== "order-request") {
           return hasRefundStatus && t.subCategory === subCategory;
@@ -169,40 +170,36 @@ export function TransactionList({ category, subCategory }: TransactionListProps)
 
   return (
     <>
-      <Card className="flex min-h-full flex-col border-0 shadow-none">
-        <CardHeader className="px-0 pb-4">
-          <div className="flex items-center justify-end">
-            <div className="flex items-center gap-2">
-              <div className="relative w-[300px]">
-                <Input
-                  placeholder=""
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="h-9 rounded-full border-gray-200 bg-gray-50 pr-10 pl-4"
-                />
-                <Search className="text-muted-foreground absolute top-2.5 right-3 h-4 w-4" />
-              </div>
-              <TransactionFilter type={category} onFilterChange={setFilters} />
+      <div className="flex min-h-full flex-col space-y-4">
+        <div className="flex items-center justify-end">
+          <div className="flex items-center gap-2">
+            <div className="relative w-[300px]">
+              <Input
+                placeholder=""
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="h-9 rounded-full pr-10 pl-4"
+              />
+              <Search className="text-muted-foreground absolute top-2.5 right-3 h-4 w-4" />
             </div>
+            <TransactionFilter type={category} onFilterChange={setFilters} />
           </div>
-        </CardHeader>
-        <CardContent className="flex flex-1 flex-col p-0">
-          <div className="flex-1 rounded-md">
-            <DataTable table={table} columns={columns} />
-          </div>
-          <div className="flex items-center justify-between border-t px-4 py-4">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleDownloadAll}
-              disabled={table.getFilteredSelectedRowModel().rows.length === 0}
-            >
-              전체 다운로드
-            </Button>
-            <TransactionPagination table={table} />
-          </div>
-        </CardContent>
-      </Card>
+        </div>
+        <div className="flex-1 rounded-md">
+          <DataTable table={table} columns={columns} />
+        </div>
+        <div className="flex items-center justify-between border-t px-4 py-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleDownloadAll}
+            disabled={table.getFilteredSelectedRowModel().rows.length === 0}
+          >
+            전체 다운로드
+          </Button>
+          <TransactionPagination table={table} />
+        </div>
+      </div>
 
       <TransactionDetailModal
         open={isModalOpen}

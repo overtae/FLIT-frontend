@@ -2,6 +2,7 @@
 @import "tw-animate-css";
 
 /* Theme preset styles: these override CSS variables based on the selected data-theme-preset */
+@import "../styles/presets/flit.css";
 @import "../styles/presets/brutalist.css";
 @import "../styles/presets/soft-pop.css";
 @import "../styles/presets/tangerine.css";
@@ -85,8 +86,25 @@ These serve as the fallback; there is no separate default.css file. */
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
 
-  --main: #da4359;
-  --main-accent: rgba(220, 71, 52, 0.8);
+  --main: var(--primary);
+  --main-accent: rgba(229, 80, 96, 0.8);
+
+  /* Design System Colors - Using theme variables */
+  --color-primary-red: var(--primary);
+  --color-bg-main: oklch(0.96 0 0); /* #F5F6F8 equivalent */
+  --color-bg-card: var(--card);
+  --color-text-primary: var(--foreground);
+  --color-text-secondary: var(--secondary-foreground);
+  --color-text-tertiary: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-border-alt: var(--input);
+
+  /* Chart Colors - Using theme chart variables */
+  --color-chart-pink: var(--chart-2);
+  --color-chart-green: var(--chart-3);
+  --color-chart-beige: var(--chart-5);
+  --color-chart-blue: var(--chart-4);
+  --color-chart-purple: var(--chart-5);
 }
 
 .dark {
@@ -167,6 +185,13 @@ These serve as the fallback; there is no separate default.css file. */
 
   body {
     @apply bg-background text-foreground;
+    font-family:
+      "Pretendard",
+      "Noto Sans KR",
+      -apple-system,
+      BlinkMacSystemFont,
+      system-ui,
+      sans-serif;
   }
 
   button {

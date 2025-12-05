@@ -10,8 +10,8 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">홈</h1>
-        <p className="text-muted-foreground mt-2">대시보드에 오신 것을 환영합니다</p>
+        <h1 className="text-foreground text-xl font-bold">홈</h1>
+        <p className="text-secondary-foreground mt-2 text-sm">대시보드에 오신 것을 환영합니다</p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

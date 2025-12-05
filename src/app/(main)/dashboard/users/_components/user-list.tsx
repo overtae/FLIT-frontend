@@ -5,7 +5,6 @@ import { useState, useMemo } from "react";
 import { Search } from "lucide-react";
 
 import { DataTable } from "@/components/data-table/data-table";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useDataTableInstance } from "@/hooks/use-data-table-instance";
 
@@ -83,33 +82,29 @@ export function UserList({ category }: UserListProps) {
 
   return (
     <>
-      <Card className="flex min-h-screen flex-col border-0 shadow-none">
-        <CardHeader className="px-0 pt-16 pb-4">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-lg font-bold">User List</CardTitle>
-            <div className="flex items-center gap-2">
-              <div className="relative w-[300px]">
-                <Input
-                  placeholder=""
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="h-9 rounded-full border-gray-200 bg-gray-50 pr-10 pl-4"
-                />
-                <Search className="text-muted-foreground absolute top-2.5 right-3 h-4 w-4" />
-              </div>
-              <UserFilter />
+      <div className="flex min-h-screen flex-col space-y-4">
+        <div className="flex items-center justify-between pt-16">
+          <h2 className="text-foreground text-lg font-bold">User List</h2>
+          <div className="flex items-center gap-2">
+            <div className="relative w-[300px]">
+              <Input
+                placeholder=""
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="h-9 rounded-full pr-10 pl-4"
+              />
+              <Search className="text-muted-foreground absolute top-2.5 right-3 h-4 w-4" />
             </div>
+            <UserFilter />
           </div>
-        </CardHeader>
-        <CardContent className="flex flex-1 flex-col p-0">
-          <div className="flex-1 rounded-md">
-            <DataTable table={table} columns={columns} />
-          </div>
-          <div className="flex justify-center py-4">
-            <UserPagination table={table} />
-          </div>
-        </CardContent>
-      </Card>
+        </div>
+        <div className="flex-1 rounded-md">
+          <DataTable table={table} columns={columns} />
+        </div>
+        <div className="flex justify-center py-4">
+          <UserPagination table={table} />
+        </div>
+      </div>
 
       <UserDetailModal open={isModalOpen} onOpenChange={setIsModalOpen} user={selectedUser} />
     </>
