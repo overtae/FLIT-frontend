@@ -136,7 +136,7 @@ export function FilterModal({ open, onOpenChange }: FilterModalProps) {
                     <Input
                       readOnly
                       value={
-                        dateRange.from && dateRange.to
+                        dateRange?.from && dateRange.to
                           ? `${format(dateRange.from, "yyyy.MM.dd", { locale: ko })} - ${format(dateRange.to, "yyyy.MM.dd", { locale: ko })}`
                           : ""
                       }
