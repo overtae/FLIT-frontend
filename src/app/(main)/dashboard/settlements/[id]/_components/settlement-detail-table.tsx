@@ -5,8 +5,8 @@ import { useMemo, useCallback } from "react";
 import { format } from "date-fns";
 import { Download, Search, Filter } from "lucide-react";
 
-import { DataTable } from "@/components/data-table/data-table";
 import { DataTablePagination } from "@/components/data-table/data-table-pagination";
+import { DataTableWithSelection } from "@/components/data-table/data-table-with-selection";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -34,7 +34,7 @@ export function SettlementDetailTable({
     [onDownload, onViewDetail],
   );
 
-  const table = useDataTableInstance({
+  const { table, rowSelection } = useDataTableInstance({
     data: transactions,
     columns,
     getRowId: (row) => row.id,
@@ -42,7 +42,7 @@ export function SettlementDetailTable({
   });
 
   const handleDownloadAll = useCallback(() => {
-    const selectedRows = table.getFilteredSelectedRowModel().rows;
+    const selectedRows = table.getSelectedRowModel().rows;
     if (selectedRows.length === 0) return;
 
     const transactionsToDownload = selectedRows.map((row) => row.original);
@@ -102,19 +102,17 @@ export function SettlementDetailTable({
       </CardHeader>
       <CardContent className="flex size-full flex-col gap-4">
         <div className="overflow-hidden rounded-md border">
-          <DataTable table={table} columns={columns} onRowClick={onViewDetail} />
+          <DataTableWithSelection table={table} rowSelection={rowSelection} onRowClick={onViewDetail} />
         </div>
-        <div className="border-t px-4 py-4">
-          <DataTablePagination
-            table={table}
-            leftSlot={
-              <Button variant="outline" size="sm" onClick={handleDownloadAll}>
-                <Download className="mr-2 h-4 w-4" />
-                엑셀 다운로드
-              </Button>
-            }
-          />
-        </div>
+        <DataTablePagination
+          table={table}
+          leftSlot={
+            <Button variant="outline" onClick={handleDownloadAll} disabled={Object.keys(rowSelection).length === 0}>
+              <Download className="mr-2 h-4 w-4" />
+              전체 다운로드
+            </Button>
+          }
+        />
       </CardContent>
     </Card>
   );

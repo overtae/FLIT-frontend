@@ -13,7 +13,7 @@ import { recentLeadsColumns } from "./columns.crm";
 import { recentLeadsData } from "./crm.config";
 
 export function TableCards() {
-  const table = useDataTableInstance({
+  const { table, rowSelection } = useDataTableInstance({
     data: recentLeadsData,
     columns: recentLeadsColumns,
     getRowId: (row) => row.id.toString(),

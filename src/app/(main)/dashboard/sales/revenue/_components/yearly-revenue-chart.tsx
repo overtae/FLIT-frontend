@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Fragment, useState } from "react";
 
 import { ChevronRight } from "lucide-react";
 import {
@@ -199,7 +199,7 @@ export function YearlyRevenueChart() {
                     />
                   );
                 }
-                return null;
+                return <Fragment />;
               }}
             />
           </LineChart>
