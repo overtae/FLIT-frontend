@@ -6,13 +6,13 @@ import { format } from "date-fns";
 import { Download, Search, Filter } from "lucide-react";
 
 import { DataTable } from "@/components/data-table/data-table";
+import { DataTablePagination } from "@/components/data-table/data-table-pagination";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useDataTableInstance } from "@/hooks/use-data-table-instance";
 
 import { createSettlementDetailColumns, SettlementDetailTransaction } from "./settlement-detail-columns";
-import { SettlementDetailPagination } from "./settlement-detail-pagination";
 
 interface SettlementDetailTableProps {
   transactions: SettlementDetailTransaction[];
@@ -38,6 +38,7 @@ export function SettlementDetailTable({
     data: transactions,
     columns,
     getRowId: (row) => row.id,
+    manualFiltering: true,
   });
 
   const handleDownloadAll = useCallback(() => {
@@ -103,8 +104,16 @@ export function SettlementDetailTable({
         <div className="overflow-hidden rounded-md border">
           <DataTable table={table} columns={columns} onRowClick={onViewDetail} />
         </div>
-        <div className="flex justify-center">
-          <SettlementDetailPagination table={table} />
+        <div className="border-t px-4 py-4">
+          <DataTablePagination
+            table={table}
+            leftSlot={
+              <Button variant="outline" size="sm" onClick={handleDownloadAll}>
+                <Download className="mr-2 h-4 w-4" />
+                엑셀 다운로드
+              </Button>
+            }
+          />
         </div>
       </CardContent>
     </Card>

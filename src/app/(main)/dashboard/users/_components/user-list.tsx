@@ -50,6 +50,7 @@ const mockUsers: User[] = [
     lastAccessDate: "2024-01-13",
     joinDate: "2023-03-01",
   },
+  // TODO: category seceder 추가
 ];
 
 interface UserListProps {
@@ -74,7 +75,7 @@ export function UserList({ category }: UserListProps) {
 
   const columns = useMemo(() => getUserColumns(handleViewDetail), []);
 
-  const table = useDataTableInstance({
+  const { table } = useDataTableInstance({
     data,
     columns,
     getRowId: (row) => row.id,

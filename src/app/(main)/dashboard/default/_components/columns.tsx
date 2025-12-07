@@ -88,7 +88,7 @@ export const dashboardColumns: ColumnDef<z.infer<typeof sectionSchema>>[] = [
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          toast.promise(new Promise((resolve) => setTimeout(resolve, 1000)), {
+          toast.promise(Promise.resolve(), {
             loading: `Saving ${row.original.header}`,
             success: "Done",
             error: "Error",
@@ -114,7 +114,7 @@ export const dashboardColumns: ColumnDef<z.infer<typeof sectionSchema>>[] = [
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          toast.promise(new Promise((resolve) => setTimeout(resolve, 1000)), {
+          toast.promise(Promise.resolve(), {
             loading: `Saving ${row.original.header}`,
             success: "Done",
             error: "Error",

@@ -8,16 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 
-const AGE_COLORS = {
-  "10대": "#FFB6C1",
-  "20대": "#87CEEB",
-  "30대": "#98D8C8",
-  "40대": "#F7DC6F",
-  "50대": "#BB8FCE",
-  "60대": "#85C1E2",
-  "70대+": "#F8B88B",
-};
-
 const ageData = [
   { age: "10대", count: 120 },
   { age: "20대", count: 450 },
@@ -178,7 +168,9 @@ interface AgeTabProps {
   selectedDate?: Date;
 }
 
-export function AgeTab({ selectedDate: _selectedDate }: AgeTabProps) {
+export function AgeTab(_props: AgeTabProps) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _ = _props;
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   return (
@@ -197,7 +189,7 @@ export function AgeTab({ selectedDate: _selectedDate }: AgeTabProps) {
                 label={{ position: "right", formatter: (value: number) => `${value}명` }}
               >
                 {ageData.map((entry) => (
-                  <Cell key={`cell-${entry.age}`} fill={AGE_COLORS[entry.age as keyof typeof AGE_COLORS]} />
+                  <Cell key={`cell-${entry.age}`} fill="var(--chart-1)" />
                 ))}
               </Bar>
             </BarChart>
@@ -232,17 +224,22 @@ export function AgeTab({ selectedDate: _selectedDate }: AgeTabProps) {
                 </div>
               </DialogContent>
             </Dialog>
-            <Table>
-              <TableBody>
-                {topItems.map((item) => (
-                  <TableRow key={item.rank}>
-                    <TableCell className="w-12 text-center text-sm">{item.rank}</TableCell>
-                    <TableCell className="text-sm">{item.name}</TableCell>
-                    <TableCell className="text-right text-sm">{item.count.toLocaleString()}건</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <div className="space-y-2">
+              {topItems.map((item) => (
+                <div
+                  key={item.rank}
+                  className="bg-card border-border rounded-lg border p-3 shadow-md transition-shadow hover:shadow-lg"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold">{item.rank}위</span>
+                      <span className="text-sm">{item.name}</span>
+                    </div>
+                    <span className="text-sm font-semibold">{item.count.toLocaleString()}건</span>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -255,19 +252,19 @@ export function AgeTab({ selectedDate: _selectedDate }: AgeTabProps) {
           <Tooltip
             formatter={(value: number) => `${value}건`}
             contentStyle={{
-              backgroundColor: "rgba(255, 255, 255, 0.95)",
-              border: "1px solid #ccc",
-              borderRadius: "4px",
+              backgroundColor: "hsl(var(--card))",
+              border: "1px solid hsl(var(--border))",
+              borderRadius: "0.5rem",
             }}
           />
           <Legend />
-          <Bar dataKey="10대" stackId="a" fill={AGE_COLORS["10대"]} />
-          <Bar dataKey="20대" stackId="a" fill={AGE_COLORS["20대"]} />
-          <Bar dataKey="30대" stackId="a" fill={AGE_COLORS["30대"]} />
-          <Bar dataKey="40대" stackId="a" fill={AGE_COLORS["40대"]} />
-          <Bar dataKey="50대" stackId="a" fill={AGE_COLORS["50대"]} />
-          <Bar dataKey="60대" stackId="a" fill={AGE_COLORS["60대"]} />
-          <Bar dataKey="70대+" stackId="a" fill={AGE_COLORS["70대+"]} />
+          <Bar dataKey="10대" stackId="a" fill="var(--chart-1)" />
+          <Bar dataKey="20대" stackId="a" fill="var(--chart-1)" />
+          <Bar dataKey="30대" stackId="a" fill="var(--chart-1)" />
+          <Bar dataKey="40대" stackId="a" fill="var(--chart-1)" />
+          <Bar dataKey="50대" stackId="a" fill="var(--chart-1)" />
+          <Bar dataKey="60대" stackId="a" fill="var(--chart-1)" />
+          <Bar dataKey="70대+" stackId="a" fill="var(--chart-1)" />
         </BarChart>
       </ResponsiveContainer>
     </div>

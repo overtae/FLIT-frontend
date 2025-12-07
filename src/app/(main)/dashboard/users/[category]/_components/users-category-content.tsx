@@ -67,7 +67,7 @@ export function UsersCategoryContent({ category, initialVerified }: UsersCategor
         </Tabs>
       )}
       {category !== "seceder" && <UserOverview category={category} />}
-      {category !== "all" && category !== "seceder" && <UserList category={category} />}
+      {category !== "all" && <UserList category={category} />}
     </div>
   );
 }

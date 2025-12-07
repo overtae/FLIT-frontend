@@ -4,7 +4,8 @@ import { useMemo, useState } from "react";
 
 import { Search } from "lucide-react";
 
-import { DataTable } from "@/components/data-table/data-table";
+import { DataTablePagination } from "@/components/data-table/data-table-pagination";
+import { DataTableWithSelection } from "@/components/data-table/data-table-with-selection";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useDataTableInstance } from "@/hooks/use-data-table-instance";
@@ -13,7 +14,6 @@ import { mockTransactions } from "./mock-transactions";
 import { createTransactionColumns } from "./transaction-columns";
 import { TransactionDetailModal } from "./transaction-detail-modal";
 import { TransactionFilter } from "./transaction-filter";
-import { TransactionPagination } from "./transaction-pagination";
 import { Transaction, PaymentMethod, TransactionType } from "./transaction-types";
 
 interface TransactionListProps {
@@ -129,10 +129,11 @@ export function TransactionList({ category, subCategory }: TransactionListProps)
     [category],
   );
 
-  const table = useDataTableInstance({
+  const { table, rowSelection } = useDataTableInstance({
     data: filteredData,
     columns,
     getRowId: (row) => row.id,
+    manualFiltering: true,
   });
 
   const handleDownloadAll = () => {
@@ -186,18 +187,22 @@ export function TransactionList({ category, subCategory }: TransactionListProps)
           </div>
         </div>
         <div className="flex-1 rounded-md">
-          <DataTable table={table} columns={columns} />
+          <DataTableWithSelection table={table} rowSelection={rowSelection} />
         </div>
-        <div className="flex items-center justify-between border-t px-4 py-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleDownloadAll}
-            disabled={table.getFilteredSelectedRowModel().rows.length === 0}
-          >
-            전체 다운로드
-          </Button>
-          <TransactionPagination table={table} />
+        <div className="border-t px-4 py-4">
+          <DataTablePagination
+            table={table}
+            leftSlot={
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleDownloadAll}
+                disabled={table.getFilteredSelectedRowModel().rows.length === 0}
+              >
+                전체 다운로드
+              </Button>
+            }
+          />
         </div>
       </div>
 

@@ -41,7 +41,9 @@ const yearlyComparisonData = [
   { month: "6월", "2020": 130000000, "2021": 150000000, "2022": 170000000, "2023": 190000000 },
 ];
 
-export function YearlySalesChart({ selectedCategory: _selectedCategory }: YearlySalesChartProps) {
+export function YearlySalesChart(_props: YearlySalesChartProps) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _ = _props;
   const [selectedYear, setSelectedYear] = useState("2024");
   const [selectedYearRange, setSelectedYearRange] = useState(["2020", "2023"]);
   const [isQuarterModalOpen, setIsQuarterModalOpen] = useState(false);
@@ -76,9 +78,9 @@ export function YearlySalesChart({ selectedCategory: _selectedCategory }: Yearly
             <YAxis />
             <Tooltip formatter={(value: number) => `${value.toLocaleString()}원`} />
             <Legend />
-            <Bar dataKey="card" stackId="a" fill="#8884d8" name="카드" />
-            <Bar dataKey="pos" stackId="a" fill="#82ca9d" name="현장결제" />
-            <Bar dataKey="transfer" stackId="a" fill="#ffc658" name="계좌이체" />
+            <Bar dataKey="card" stackId="a" fill="var(--chart-1)" name="카드" />
+            <Bar dataKey="pos" stackId="a" fill="var(--chart-2)" name="현장결제" />
+            <Bar dataKey="transfer" stackId="a" fill="var(--chart-3)" name="계좌이체" />
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -104,10 +106,10 @@ export function YearlySalesChart({ selectedCategory: _selectedCategory }: Yearly
             <YAxis />
             <Tooltip formatter={(value: number) => `${value.toLocaleString()}원`} />
             <Legend />
-            <Line type="monotone" dataKey="2020" stroke="#8884d8" name="2020" />
-            <Line type="monotone" dataKey="2021" stroke="#82ca9d" name="2021" />
-            <Line type="monotone" dataKey="2022" stroke="#ffc658" name="2022" />
-            <Line type="monotone" dataKey="2023" stroke="#ff7300" name="2023" />
+            <Line type="monotone" dataKey="2020" stroke="var(--muted-foreground)" name="2020" strokeWidth={1} />
+            <Line type="monotone" dataKey="2021" stroke="var(--muted-foreground)" name="2021" strokeWidth={1} />
+            <Line type="monotone" dataKey="2022" stroke="var(--muted-foreground)" name="2022" strokeWidth={1} />
+            <Line type="monotone" dataKey="2023" stroke="var(--chart-1)" name="2023" strokeWidth={3} />
           </LineChart>
         </ResponsiveContainer>
       </div>

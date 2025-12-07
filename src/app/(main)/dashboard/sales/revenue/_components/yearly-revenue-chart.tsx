@@ -3,7 +3,18 @@
 import { useState } from "react";
 
 import { ChevronRight } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  Cell,
+} from "recharts";
 
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -26,8 +37,75 @@ const yearlyComparisonData = [
   { month: "6월", "2020": 130000000, "2021": 150000000, "2022": 170000000, "2023": 190000000 },
 ];
 
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: Array<{
+    value?: number;
+    dataKey?: string;
+  }>;
+  label?: string;
+}
+
+function CustomBarTooltip({ active, payload, label }: CustomTooltipProps) {
+  if (active && payload && payload.length > 0) {
+    return (
+      <div className="bg-card border-border rounded-lg border p-2 shadow-lg">
+        <p className="font-semibold">{label}</p>
+        <p className="text-sm">{payload[0].value?.toLocaleString()}원</p>
+      </div>
+    );
+  }
+  return null;
+}
+
+function CustomLineTooltip({ active, payload, label }: CustomTooltipProps) {
+  if (active && payload && payload.length > 0) {
+    return (
+      <div className="bg-card border-border rounded-lg border p-2 shadow-lg">
+        <p className="font-semibold">{label}</p>
+        {payload.map((entry) => (
+          <p
+            key={entry.dataKey}
+            className="text-sm"
+            style={{ color: entry.dataKey === "2023" ? "var(--chart-1)" : undefined }}
+          >
+            {entry.dataKey}: {entry.value?.toLocaleString()}원
+          </p>
+        ))}
+      </div>
+    );
+  }
+  return null;
+}
+
+interface CustomLabelProps {
+  x?: number;
+  y?: number;
+  value?: number;
+  onClick?: () => void;
+}
+
+function CustomLabel({ x, y, value, onClick }: CustomLabelProps) {
+  if (x === undefined || y === undefined || value === undefined) return null;
+
+  return (
+    <g>
+      <foreignObject x={x - 100} y={y - 50} width="200" height="40">
+        <div className="flex items-center justify-center">
+          <button
+            onClick={onClick}
+            className="bg-primary text-primary-foreground cursor-pointer rounded-lg px-3 py-1 text-sm font-semibold shadow-lg transition-opacity hover:opacity-90"
+          >
+            {value.toLocaleString()}원
+          </button>
+        </div>
+      </foreignObject>
+    </g>
+  );
+}
+
 export function YearlyRevenueChart() {
-  const [selectedYear, setSelectedYear] = useState("2024");
+  const [selectedYear, setSelectedYear] = useState("2023");
   const [selectedYearRange, setSelectedYearRange] = useState("2020-2023");
   const [isYearlyModalOpen, setIsYearlyModalOpen] = useState(false);
 
@@ -59,13 +137,16 @@ export function YearlyRevenueChart() {
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="quarter" />
             <YAxis />
-            <Tooltip formatter={(value: number) => `${value.toLocaleString()}원`} />
+            <Tooltip content={<CustomBarTooltip />} />
             <Bar
               dataKey="amount"
-              fill="hsl(var(--chart-2))"
               radius={[4, 4, 0, 0]}
               label={{ position: "top", formatter: (value: number) => `${value.toLocaleString()}원` }}
-            />
+            >
+              {quarterlyData.map((entry) => (
+                <Cell key={`cell-${entry.quarter}`} fill="var(--chart-2)" />
+              ))}
+            </Bar>
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -89,18 +170,37 @@ export function YearlyRevenueChart() {
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="month" />
             <YAxis />
-            <Tooltip formatter={(value: number) => `${value.toLocaleString()}원`} />
-            <Line type="monotone" dataKey="2020" stroke="#8884d8" name="2020" />
-            <Line type="monotone" dataKey="2021" stroke="#82ca9d" name="2021" />
-            <Line type="monotone" dataKey="2022" stroke="#ffc658" name="2022" />
+            <Tooltip content={<CustomLineTooltip />} />
+            <Line type="monotone" dataKey="2020" stroke="var(--muted-foreground)" name="2020" strokeWidth={1} />
+            <Line type="monotone" dataKey="2021" stroke="var(--muted-foreground)" name="2021" strokeWidth={1} />
+            <Line type="monotone" dataKey="2022" stroke="var(--muted-foreground)" name="2022" strokeWidth={1} />
             <Line
               type="monotone"
               dataKey="2023"
-              stroke="hsl(var(--primary))"
-              strokeWidth={2}
+              stroke="var(--chart-1)"
+              strokeWidth={3}
               name="2023"
-              dot={{ r: 5, fill: "hsl(var(--primary))" }}
-              label={{ position: "right", value: "1,361,471,840", fill: "hsl(var(--primary))", fontSize: 12 }}
+              dot={{ r: 6, fill: "var(--chart-1)", cursor: "pointer" }}
+              activeDot={{
+                r: 8,
+                fill: "var(--chart-1)",
+                cursor: "pointer",
+                onClick: () => setIsYearlyModalOpen(true),
+              }}
+              label={(props: { x?: number; y?: number; value?: number }) => {
+                const lastData = yearlyComparisonData[yearlyComparisonData.length - 1];
+                if (props.value === lastData["2023"]) {
+                  return (
+                    <CustomLabel
+                      x={props.x}
+                      y={props.y}
+                      value={props.value}
+                      onClick={() => setIsYearlyModalOpen(true)}
+                    />
+                  );
+                }
+                return null;
+              }}
             />
           </LineChart>
         </ResponsiveContainer>

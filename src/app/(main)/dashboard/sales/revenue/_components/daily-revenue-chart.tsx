@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { ChevronDown } from "lucide-react";
 import { DateRange } from "react-day-picker";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 import { Button } from "@/components/ui/button";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
@@ -43,14 +43,10 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
     const secondValue = typeof secondPayload.value === "number" ? secondPayload.value : 0;
 
     return (
-      <div className="space-y-2">
-        <div className="border-primary bg-primary text-primary-foreground rounded-lg border p-3 shadow-lg">
-          <p className="mb-1 font-semibold">{time}시</p>
-          <p className="text-sm">This Day: {firstValue.toLocaleString()}원</p>
-        </div>
-        <div className="border-primary bg-primary text-primary-foreground rounded-lg border p-3 shadow-lg">
-          <p className="text-sm">Last Day: {secondValue.toLocaleString()}원</p>
-        </div>
+      <div className="bg-primary text-primary-foreground rounded-lg p-3 shadow-lg">
+        <p className="mb-1 font-semibold">{time}시</p>
+        <p className="text-sm">This Week : {firstValue.toLocaleString()}원</p>
+        <p className="text-sm">Last Week : {secondValue.toLocaleString()}원</p>
       </div>
     );
   }
@@ -111,28 +107,38 @@ export function DailyRevenueChart({ paymentMethod, onPaymentMethodChange }: Dail
       </div>
 
       <ResponsiveContainer width="100%" height={400}>
-        <LineChart data={dailyData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+        <AreaChart data={dailyData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+          <defs>
+            <linearGradient id="colorThisDay" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="var(--chart-1)" stopOpacity={0.3} />
+              <stop offset="95%" stopColor="var(--chart-1)" stopOpacity={0} />
+            </linearGradient>
+            <linearGradient id="colorLastDay" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="var(--muted-foreground)" stopOpacity={0.2} />
+              <stop offset="95%" stopColor="var(--muted-foreground)" stopOpacity={0} />
+            </linearGradient>
+          </defs>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="time" />
           <YAxis />
           <Tooltip content={<CustomTooltip />} />
-          <Line
+          <Area
             type="monotone"
             dataKey="thisDay"
-            stroke="hsl(var(--primary))"
+            stroke="var(--chart-1)"
             strokeWidth={3}
-            dot={{ r: 5, fill: "hsl(var(--primary))" }}
+            fill="url(#colorThisDay)"
             name="This Day"
           />
-          <Line
+          <Area
             type="monotone"
             dataKey="lastDay"
-            stroke="hsl(var(--muted-foreground))"
+            stroke="var(--muted-foreground)"
             strokeWidth={1}
-            dot={{ r: 3, fill: "hsl(var(--muted-foreground))" }}
+            fill="url(#colorLastDay)"
             name="Last Day"
           />
-        </LineChart>
+        </AreaChart>
       </ResponsiveContainer>
     </div>
   );

@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { ChevronDown } from "lucide-react";
 import { DateRange } from "react-day-picker";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 import { Button } from "@/components/ui/button";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
@@ -45,14 +45,10 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
     const secondValue = typeof secondPayload.value === "number" ? secondPayload.value : 0;
 
     return (
-      <div className="space-y-2">
-        <div className="border-primary bg-primary text-primary-foreground rounded-lg border p-3 shadow-lg">
-          <p className="mb-1 font-semibold">{day}</p>
-          <p className="text-sm">This Week: {firstValue.toLocaleString()}원</p>
-        </div>
-        <div className="border-primary bg-primary text-primary-foreground rounded-lg border p-3 shadow-lg">
-          <p className="text-sm">Last Week: {secondValue.toLocaleString()}원</p>
-        </div>
+      <div className="bg-primary text-primary-foreground rounded-lg p-3 shadow-lg">
+        <p className="mb-1 font-semibold">{day}</p>
+        <p className="text-sm">This Week : {firstValue.toLocaleString()}원</p>
+        <p className="text-sm">Last Week : {secondValue.toLocaleString()}원</p>
       </div>
     );
   }
@@ -114,28 +110,38 @@ export function WeeklyRevenueChart({ paymentMethod, onPaymentMethodChange }: Wee
       </div>
 
       <ResponsiveContainer width="100%" height={400}>
-        <LineChart data={weeklyData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+        <AreaChart data={weeklyData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+          <defs>
+            <linearGradient id="colorThisWeek" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="var(--chart-1)" stopOpacity={0.3} />
+              <stop offset="95%" stopColor="var(--chart-1)" stopOpacity={0} />
+            </linearGradient>
+            <linearGradient id="colorLastWeek" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="var(--muted-foreground)" stopOpacity={0.2} />
+              <stop offset="95%" stopColor="var(--muted-foreground)" stopOpacity={0} />
+            </linearGradient>
+          </defs>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="day" />
           <YAxis />
           <Tooltip content={<CustomTooltip />} />
-          <Line
+          <Area
             type="monotone"
             dataKey="thisWeek"
-            stroke="hsl(var(--primary))"
+            stroke="var(--chart-1)"
             strokeWidth={3}
-            dot={{ r: 5, fill: "hsl(var(--primary))" }}
+            fill="url(#colorThisWeek)"
             name="This Week"
           />
-          <Line
+          <Area
             type="monotone"
             dataKey="lastWeek"
-            stroke="hsl(var(--muted-foreground))"
+            stroke="var(--muted-foreground)"
             strokeWidth={1}
-            dot={{ r: 3, fill: "hsl(var(--muted-foreground))" }}
+            fill="url(#colorLastWeek)"
             name="Last Week"
           />
-        </LineChart>
+        </AreaChart>
       </ResponsiveContainer>
     </div>
   );

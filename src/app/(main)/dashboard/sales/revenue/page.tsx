@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { DailyRevenueChart } from "./_components/daily-revenue-chart";
-import { FilterModal } from "./_components/filter-modal";
+import { FilterPanel } from "./_components/filter-panel";
 import { MonthlyRevenueChart } from "./_components/monthly-revenue-chart";
 import { RevenueDashboard } from "./_components/revenue-dashboard";
 import { RevenueDetailTable } from "./_components/revenue-detail-table";
@@ -20,8 +20,8 @@ export default function RevenuePage() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [activePeriodTab, setActivePeriodTab] = useState<"daily" | "weekly" | "monthly" | "yearly">("daily");
   const [paymentMethod, setPaymentMethod] = useState<"total" | "card" | "pos" | "transfer">("total");
-  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
-  const [activeDetailTab, setActiveDetailTab] = useState<"all" | "shop" | "florist" | "order">("florist");
+  const [activeDetailTab, setActiveDetailTab] = useState<"all" | "shop" | "florist" | "order">("all");
+  const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
 
   return (
     <div className="space-y-6">
@@ -68,15 +68,14 @@ export default function RevenuePage() {
               <Input placeholder="검색..." className="w-[200px] rounded-full pl-8" />
               <Search className="text-muted-foreground absolute top-2.5 left-2 h-4 w-4" />
             </div>
-            <Button variant="outline" size="icon" onClick={() => setIsFilterModalOpen(true)}>
+            <Button variant="outline" size="icon" onClick={() => setIsFilterPanelOpen(!isFilterPanelOpen)}>
               <Filter className="h-4 w-4" />
             </Button>
           </div>
         </div>
+        <FilterPanel open={isFilterPanelOpen} onOpenChange={setIsFilterPanelOpen} />
         <RevenueDetailTable />
       </div>
-
-      <FilterModal open={isFilterModalOpen} onOpenChange={setIsFilterModalOpen} />
     </div>
   );
 }

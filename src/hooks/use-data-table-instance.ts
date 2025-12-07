@@ -13,7 +13,6 @@ import {
   getSortedRowModel,
   useReactTable,
   RowSelectionState,
-  OnChangeFn,
   PaginationState,
   Table,
 } from "@tanstack/react-table";
@@ -25,8 +24,12 @@ type UseDataTableInstanceProps<TData, TValue> = {
   defaultPageIndex?: number;
   defaultPageSize?: number;
   getRowId?: (row: TData, index: number) => string;
-  rowSelection?: RowSelectionState;
-  onRowSelectionChange?: OnChangeFn<RowSelectionState>;
+  manualFiltering?: boolean;
+};
+
+type UseDataTableInstanceReturn<TData> = {
+  table: Table<TData>;
+  rowSelection: RowSelectionState;
 };
 
 export function useDataTableInstance<TData, TValue>({
@@ -36,10 +39,9 @@ export function useDataTableInstance<TData, TValue>({
   defaultPageIndex = 0,
   defaultPageSize = 10,
   getRowId,
-  rowSelection: controlledRowSelection,
-  onRowSelectionChange: controlledOnRowSelectionChange,
-}: UseDataTableInstanceProps<TData, TValue>): Table<TData> {
-  const [internalRowSelection, setInternalRowSelection] = React.useState<RowSelectionState>({});
+  manualFiltering = false,
+}: UseDataTableInstanceProps<TData, TValue>): UseDataTableInstanceReturn<TData> {
+  const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({});
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -48,20 +50,22 @@ export function useDataTableInstance<TData, TValue>({
     pageSize: defaultPageSize,
   });
 
-  const rowSelection = controlledRowSelection ?? internalRowSelection;
-
-  const handleRowSelectionChange: OnChangeFn<RowSelectionState> = React.useCallback(
-    (updater) => {
-      if (controlledOnRowSelectionChange) {
-        controlledOnRowSelectionChange(updater);
-      } else {
-        setInternalRowSelection((prev) => {
-          return typeof updater === "function" ? updater(prev) : updater;
-        });
+  const memoizedGetRowId = React.useCallback(
+    (row: TData, index: number) => {
+      if (getRowId) {
+        return getRowId(row, index);
       }
+      const rowWithId = row as { id?: string | number };
+      return rowWithId.id?.toString() ?? index.toString();
     },
-    [controlledOnRowSelectionChange],
+    [getRowId],
   );
+
+  React.useEffect(() => {
+    if (data.length === 0 && pagination.pageIndex > 0) {
+      setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+    }
+  }, [data.length, pagination.pageIndex]);
 
   const table = useReactTable({
     data,
@@ -74,25 +78,21 @@ export function useDataTableInstance<TData, TValue>({
       pagination,
     },
     enableRowSelection,
-    getRowId: (row, index) => {
-      if (getRowId) {
-        return getRowId(row, index);
-      }
-      const rowWithId = row as { id?: string | number };
-      return rowWithId.id?.toString() ?? index.toString();
-    },
-    onRowSelectionChange: handleRowSelectionChange,
+    manualFiltering,
+    autoResetPageIndex: false,
+    getRowId: memoizedGetRowId,
+    onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
     onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
+    getFilteredRowModel: manualFiltering ? undefined : getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    getFacetedRowModel: getFacetedRowModel(),
-    getFacetedUniqueValues: getFacetedUniqueValues(),
+    getFacetedRowModel: manualFiltering ? undefined : getFacetedRowModel(),
+    getFacetedUniqueValues: manualFiltering ? undefined : getFacetedUniqueValues(),
   });
 
-  return table;
+  return { table, rowSelection };
 }

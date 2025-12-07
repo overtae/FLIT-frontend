@@ -71,16 +71,15 @@ function CustomTooltip({
     const xAxisValue = payloadData?.[xAxisKey];
 
     return (
-      <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-lg">
+      <div className="bg-primary text-primary-foreground rounded-lg p-3 shadow-lg">
         <p className="mb-2 font-semibold">{String(xAxisValue)}</p>
         {payload.map((pld) => {
           const entryName = String(pld.name ?? "");
           const entryValue = Array.isArray(pld.value) ? pld.value[0] : typeof pld.value === "number" ? pld.value : 0;
-          const entryColor = pld.color;
           const periodLabel = getPeriodLabel(entryName, period);
 
           return (
-            <p key={entryName || String(entryValue)} className="text-sm" style={{ color: entryColor }}>
+            <p key={entryName || String(entryValue)} className="text-sm">
               {periodLabel}: {entryValue}%
             </p>
           );
@@ -91,7 +90,7 @@ function CustomTooltip({
   return null;
 }
 
-export function CvrChart({ period, selectedDate: _selectedDate }: CvrChartProps) {
+export function CvrChart({ period }: CvrChartProps) {
   const getData = () => {
     switch (period) {
       case "weekly":
@@ -134,14 +133,15 @@ export function CvrChart({ period, selectedDate: _selectedDate }: CvrChartProps)
         <Line
           type="monotone"
           dataKey={period === "weekly" ? "thisWeek" : period === "monthly" ? "thisMonth" : "thisYear"}
-          stroke="#8884d8"
+          stroke="var(--chart-1)"
           name={period === "weekly" ? "This Week" : period === "monthly" ? "This Month" : "This Year"}
           strokeWidth={2}
         />
         <Line
           type="monotone"
           dataKey={period === "weekly" ? "lastWeek" : period === "monthly" ? "lastMonth" : "lastYear"}
-          stroke="#82ca9d"
+          stroke="var(--muted-foreground)"
+          strokeDasharray="5 5"
           name={period === "weekly" ? "Last Week" : period === "monthly" ? "Last Month" : "Last Year"}
           strokeWidth={2}
         />

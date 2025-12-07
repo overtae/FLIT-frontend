@@ -1,18 +1,31 @@
 "use client";
 
+import { useRef, useState } from "react";
+
+import { useRouter } from "next/navigation";
+
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Camera } from "lucide-react";
+import { ChevronLeft, Copy } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { rootUser } from "@/data/users";
-import { getInitials } from "@/lib/utils";
+
+import { AddressSearch } from "./_components/address-search";
+import { ImageUploader } from "./_components/image-uploader";
 
 const profileFormSchema = z.object({
   name: z.string().min(1, "이름을 입력해주세요."),
@@ -23,200 +36,257 @@ const profileFormSchema = z.object({
   address: z.string().optional(),
   detailAddress: z.string().optional(),
   sns: z.string().optional(),
+  profileImage: z.instanceof(File).optional().nullable(),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
+const levels = ["Master", "Admin", "User", "Guest"];
+
 export default function ProfilePage() {
+  const router = useRouter();
+  const [profileImage, setProfileImage] = useState<File | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const detailAddressRef = useRef<HTMLInputElement>(null);
+
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
-      name: rootUser.name,
-      nickname: rootUser.email.split("@")[0],
-      phone: "",
-      level: "",
-      code: "",
+      name: "전엄지",
+      nickname: "Admin",
+      phone: "010.6536.0429",
+      level: "Master",
+      code: "maaaa000",
       address: "",
       detailAddress: "",
-      sns: "",
+      sns: "instagram / dearflora",
     },
   });
 
   const onSubmit = async (data: ProfileFormValues) => {
     toast.success("프로필이 업데이트되었습니다.");
-    console.log(data);
+    console.log({ ...data, profileImage });
+  };
+
+  const handleDelete = () => {
+    toast.success("계정이 삭제되었습니다.");
+    setIsDeleteDialogOpen(false);
+  };
+
+  const handleCopyCode = () => {
+    const code = form.getValues("code");
+    if (code) {
+      navigator.clipboard.writeText(code);
+      toast.success("코드가 복사되었습니다.");
+    }
+  };
+
+  const formatPhone = (value: string) => {
+    const numbers = value.replace(/\D/g, "");
+    if (numbers.length <= 3) return numbers;
+    if (numbers.length <= 7) return `${numbers.slice(0, 3)}.${numbers.slice(3)}`;
+    return `${numbers.slice(0, 3)}.${numbers.slice(3, 7)}.${numbers.slice(7, 11)}`;
   };
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">사용자 정보 수정</h1>
-        <p className="text-muted-foreground mt-2">프로필 정보를 수정하세요</p>
+      <div className="flex items-center gap-2">
+        <Button variant="ghost" onClick={() => router.back()} className="rounded-full" aria-label="Back">
+          <ChevronLeft width={24} height={24} />
+        </Button>
+        <h1 className="text-xl font-bold">정보수정</h1>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>프로필 사진</CardTitle>
-          <CardDescription>프로필 사진을 변경하세요</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-4">
-            <div className="relative">
-              <Avatar className="h-24 w-24">
-                <AvatarImage src={rootUser.avatar} alt={rootUser.name} />
-                <AvatarFallback className="text-lg">{getInitials(rootUser.name)}</AvatarFallback>
-              </Avatar>
-              <Button size="icon" variant="secondary" className="absolute right-0 bottom-0 size-8 rounded-full">
-                <Camera className="size-4" />
-              </Button>
-            </div>
-            <div>
-              <Button variant="outline">사진 변경</Button>
-              <p className="text-muted-foreground mt-2 text-sm">JPG, PNG 형식만 지원됩니다. (최대 5MB)</p>
-            </div>
+      <div className="mb-12 flex justify-center">
+        <ImageUploader
+          value={rootUser.avatar}
+          onChange={(file) => {
+            setProfileImage(file);
+          }}
+        />
+      </div>
+
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 px-24">
+          <div className="grid grid-cols-1 gap-x-12 gap-y-6 md:grid-cols-2">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Name</FormLabel>
+                  <FormControl>
+                    <Input {...field} readOnly className="border-0 border-b bg-transparent p-0 shadow-none" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="level"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Level</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger className="border-0 border-b bg-transparent p-0 shadow-none">
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {levels.map((level) => (
+                        <SelectItem key={level} value={level}>
+                          {level}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="nickname"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nickname</FormLabel>
+                  <FormControl>
+                    <Input {...field} className="border-0 border-b bg-transparent p-0 shadow-none" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="code"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Code</FormLabel>
+                  <FormControl>
+                    <div className="flex items-center gap-2">
+                      <Input {...field} readOnly className="border-0 border-b bg-transparent p-0 shadow-none" />
+                      <Button type="button" variant="ghost" size="icon" onClick={handleCopyCode} className="h-6 w-6">
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Phone</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      onChange={(e) => {
+                        const formatted = formatPhone(e.target.value);
+                        field.onChange(formatted);
+                      }}
+                      className="border-0 border-b bg-transparent p-0 shadow-none"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="address"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Address</FormLabel>
+                  <FormControl>
+                    <AddressSearch
+                      value={field.value ?? ""}
+                      onChange={field.onChange}
+                      onDetailFocus={() => {
+                        detailAddressRef.current?.focus();
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="sns"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>SNS</FormLabel>
+                  <FormControl>
+                    <Input {...field} className="border-0 border-b bg-transparent p-0 shadow-none" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="detailAddress"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Detail</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      ref={detailAddressRef}
+                      className="border-0 border-b bg-transparent p-0 shadow-none"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </div>
-        </CardContent>
-      </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>기본 정보</CardTitle>
-          <CardDescription>기본 정보를 수정하세요</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <div className="grid gap-6 md:grid-cols-2">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>이름</FormLabel>
-                      <FormControl>
-                        <Input placeholder="이름을 입력하세요" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+          <div className="flex justify-end gap-4">
+            <Button
+              type="button"
+              variant="outline"
+              className="border-primary text-primary hover:text-primary rounded-full"
+              onClick={() => setIsDeleteDialogOpen(true)}
+            >
+              Delete
+            </Button>
+            <Button type="submit" className="rounded-full">
+              Save
+            </Button>
+          </div>
+        </form>
+      </Form>
 
-                <FormField
-                  control={form.control}
-                  name="nickname"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>닉네임 (ID)</FormLabel>
-                      <FormControl>
-                        <Input placeholder="닉네임을 입력하세요" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="phone"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>전화번호</FormLabel>
-                      <FormControl>
-                        <Input placeholder="010-0000-0000" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="level"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>레벨</FormLabel>
-                      <FormControl>
-                        <Input placeholder="레벨을 입력하세요" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="code"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>코드</FormLabel>
-                      <FormControl>
-                        <Input placeholder="코드를 입력하세요" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="sns"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>SNS</FormLabel>
-                      <FormControl>
-                        <Input placeholder="SNS 계정을 입력하세요" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="address"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>주소</FormLabel>
-                      <FormControl>
-                        <div className="flex gap-2">
-                          <Input placeholder="주소를 검색하세요" {...field} />
-                          <Button type="button" variant="outline">
-                            주소 검색
-                          </Button>
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="detailAddress"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>상세 주소</FormLabel>
-                      <FormControl>
-                        <Input placeholder="상세 주소를 입력하세요" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="flex justify-end gap-4">
-                <Button type="button" variant="outline">
-                  취소
-                </Button>
-                <Button type="submit">저장</Button>
-              </div>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>계정 삭제 확인</DialogTitle>
+            <DialogDescription>정말로 계정을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+              취소
+            </Button>
+            <Button variant="destructive" onClick={handleDelete}>
+              삭제
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

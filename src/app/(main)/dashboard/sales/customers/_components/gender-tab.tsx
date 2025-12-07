@@ -20,12 +20,6 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 
-const GENDER_COLORS = {
-  여성: "#F472B6",
-  남성: "#60A5FA",
-  기타: "#9CA3AF",
-};
-
 const genderData = [
   { name: "여성", value: 60 },
   { name: "남성", value: 35 },
@@ -74,7 +68,15 @@ interface GenderTabProps {
   selectedDate?: Date;
 }
 
-export function GenderTab({ selectedDate: _selectedDate }: GenderTabProps) {
+const GENDER_COLORS = {
+  여성: "var(--chart-1)",
+  남성: "var(--chart-2)",
+  기타: "var(--chart-2)",
+};
+
+export function GenderTab(_props: GenderTabProps) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _ = _props;
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   interface CustomLabelProps {
@@ -160,17 +162,22 @@ export function GenderTab({ selectedDate: _selectedDate }: GenderTabProps) {
                 </div>
               </DialogContent>
             </Dialog>
-            <Table>
-              <TableBody>
-                {topItems.map((item) => (
-                  <TableRow key={item.rank}>
-                    <TableCell className="w-12 text-center text-sm">{item.rank}</TableCell>
-                    <TableCell className="text-sm">{item.name}</TableCell>
-                    <TableCell className="text-right text-sm">{item.count.toLocaleString()}건</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <div className="space-y-2">
+              {topItems.map((item) => (
+                <div
+                  key={item.rank}
+                  className="bg-card border-border rounded-lg border p-3 shadow-md transition-shadow hover:shadow-lg"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold">{item.rank}위</span>
+                      <span className="text-sm">{item.name}</span>
+                    </div>
+                    <span className="text-sm font-semibold">{item.count.toLocaleString()}건</span>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -183,15 +190,15 @@ export function GenderTab({ selectedDate: _selectedDate }: GenderTabProps) {
           <Tooltip
             formatter={(value: number) => `${value}건`}
             contentStyle={{
-              backgroundColor: "rgba(255, 255, 255, 0.95)",
-              border: "1px solid #ccc",
-              borderRadius: "4px",
+              backgroundColor: "hsl(var(--card))",
+              border: "1px solid hsl(var(--border))",
+              borderRadius: "0.5rem",
             }}
           />
           <Legend />
           <Bar dataKey="여성" stackId="a" fill={GENDER_COLORS.여성} />
           <Bar dataKey="남성" stackId="a" fill={GENDER_COLORS.남성} />
-          <Bar dataKey="기타" stackId="a" fill={GENDER_COLORS.기타} />
+          <Bar dataKey="기타" stackId="a" fill={GENDER_COLORS.기타} fillOpacity={0.5} />
         </BarChart>
       </ResponsiveContainer>
     </div>

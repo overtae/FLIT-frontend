@@ -9,7 +9,7 @@ import { mockScheduleEvents } from "./_components/schedule-data";
 import { ScheduleTimeline } from "./_components/schedule-timeline";
 
 export default function Page() {
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date(2025, 11, 13));
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
 
   const datesWithEvents = useMemo(() => {
     return mockScheduleEvents.map((event) => event.date);

@@ -16,7 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { CategorySalesChart } from "./_components/category-sales-chart";
 import { DailySalesChart } from "./_components/daily-sales-chart";
-import { FilterModal } from "./_components/filter-modal";
+import { FilterPanel } from "./_components/filter-panel";
 import { MonthlySalesChart } from "./_components/monthly-sales-chart";
 import { SalesDetailTable } from "./_components/sales-detail-table";
 import { WeeklySalesChart } from "./_components/weekly-sales-chart";
@@ -129,15 +129,14 @@ export default function ProductsPage() {
               <Input placeholder="검색..." className="w-[200px] pl-8" />
               <Search className="text-muted-foreground absolute top-2.5 left-2 h-4 w-4" />
             </div>
-            <Button variant="outline" size="icon" onClick={() => setIsFilterModalOpen(true)}>
+            <Button variant="outline" size="icon" onClick={() => setIsFilterModalOpen(!isFilterModalOpen)}>
               <Filter className="h-4 w-4" />
             </Button>
           </div>
         </div>
+        <FilterPanel open={isFilterModalOpen} onOpenChange={setIsFilterModalOpen} />
         <SalesDetailTable />
       </div>
-
-      <FilterModal open={isFilterModalOpen} onOpenChange={setIsFilterModalOpen} />
     </div>
   );
 }

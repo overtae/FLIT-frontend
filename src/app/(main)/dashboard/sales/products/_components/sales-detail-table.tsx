@@ -1,12 +1,13 @@
 "use client";
 
-import { flexRender, type ColumnDef } from "@tanstack/react-table";
+import { useMemo } from "react";
+
 import { Download } from "lucide-react";
 
+import { productColumns } from "@/app/(main)/dashboard/sales/products/_components/columns.product";
 import { DataTablePagination } from "@/components/data-table/data-table-pagination";
+import { DataTableWithSelection } from "@/components/data-table/data-table-with-selection";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useDataTableInstance } from "@/hooks/use-data-table-instance";
 
 interface SalesDetail {
@@ -79,143 +80,38 @@ const mockSalesDetails: SalesDetail[] = [
   },
 ];
 
-function createColumns(): ColumnDef<SalesDetail>[] {
-  return [
-    {
-      id: "select",
-      header: ({ table }) => (
-        <div className="flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
-          <Checkbox
-            checked={table.getIsAllPageRowsSelected()}
-            onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-            aria-label="전체 선택"
-          />
-        </div>
-      ),
-      cell: ({ row }) => (
-        <div className="flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
-          <Checkbox
-            checked={row.getIsSelected()}
-            onCheckedChange={(value) => row.toggleSelected(!!value)}
-            aria-label="행 선택"
-          />
-        </div>
-      ),
-      enableSorting: false,
-      enableHiding: false,
-    },
-    {
-      accessorKey: "name",
-      header: "이름",
-    },
-    {
-      accessorKey: "nickname",
-      header: "닉네임(ID)",
-      cell: ({ row }) => `${row.original.nickname} (${row.original.nicknameId})`,
-    },
-    {
-      accessorKey: "phone",
-      header: "번호",
-    },
-    {
-      accessorKey: "address",
-      header: "주소",
-    },
-    {
-      accessorKey: "productName",
-      header: "상품명",
-    },
-    {
-      accessorKey: "amount",
-      header: "금액",
-      cell: ({ row }) => `${row.original.amount.toLocaleString()}원`,
-    },
-    {
-      accessorKey: "paymentMethod",
-      header: "결제방법",
-    },
-    {
-      id: "download",
-      header: "다운로드",
-      cell: () => {
-        return (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              // Download logic here
-            }}
-            className="h-8 w-8 p-0"
-          >
-            <Download className="h-4 w-4" />
-            <span className="sr-only">다운로드</span>
-          </Button>
-        );
-      },
-    },
-  ];
-}
-
 export function SalesDetailTable() {
-  const columns = createColumns();
-  const table = useDataTableInstance({
+  const columns = useMemo(() => productColumns, []);
+  const { table, rowSelection } = useDataTableInstance({
     data: mockSalesDetails,
     columns,
-    getRowId: (row) => row.id,
   });
 
   const handleDownloadAll = () => {
     const selectedRows = table.getFilteredSelectedRowModel().rows;
     if (selectedRows.length === 0) return;
-    // Download logic here
+    // TODO: Download logic here
   };
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <Button variant="outline" onClick={handleDownloadAll}>
-          <Download className="mr-2 h-4 w-4" />
-          전체 다운로드
-        </Button>
-      </div>
-
       <div className="overflow-hidden rounded-md border">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
-                    {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                  </TableHead>
-                ))}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center">
-                  No results.
-                </TableCell>
-              </TableRow>
-            ) : (
-              table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
-                  ))}
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+        <DataTableWithSelection table={table} rowSelection={rowSelection} />
       </div>
 
-      <div className="flex items-center justify-center">
-        <DataTablePagination table={table} />
-      </div>
+      <DataTablePagination
+        table={table}
+        leftSlot={
+          <Button
+            variant="outline"
+            onClick={handleDownloadAll}
+            disabled={table.getFilteredSelectedRowModel().rows.length === 0}
+          >
+            <Download className="mr-2 h-4 w-4" />
+            전체 다운로드
+          </Button>
+        }
+      />
     </div>
   );
 }

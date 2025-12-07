@@ -32,25 +32,21 @@ const productData = [
 ];
 
 const COLORS = [
-  "#8884d8",
-  "#82ca9d",
-  "#ffc658",
-  "#ff7300",
-  "#00ff00",
-  "#0088fe",
-  "#ff00ff",
-  "#ff0000",
-  "#00ffff",
-  "#ffff00",
-  "#ffa500",
-  "#800080",
+  "var(--chart-1)",
+  "var(--chart-2)",
+  "var(--chart-3)",
+  "var(--chart-4)",
+  "var(--chart-5)",
+  "var(--chart-1)",
+  "var(--chart-2)",
+  "var(--chart-3)",
+  "var(--chart-4)",
+  "var(--chart-5)",
+  "var(--chart-1)",
+  "var(--chart-2)",
 ];
 
-export function CategorySalesChart({
-  viewMode,
-  selectedDate: _selectedDate,
-  onCategoryClick,
-}: CategorySalesChartProps) {
+export function CategorySalesChart({ viewMode, onCategoryClick }: CategorySalesChartProps) {
   const data = viewMode === "group" ? groupData : productData;
 
   const handleBarClick = (data: { name: string }) => {
@@ -66,9 +62,9 @@ export function CategorySalesChart({
         <Tooltip
           formatter={(value: number) => `${value.toLocaleString()}원`}
           contentStyle={{
-            backgroundColor: "rgba(255, 255, 255, 0.95)",
-            border: "1px solid #ccc",
-            borderRadius: "4px",
+            backgroundColor: "hsl(var(--card))",
+            border: "1px solid hsl(var(--border))",
+            borderRadius: "0.5rem",
           }}
         />
         <Bar dataKey="revenue" onClick={handleBarClick} cursor="pointer">

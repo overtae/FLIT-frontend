@@ -8,8 +8,8 @@ import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subWeeks, isW
 import { Download, Search, Filter } from "lucide-react";
 
 import { mockSettlements } from "@/_mock/settlements";
-import { DataTable } from "@/components/data-table/data-table";
 import { DataTablePagination } from "@/components/data-table/data-table-pagination";
+import { DataTableWithSelection } from "@/components/data-table/data-table-with-selection";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -165,7 +165,7 @@ export function SettlementList() {
 
   const columns = useMemo(() => createSettlementColumns({ onDownload: handleDownload }), []);
 
-  const table = useDataTableInstance({
+  const { table, rowSelection } = useDataTableInstance({
     data: filteredData,
     columns,
     getRowId: (row) => row.id,
@@ -241,17 +241,23 @@ export function SettlementList() {
         </div>
       </div>
 
-      <div className="w-full">
+      <div className="w-full space-y-4">
         <div className="overflow-hidden rounded-md border">
-          <DataTable table={table} columns={columns} onRowClick={handleRowClick} />
+          <DataTableWithSelection table={table} rowSelection={rowSelection} onRowClick={handleRowClick} />
         </div>
-        <div className="mt-2 flex items-center justify-between space-x-2">
-          <Button variant="outline" size="sm" onClick={handleDownloadAll}>
-            <Download className="mr-2 h-4 w-4" />
-            전체 다운로드
-          </Button>
-          <DataTablePagination table={table} />
-        </div>
+        <DataTablePagination
+          table={table}
+          leftSlot={
+            <Button
+              variant="outline"
+              onClick={handleDownloadAll}
+              disabled={table.getFilteredSelectedRowModel().rows.length === 0}
+            >
+              <Download className="mr-2 h-4 w-4" />
+              전체 다운로드
+            </Button>
+          }
+        />
       </div>
     </div>
   );

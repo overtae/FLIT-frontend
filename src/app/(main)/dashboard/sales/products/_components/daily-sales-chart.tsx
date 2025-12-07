@@ -120,20 +120,34 @@ export function DailySalesChart({ selectedCategory, paymentMethod, onPaymentMeth
         <AreaChart data={dailyData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
           <defs>
             <linearGradient id="colorThisWeek" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8} />
-              <stop offset="95%" stopColor="#8884d8" stopOpacity={0} />
+              <stop offset="5%" stopColor="var(--chart-1)" stopOpacity={0.3} />
+              <stop offset="95%" stopColor="var(--chart-1)" stopOpacity={0} />
             </linearGradient>
             <linearGradient id="colorLastWeek" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#82ca9d" stopOpacity={0.8} />
-              <stop offset="95%" stopColor="#82ca9d" stopOpacity={0} />
+              <stop offset="5%" stopColor="var(--muted-foreground)" stopOpacity={0.2} />
+              <stop offset="95%" stopColor="var(--muted-foreground)" stopOpacity={0} />
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="date" />
           <YAxis />
           <Tooltip content={<CustomTooltip />} />
-          <Area type="monotone" dataKey="thisWeek" stroke="#8884d8" fillOpacity={1} fill="url(#colorThisWeek)" />
-          <Area type="monotone" dataKey="lastWeek" stroke="#82ca9d" fillOpacity={1} fill="url(#colorLastWeek)" />
+          <Area
+            type="monotone"
+            dataKey="thisWeek"
+            stroke="var(--chart-1)"
+            strokeWidth={3}
+            fillOpacity={1}
+            fill="url(#colorThisWeek)"
+          />
+          <Area
+            type="monotone"
+            dataKey="lastWeek"
+            stroke="var(--muted-foreground)"
+            strokeWidth={1}
+            fillOpacity={1}
+            fill="url(#colorLastWeek)"
+          />
         </AreaChart>
       </ResponsiveContainer>
     </div>

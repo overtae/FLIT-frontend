@@ -26,9 +26,8 @@ interface ScheduleCalendarProps {
 }
 
 export function ScheduleCalendar({ selectedDate, onDateSelect, datesWithEvents, className }: ScheduleCalendarProps) {
-  const [currentMonth, setCurrentMonth] = useState(new Date(2025, 11, 1));
+  const [currentMonth, setCurrentMonth] = useState(new Date());
 
-  // Generate calendar grid days
   const daysInMonth = eachDayOfInterval({
     start: startOfWeek(startOfMonth(currentMonth)),
     end: endOfWeek(endOfMonth(currentMonth)),
@@ -43,9 +42,47 @@ export function ScheduleCalendar({ selectedDate, onDateSelect, datesWithEvents, 
     return datesWithEvents.some((eventDate) => isSameDay(eventDate, date));
   };
 
+  const getDayCellClassName = (date: Date) => {
+    const isToday = isSameDay(date, new Date());
+    const isSelected = selectedDate ? isSameDay(date, selectedDate) : false;
+    const isCurrentMonth = isSameMonth(date, currentMonth);
+
+    return cn(
+      "group relative flex aspect-square w-full flex-col items-center justify-center rounded-2xl text-lg transition-all",
+      "bg-white shadow-[2px_2px_10px_rgba(0,0,0,0.03)] hover:-translate-y-0.5 hover:shadow-md",
+      !isCurrentMonth && "text-gray-200",
+      isCurrentMonth && "text-gray-500",
+      isSelected && "z-10 border-2 border-red-400 text-gray-800 shadow-md",
+      !isSelected && "hover:bg-gray-50",
+      isToday && "bg-primary/10 text-primary hover:bg-primary/20",
+    );
+  };
+
+  const getEventBulletClassName = (date: Date) => {
+    const isSelected = selectedDate ? isSameDay(date, selectedDate) : false;
+    const isCurrentMonth = isSameMonth(date, currentMonth);
+
+    return cn(
+      "absolute top-2 right-2 h-1.5 w-1.5 rounded-full bg-red-400 opacity-80",
+      isSelected && "bg-red-500",
+      !isCurrentMonth && "opacity-30",
+    );
+  };
+
+  const renderDayCell = (date: Date) => {
+    const isSelected = selectedDate ? isSameDay(date, selectedDate) : false;
+    const hasEvent = isDateWithEvent(date);
+
+    return (
+      <button key={date.toISOString()} onClick={() => onDateSelect(date)} className={getDayCellClassName(date)}>
+        <span className={cn("z-10 font-normal", isSelected && "font-semibold")}>{format(date, "d")}</span>
+        {hasEvent && <div className={getEventBulletClassName(date)} />}
+      </button>
+    );
+  };
+
   return (
     <div className={cn("flex w-full flex-col gap-8 p-4", className)}>
-      {/* Calendar Header */}
       <div className="flex items-center justify-center gap-8">
         <button onClick={prevMonth} className="text-gray-400 transition-colors hover:text-gray-900">
           <ChevronLeft className="h-6 w-6" />
@@ -56,53 +93,14 @@ export function ScheduleCalendar({ selectedDate, onDateSelect, datesWithEvents, 
         </button>
       </div>
 
-      {/* Calendar Grid */}
       <div className="grid w-full grid-cols-7 gap-3 sm:gap-4">
-        {/* Weekdays Headers */}
         {weekDays.map((day) => (
           <div key={day} className="text-center text-xs font-medium text-gray-400">
             {day}
           </div>
         ))}
 
-        {/* Days Cells */}
-        {daysInMonth.map((date) => {
-          const isSelected = selectedDate ? isSameDay(date, selectedDate) : false;
-          const isCurrentMonth = isSameMonth(date, currentMonth);
-          const hasEvent = isDateWithEvent(date);
-
-          return (
-            <button
-              key={date.toISOString()}
-              onClick={() => onDateSelect(date)}
-              className={cn(
-                "group relative flex aspect-square w-full flex-col items-center justify-center rounded-2xl text-lg transition-all",
-                // Base Appearance (Soft Neumorphic-like shadow)
-                "bg-white shadow-[2px_2px_10px_rgba(0,0,0,0.03)] hover:-translate-y-0.5 hover:shadow-md",
-                // Text Colors
-                !isCurrentMonth && "text-gray-200",
-                isCurrentMonth && "text-gray-500",
-                // Selected State
-                isSelected && "z-10 border-2 border-red-400 text-gray-800 shadow-md",
-                // Hover State (when not selected)
-                !isSelected && "hover:bg-gray-50",
-              )}
-            >
-              <span className={cn("z-10 font-normal", isSelected && "font-semibold")}>{format(date, "d")}</span>
-
-              {/* Bullet for events */}
-              {hasEvent && (
-                <div
-                  className={cn(
-                    "absolute top-2 right-2 h-1.5 w-1.5 rounded-full bg-red-400 opacity-80",
-                    isSelected && "bg-red-500",
-                    !isCurrentMonth && "opacity-30",
-                  )}
-                />
-              )}
-            </button>
-          );
-        })}
+        {daysInMonth.map(renderDayCell)}
       </div>
     </div>
   );
