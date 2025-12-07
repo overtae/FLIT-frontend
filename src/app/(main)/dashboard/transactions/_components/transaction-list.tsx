@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 
 import { Search } from "lucide-react";
+import * as XLSX from "xlsx";
 
 import { DataTablePagination } from "@/components/data-table/data-table-pagination";
 import { DataTableWithSelection } from "@/components/data-table/data-table-with-selection";
@@ -93,30 +94,24 @@ export function TransactionList({ category, subCategory }: TransactionListProps)
 
   const handleDownload = (transaction: Transaction) => {
     const data = [
-      ["주문번호", "From", "To", "상품명", "결제금액", "주문접수일", "결제일", "결제방법", "구분"],
-      [
-        transaction.orderNumber,
-        transaction.from,
-        transaction.to,
-        transaction.productName,
-        transaction.paymentAmount.toString(),
-        transaction.orderDate,
-        transaction.paymentDate,
-        transaction.paymentMethod,
-        transaction.type,
-      ],
+      {
+        주문번호: transaction.orderNumber,
+        From: transaction.from,
+        To: transaction.to,
+        상품명: transaction.productName,
+        결제금액: transaction.paymentAmount,
+        주문접수일: transaction.orderDate,
+        결제일: transaction.paymentDate,
+        결제방법: transaction.paymentMethod,
+        구분: transaction.type,
+      },
     ];
 
-    const csvContent = data.map((row) => row.join(",")).join("\n");
-    const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute("download", `${transaction.orderNumber}.csv`);
-    link.style.visibility = "hidden";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "거래 내역");
+    const fileName = `${transaction.orderNumber}.xlsx`;
+    XLSX.writeFile(workbook, fileName);
   };
 
   const columns = useMemo(
@@ -142,31 +137,23 @@ export function TransactionList({ category, subCategory }: TransactionListProps)
 
     const transactionsToDownload = selectedRows.map((row) => row.original);
 
-    const data = [
-      ["주문번호", "From", "To", "상품명", "결제금액", "주문접수일", "결제일", "결제방법", "구분"],
-      ...transactionsToDownload.map((t) => [
-        t.orderNumber,
-        t.from,
-        t.to,
-        t.productName,
-        t.paymentAmount.toString(),
-        t.orderDate,
-        t.paymentDate,
-        t.paymentMethod,
-        t.type,
-      ]),
-    ];
+    const data = transactionsToDownload.map((t) => ({
+      주문번호: t.orderNumber,
+      From: t.from,
+      To: t.to,
+      상품명: t.productName,
+      결제금액: t.paymentAmount,
+      주문접수일: t.orderDate,
+      결제일: t.paymentDate,
+      결제방법: t.paymentMethod,
+      구분: t.type,
+    }));
 
-    const csvContent = data.map((row) => row.join(",")).join("\n");
-    const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute("download", `주문목록_${new Date().toISOString().split("T")[0]}.csv`);
-    link.style.visibility = "hidden";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "거래 목록");
+    const fileName = `주문목록_${new Date().toISOString().split("T")[0]}.xlsx`;
+    XLSX.writeFile(workbook, fileName);
   };
 
   return (
@@ -197,7 +184,7 @@ export function TransactionList({ category, subCategory }: TransactionListProps)
                 variant="outline"
                 size="sm"
                 onClick={handleDownloadAll}
-                disabled={table.getFilteredSelectedRowModel().rows.length === 0}
+                disabled={Object.keys(rowSelection).length === 0}
               >
                 전체 다운로드
               </Button>

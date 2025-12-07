@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 
 import { Download } from "lucide-react";
+import * as XLSX from "xlsx";
 
 import { productColumns } from "@/app/(main)/dashboard/sales/products/_components/columns.product";
 import { DataTablePagination } from "@/components/data-table/data-table-pagination";
@@ -88,9 +89,26 @@ export function SalesDetailTable() {
   });
 
   const handleDownloadAll = () => {
-    const selectedRows = table.getFilteredSelectedRowModel().rows;
+    const filteredRows = table.getFilteredRowModel().rows;
+    const selectedRows = filteredRows.filter((row) => row.getIsSelected());
     if (selectedRows.length === 0) return;
-    // TODO: Download logic here
+
+    const data = selectedRows.map((row) => ({
+      이름: row.original.name,
+      "닉네임(ID)": `${row.original.nickname} (${row.original.nicknameId})`,
+      번호: row.original.phone,
+      주소: row.original.address,
+      상품명: row.original.productName,
+      금액: `${row.original.amount.toLocaleString()}원`,
+      결제방법: row.original.paymentMethod,
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "판매 상세");
+
+    const fileName = `판매상세_${new Date().toISOString().split("T")[0]}.xlsx`;
+    XLSX.writeFile(workbook, fileName);
   };
 
   return (
@@ -102,11 +120,7 @@ export function SalesDetailTable() {
       <DataTablePagination
         table={table}
         leftSlot={
-          <Button
-            variant="outline"
-            onClick={handleDownloadAll}
-            disabled={table.getFilteredSelectedRowModel().rows.length === 0}
-          >
+          <Button variant="outline" onClick={handleDownloadAll} disabled={Object.keys(rowSelection).length === 0}>
             <Download className="mr-2 h-4 w-4" />
             전체 다운로드
           </Button>

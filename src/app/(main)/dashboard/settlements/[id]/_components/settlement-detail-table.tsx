@@ -4,6 +4,7 @@ import { useMemo, useCallback } from "react";
 
 import { format } from "date-fns";
 import { Download, Search, Filter } from "lucide-react";
+import * as XLSX from "xlsx";
 
 import { DataTablePagination } from "@/components/data-table/data-table-pagination";
 import { DataTableWithSelection } from "@/components/data-table/data-table-with-selection";
@@ -42,36 +43,28 @@ export function SettlementDetailTable({
   });
 
   const handleDownloadAll = useCallback(() => {
-    const selectedRows = table.getSelectedRowModel().rows;
+    const filteredRows = table.getFilteredRowModel().rows;
+    const selectedRows = filteredRows.filter((row) => row.getIsSelected());
     if (selectedRows.length === 0) return;
 
-    const transactionsToDownload = selectedRows.map((row) => row.original);
+    const data = selectedRows.map((row) => ({
+      주문번호: row.original.orderNumber,
+      From: row.original.from,
+      To: row.original.to,
+      상품명: row.original.productName,
+      결제금액: row.original.paymentAmount.toLocaleString(),
+      주문접수일: row.original.orderDate,
+      결제일: row.original.paymentDate,
+      결제방법: row.original.paymentMethod,
+      구분: row.original.type,
+    }));
 
-    const data = [
-      ["주문번호", "From", "To", "상품명", "결제금액", "주문접수일", "결제일", "결제방법", "구분"],
-      ...transactionsToDownload.map((t) => [
-        t.orderNumber,
-        t.from,
-        t.to,
-        t.productName,
-        t.paymentAmount.toString(),
-        t.orderDate,
-        t.paymentDate,
-        t.paymentMethod,
-        t.type,
-      ]),
-    ];
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "정산 상세");
 
-    const csvContent = data.map((row) => row.join(",")).join("\n");
-    const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute("download", `정산상세_${format(new Date(), "yyyy-MM-dd")}.csv`);
-    link.style.visibility = "hidden";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const fileName = `정산상세_${format(new Date(), "yyyy-MM-dd")}.xlsx`;
+    XLSX.writeFile(workbook, fileName);
   }, [table]);
 
   return (
@@ -93,7 +86,12 @@ export function SettlementDetailTable({
               <Filter className="mr-2 h-4 w-4" />
               필터
             </Button>
-            <Button variant="outline" size="sm" onClick={handleDownloadAll}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDownloadAll}
+              disabled={Object.keys(rowSelection).length === 0}
+            >
               <Download className="mr-2 h-4 w-4" />
               엑셀 다운로드
             </Button>

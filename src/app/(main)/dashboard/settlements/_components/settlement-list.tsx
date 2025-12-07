@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subWeeks, isWithinInterval } from "date-fns";
 import { Download, Search, Filter } from "lucide-react";
+import * as XLSX from "xlsx";
 
 import { mockSettlements } from "@/_mock/settlements";
 import { DataTablePagination } from "@/components/data-table/data-table-pagination";
@@ -128,35 +129,27 @@ export function SettlementList() {
   };
 
   const handleDownloadAll = () => {
-    const selectedRows = table.getFilteredSelectedRowModel().rows;
+    const filteredRows = table.getFilteredRowModel().rows;
+    const selectedRows = filteredRows.filter((row) => row.getIsSelected());
     if (selectedRows.length === 0) return;
 
-    const settlementsToDownload = selectedRows.map((row) => row.original);
+    const data = selectedRows.map((row) => ({
+      "닉네임(ID)": `${row.original.nickname} (${row.original.nicknameId})`,
+      번호: row.original.phone,
+      mail: row.original.email,
+      총매출: row.original.totalRevenue.toLocaleString(),
+      수수료: row.original.commission.toLocaleString(),
+      "수수료 제외": row.original.revenueExcludingCommission.toLocaleString(),
+      배달료: row.original.deliveryFee.toLocaleString(),
+      상태: row.original.status,
+    }));
 
-    const data = [
-      ["닉네임(ID)", "번호", "mail", "총매출", "수수료", "수수료 제외", "배달료", "상태"],
-      ...settlementsToDownload.map((s) => [
-        `${s.nickname} (${s.nicknameId})`,
-        s.phone,
-        s.email,
-        s.totalRevenue.toString(),
-        s.commission.toString(),
-        s.revenueExcludingCommission.toString(),
-        s.deliveryFee.toString(),
-        s.status,
-      ]),
-    ];
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "정산 목록");
 
-    const csvContent = data.map((row) => row.join(",")).join("\n");
-    const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute("download", `정산목록_${format(new Date(), "yyyy-MM-dd")}.csv`);
-    link.style.visibility = "hidden";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const fileName = `정산목록_${format(new Date(), "yyyy-MM-dd")}.xlsx`;
+    XLSX.writeFile(workbook, fileName);
   };
 
   const handleRowClick = (settlement: Settlement) => {
@@ -248,11 +241,7 @@ export function SettlementList() {
         <DataTablePagination
           table={table}
           leftSlot={
-            <Button
-              variant="outline"
-              onClick={handleDownloadAll}
-              disabled={table.getFilteredSelectedRowModel().rows.length === 0}
-            >
+            <Button variant="outline" onClick={handleDownloadAll} disabled={Object.keys(rowSelection).length === 0}>
               <Download className="mr-2 h-4 w-4" />
               전체 다운로드
             </Button>
