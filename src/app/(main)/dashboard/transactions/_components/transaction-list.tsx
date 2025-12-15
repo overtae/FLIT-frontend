@@ -1,6 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
+
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { Search } from "lucide-react";
 import * as XLSX from "xlsx";
@@ -10,12 +12,12 @@ import { DataTableWithSelection } from "@/components/data-table/data-table-with-
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useDataTableInstance } from "@/hooks/use-data-table-instance";
+import { getTransactions } from "@/service/transaction.service";
+import { Transaction, PaymentMethod, TransactionType } from "@/types/dashboard";
 
-import { mockTransactions } from "./mock-transactions";
 import { createTransactionColumns } from "./transaction-columns";
 import { TransactionDetailModal } from "./transaction-detail-modal";
 import { TransactionFilter } from "./transaction-filter";
-import { Transaction, PaymentMethod, TransactionType } from "./transaction-types";
 
 interface TransactionListProps {
   category: "order" | "order-request" | "canceled";
@@ -23,9 +25,17 @@ interface TransactionListProps {
 }
 
 export function TransactionList({ category, subCategory }: TransactionListProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [search, setSearch] = useState("");
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [total, setTotal] = useState(0);
+
+  const pageIndex = parseInt(searchParams.get("page") ?? "1", 10) - 1;
+  const pageSize = parseInt(searchParams.get("pageSize") ?? "10", 10);
   const [filters, setFilters] = useState<{
     types?: TransactionType[];
     paymentMethods?: PaymentMethod[];
@@ -33,59 +43,80 @@ export function TransactionList({ category, subCategory }: TransactionListProps)
     date?: Date;
   }>({});
 
-  const filteredData = useMemo(() => {
-    let data = mockTransactions.filter((t) => {
-      if (category === "order") {
-        return t.subCategory === subCategory || subCategory === "all";
-      }
-      if (category === "order-request") {
-        return true;
-      }
+  useEffect(() => {
+    const buildCategoryParams = (params: {
+      subCategory?: string;
+      refundStatus?: string;
+      type?: string;
+      paymentMethod?: string;
+      page?: number;
+      pageSize?: number;
+    }) => {
       if (category === "canceled") {
-        const hasRefundStatus = t.refundStatus !== undefined;
-        if (subCategory && subCategory !== "order-request") {
-          return hasRefundStatus && t.subCategory === subCategory;
+        params.refundStatus = "환불처리";
+        if (subCategory && subCategory !== "all" && subCategory !== "order-request") {
+          params.subCategory = subCategory;
         }
-        return hasRefundStatus;
+      } else if (category === "order") {
+        if (subCategory && subCategory !== "all") {
+          params.subCategory = subCategory;
+        }
+      } else {
+        params.subCategory = "order-request";
       }
-      return true;
-    });
+    };
 
-    if (search) {
-      const searchLower = search.toLowerCase();
-      data = data.filter(
-        (t) =>
-          t.orderNumber.toLowerCase().includes(searchLower) ||
-          t.from.toLowerCase().includes(searchLower) ||
-          t.to.toLowerCase().includes(searchLower) ||
-          t.productName.toLowerCase().includes(searchLower),
-      );
-    }
+    const buildFilterParams = (params: {
+      subCategory?: string;
+      refundStatus?: string;
+      type?: string;
+      paymentMethod?: string;
+      page?: number;
+      pageSize?: number;
+    }) => {
+      if (filters.types && filters.types.length > 0) {
+        params.type = filters.types[0];
+      }
+      if (filters.paymentMethods && filters.paymentMethods.length > 0) {
+        params.paymentMethod = filters.paymentMethods[0];
+      }
+    };
 
-    if (filters.types && filters.types.length > 0) {
-      data = data.filter((t) => filters.types!.includes(t.type));
-    }
+    const buildParams = () => {
+      const params: {
+        subCategory?: string;
+        refundStatus?: string;
+        type?: string;
+        paymentMethod?: string;
+        page?: number;
+        pageSize?: number;
+      } = {
+        page: pageIndex + 1,
+        pageSize,
+      };
 
-    if (filters.paymentMethods && filters.paymentMethods.length > 0) {
-      data = data.filter((t) => filters.paymentMethods!.includes(t.paymentMethod));
-    }
+      buildCategoryParams(params);
+      buildFilterParams(params);
 
-    if (filters.refundStatuses && filters.refundStatuses.length > 0) {
-      data = data.filter((t) => t.refundStatus && filters.refundStatuses!.includes(t.refundStatus));
-    }
+      return params;
+    };
 
-    if (filters.date) {
-      const filterDate = filters.date.toISOString().split("T")[0];
-      const filterYearMonth = filterDate.substring(0, 7);
-      data = data.filter((t) => {
-        const orderDate = t.orderDate.replace(/\./g, "-");
-        const yearMonth = orderDate.substring(0, 7);
-        return yearMonth === filterYearMonth;
-      });
-    }
+    const fetchTransactions = async () => {
+      try {
+        setIsLoading(true);
+        const params = buildParams();
+        const response = await getTransactions(params);
+        setTransactions(response.data);
+        setTotal(response.total);
+      } catch (error) {
+        console.error("Failed to fetch transactions:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-    return data;
-  }, [category, subCategory, search, filters]);
+    fetchTransactions();
+  }, [category, subCategory, pageIndex, pageSize, filters]);
 
   const handleViewDetail = (transaction: Transaction) => {
     setSelectedTransaction(transaction);
@@ -125,11 +156,27 @@ export function TransactionList({ category, subCategory }: TransactionListProps)
   );
 
   const { table, rowSelection } = useDataTableInstance({
-    data: filteredData,
+    data: transactions,
     columns,
     getRowId: (row) => row.id,
-    manualFiltering: true,
+    manualPagination: true,
+    pageCount: Math.ceil(total / pageSize),
+    defaultPageIndex: pageIndex,
+    defaultPageSize: pageSize,
   });
+
+  useEffect(() => {
+    const pagination = table.getState().pagination;
+    const newPageIndex = pagination.pageIndex;
+    const newPageSize = pagination.pageSize;
+
+    if (newPageIndex !== pageIndex || newPageSize !== pageSize) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("page", (newPageIndex + 1).toString());
+      params.set("pageSize", newPageSize.toString());
+      router.push(`?${params.toString()}`, { scroll: false });
+    }
+  }, [table, pageIndex, pageSize, router, searchParams]);
 
   const handleDownloadAll = () => {
     const selectedRows = table.getFilteredSelectedRowModel().rows;
@@ -155,6 +202,14 @@ export function TransactionList({ category, subCategory }: TransactionListProps)
     const fileName = `주문목록_${new Date().toISOString().split("T")[0]}.xlsx`;
     XLSX.writeFile(workbook, fileName);
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <>

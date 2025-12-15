@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 import {
   LineChart,
   Line,
@@ -15,24 +17,26 @@ import {
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
-const dailyData = [
-  { date: "1일", total: 4000, card: 3000, pos: 2000, transfer: 1000 },
-  { date: "2일", total: 3000, card: 2500, pos: 1500, transfer: 800 },
-  { date: "3일", total: 2000, card: 1800, pos: 1200, transfer: 600 },
-  { date: "4일", total: 2780, card: 2000, pos: 1500, transfer: 700 },
-  { date: "5일", total: 1890, card: 1500, pos: 1000, transfer: 500 },
-];
-
-const yearlyData = [
-  { year: "2020", revenue: 400 },
-  { year: "2021", revenue: 300 },
-  { year: "2022", revenue: 200 },
-  { year: "2023", revenue: 278 },
-  { year: "2024", revenue: 189 },
-];
+import { getRevenueDailyData, getRevenueYearlyData } from "@/service/chart.service";
+import { RevenueChartData } from "@/types/dashboard";
 
 export function RevenueDashboard() {
+  const [dailyData, setDailyData] = useState<RevenueChartData[]>([]);
+  const [yearlyData, setYearlyData] = useState<RevenueChartData[]>([]);
+
+  useEffect(() => {
+    const fetchChartData = async () => {
+      try {
+        const [daily, yearly] = await Promise.all([getRevenueDailyData(), getRevenueYearlyData()]);
+        setDailyData(daily);
+        setYearlyData(yearly);
+      } catch (error) {
+        console.error("Failed to fetch chart data:", error);
+      }
+    };
+
+    fetchChartData();
+  }, []);
   return (
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

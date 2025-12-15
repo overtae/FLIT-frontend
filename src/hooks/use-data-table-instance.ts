@@ -25,11 +25,70 @@ type UseDataTableInstanceProps<TData, TValue> = {
   defaultPageSize?: number;
   getRowId?: (row: TData, index: number) => string;
   manualFiltering?: boolean;
+  manualPagination?: boolean;
+  pageCount?: number;
 };
 
 type UseDataTableInstanceReturn<TData> = {
   table: Table<TData>;
   rowSelection: RowSelectionState;
+};
+
+const createTableConfig = <TData, TValue>({
+  data,
+  columns,
+  enableRowSelection,
+  manualFiltering,
+  manualPagination,
+  pageCount,
+  memoizedGetRowId,
+  state,
+  setters,
+}: {
+  data: TData[];
+  columns: ColumnDef<TData, TValue>[];
+  enableRowSelection: boolean;
+  manualFiltering: boolean;
+  manualPagination: boolean;
+  pageCount?: number;
+  memoizedGetRowId: (row: TData, index: number) => string;
+  state: {
+    sorting: SortingState;
+    columnVisibility: VisibilityState;
+    rowSelection: RowSelectionState;
+    columnFilters: ColumnFiltersState;
+    pagination: PaginationState;
+  };
+  setters: {
+    setRowSelection: React.Dispatch<React.SetStateAction<RowSelectionState>>;
+    setSorting: React.Dispatch<React.SetStateAction<SortingState>>;
+    setColumnFilters: React.Dispatch<React.SetStateAction<ColumnFiltersState>>;
+    setColumnVisibility: React.Dispatch<React.SetStateAction<VisibilityState>>;
+    setPagination: React.Dispatch<React.SetStateAction<PaginationState>>;
+  };
+}) => {
+  return {
+    data,
+    columns,
+    state,
+    enableRowSelection,
+    manualFiltering,
+    manualPagination,
+    pageCount: manualPagination ? pageCount : undefined,
+    autoResetPageIndex: false,
+    getRowId: memoizedGetRowId,
+    onRowSelectionChange: setters.setRowSelection,
+    onSortingChange: setters.setSorting,
+    onColumnFiltersChange: setters.setColumnFilters,
+    onColumnVisibilityChange: setters.setColumnVisibility,
+    onPaginationChange: setters.setPagination,
+    getCoreRowModel: getCoreRowModel(),
+    getFilteredRowModel: manualFiltering ? undefined : getFilteredRowModel(),
+    getPaginationRowModel: manualPagination ? undefined : getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFacetedRowModel: manualFiltering ? undefined : getFacetedRowModel(),
+    getFacetedUniqueValues: manualFiltering ? undefined : getFacetedUniqueValues(),
+  };
 };
 
 export function useDataTableInstance<TData, TValue>({
@@ -40,6 +99,8 @@ export function useDataTableInstance<TData, TValue>({
   defaultPageSize = 10,
   getRowId,
   manualFiltering = false,
+  manualPagination = false,
+  pageCount,
 }: UseDataTableInstanceProps<TData, TValue>): UseDataTableInstanceReturn<TData> {
   const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({});
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
@@ -67,32 +128,39 @@ export function useDataTableInstance<TData, TValue>({
     }
   }, [data.length, pagination.pageIndex]);
 
-  const table = useReactTable({
-    data,
-    columns,
-    state: {
-      sorting,
-      columnVisibility,
-      rowSelection,
-      columnFilters,
-      pagination,
-    },
-    enableRowSelection,
-    manualFiltering,
-    autoResetPageIndex: false,
-    getRowId: memoizedGetRowId,
-    onRowSelectionChange: setRowSelection,
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
-    onColumnVisibilityChange: setColumnVisibility,
-    onPaginationChange: setPagination,
-    getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: manualFiltering ? undefined : getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFacetedRowModel: manualFiltering ? undefined : getFacetedRowModel(),
-    getFacetedUniqueValues: manualFiltering ? undefined : getFacetedUniqueValues(),
-  });
+  React.useEffect(() => {
+    setPagination((prev) => ({
+      ...prev,
+      pageIndex: defaultPageIndex,
+      pageSize: defaultPageSize,
+    }));
+  }, [defaultPageIndex, defaultPageSize]);
+
+  const table = useReactTable(
+    createTableConfig({
+      data,
+      columns,
+      enableRowSelection,
+      manualFiltering,
+      manualPagination,
+      pageCount,
+      memoizedGetRowId,
+      state: {
+        sorting,
+        columnVisibility,
+        rowSelection,
+        columnFilters,
+        pagination,
+      },
+      setters: {
+        setRowSelection,
+        setSorting,
+        setColumnFilters,
+        setColumnVisibility,
+        setPagination,
+      },
+    }),
+  );
 
   return { table, rowSelection };
 }

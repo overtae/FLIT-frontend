@@ -1,6 +1,8 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useEffect, useState } from "react";
+
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { Download } from "lucide-react";
 import * as XLSX from "xlsx";
@@ -9,58 +11,68 @@ import { DataTablePagination } from "@/components/data-table/data-table-paginati
 import { DataTableWithSelection } from "@/components/data-table/data-table-with-selection";
 import { Button } from "@/components/ui/button";
 import { useDataTableInstance } from "@/hooks/use-data-table-instance";
+import { getRevenueDetails } from "@/service/sales.service";
+import { RevenueDetail } from "@/types/dashboard";
 
 import { revenueColumns } from "./columns.revenue";
 
-const mockRevenueDetails = [
-  {
-    id: "1",
-    nickname: "아미화",
-    nicknameId: "sm101",
-    phone: "010-0000-0000",
-    address: "서울시 강남구 테헤란로 27",
-    revenueAmount: 5000000,
-    revenueCount: 50,
-    cancelAmount: 200000,
-    cancelCount: 2,
-    refundAmount: 100000,
-    refundCount: 1,
-  },
-  {
-    id: "2",
-    nickname: "플로리스트A",
-    nicknameId: "fl001",
-    phone: "010-1111-1111",
-    address: "서울시 서초구 서초대로 123",
-    revenueAmount: 8000000,
-    revenueCount: 80,
-    cancelAmount: 300000,
-    cancelCount: 3,
-    refundAmount: 150000,
-    refundCount: 2,
-  },
-  {
-    id: "3",
-    nickname: "매장B",
-    nicknameId: "shop002",
-    phone: "010-2222-2222",
-    address: "경기도 성남시 분당구 정자동",
-    revenueAmount: 12000000,
-    revenueCount: 120,
-    cancelAmount: 500000,
-    cancelCount: 5,
-    refundAmount: 200000,
-    refundCount: 2,
-  },
-];
-
 export function RevenueDetailTable() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [isLoading, setIsLoading] = useState(true);
+  const [total, setTotal] = useState(0);
+  const [revenueDetails, setRevenueDetails] = useState<RevenueDetail[]>([]);
+
+  const pageIndex = parseInt(searchParams.get("page") ?? "1", 10) - 1;
+  const pageSize = parseInt(searchParams.get("pageSize") ?? "10", 10);
+
+  useEffect(() => {
+    const fetchRevenueDetails = async () => {
+      try {
+        setIsLoading(true);
+        const response = await getRevenueDetails({
+          page: pageIndex + 1,
+          pageSize,
+        });
+
+        setRevenueDetails(response.data);
+        setTotal(response.total);
+      } catch (error) {
+        console.error("Failed to fetch revenue details:", error);
+        setTotal(0);
+        setRevenueDetails([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchRevenueDetails();
+  }, [pageIndex, pageSize]);
+
   const columns = useMemo(() => revenueColumns, []);
+
   const { table, rowSelection } = useDataTableInstance({
-    data: mockRevenueDetails,
+    data: revenueDetails,
     columns,
     getRowId: (row) => row.id,
+    manualPagination: true,
+    pageCount: total > 0 ? Math.ceil(total / pageSize) : 0,
+    defaultPageIndex: pageIndex,
+    defaultPageSize: pageSize,
   });
+
+  useEffect(() => {
+    const pagination = table.getState().pagination;
+    const newPageIndex = pagination.pageIndex;
+    const newPageSize = pagination.pageSize;
+
+    if (newPageIndex !== pageIndex || newPageSize !== pageSize) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("page", (newPageIndex + 1).toString());
+      params.set("pageSize", newPageSize.toString());
+      router.push(`?${params.toString()}`, { scroll: false });
+    }
+  }, [table, pageIndex, pageSize, router, searchParams]);
 
   const handleDownloadAll = () => {
     const filteredRows = table.getFilteredRowModel().rows;
@@ -83,6 +95,14 @@ export function RevenueDetailTable() {
     const fileName = `매출상세_${new Date().toISOString().split("T")[0]}.xlsx`;
     XLSX.writeFile(workbook, fileName);
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">

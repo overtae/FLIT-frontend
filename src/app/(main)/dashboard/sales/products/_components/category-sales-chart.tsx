@@ -1,35 +1,17 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
+
+import { getCategoryChartData } from "@/service/chart.service";
+import { CategoryChartData } from "@/types/dashboard";
 
 interface CategorySalesChartProps {
   viewMode: "group" | "product";
   selectedDate?: Date;
   onCategoryClick: (category: string | null) => void;
 }
-
-const groupData = [
-  { name: "꽃", revenue: 5000000 },
-  { name: "식물", revenue: 3500000 },
-  { name: "화환", revenue: 2800000 },
-  { name: "공간연출", revenue: 2200000 },
-  { name: "정기배송", revenue: 1800000 },
-];
-
-const productData = [
-  { name: "꽃다발", revenue: 2500000 },
-  { name: "꽃바구니", revenue: 1800000 },
-  { name: "동양난", revenue: 1200000 },
-  { name: "서양난", revenue: 1000000 },
-  { name: "다육식물", revenue: 800000 },
-  { name: "화분", revenue: 700000 },
-  { name: "공기정화", revenue: 600000 },
-  { name: "축하화환", revenue: 1500000 },
-  { name: "근조화환", revenue: 1300000 },
-  { name: "플랜테리어", revenue: 1100000 },
-  { name: "가드닝", revenue: 900000 },
-  { name: "정기배송", revenue: 1800000 },
-];
 
 const COLORS = [
   "var(--chart-1)",
@@ -47,7 +29,20 @@ const COLORS = [
 ];
 
 export function CategorySalesChart({ viewMode, onCategoryClick }: CategorySalesChartProps) {
-  const data = viewMode === "group" ? groupData : productData;
+  const [data, setData] = useState<CategoryChartData[]>([]);
+
+  useEffect(() => {
+    const fetchChartData = async () => {
+      try {
+        const chartData = await getCategoryChartData(viewMode);
+        setData(chartData);
+      } catch (error) {
+        console.error("Failed to fetch category chart data:", error);
+      }
+    };
+
+    fetchChartData();
+  }, [viewMode]);
 
   const handleBarClick = (data: { name: string }) => {
     onCategoryClick(data.name);

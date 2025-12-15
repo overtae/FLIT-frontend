@@ -1,31 +1,12 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal, Eye, Trash2 } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { getInitials } from "@/lib/utils";
-
-export type User = {
-  id: string;
-  category: "customer" | "shop" | "florist" | "seceder";
-  grade: string;
-  name: string;
-  nickname: string;
-  email: string;
-  address: string;
-  phone: string;
-  lastAccessDate: string;
-  joinDate: string;
-};
+import { User } from "@/types/dashboard";
 
 export const getUserColumns = (onViewDetail: (user: User) => void): ColumnDef<User>[] => [
   {

@@ -1,14 +1,13 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
-import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subWeeks, isWithinInterval } from "date-fns";
+import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subWeeks } from "date-fns";
 import { Download, Search, Filter } from "lucide-react";
 import * as XLSX from "xlsx";
 
-import { mockSettlements } from "@/_mock/settlements";
 import { DataTablePagination } from "@/components/data-table/data-table-pagination";
 import { DataTableWithSelection } from "@/components/data-table/data-table-with-selection";
 import { Button } from "@/components/ui/button";
@@ -16,9 +15,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useDataTableInstance } from "@/hooks/use-data-table-instance";
+import { getSettlements } from "@/service/settlement.service";
+import { Settlement } from "@/types/dashboard";
 
 import { SettlementCalendar } from "./settlement-calendar";
-import { createSettlementColumns, Settlement } from "./settlement-columns";
+import { createSettlementColumns } from "./settlement-columns";
 
 const getSettlementDates = (settlements: Settlement[]): Date[] => {
   const dateSet = new Set<string>();
@@ -56,50 +57,58 @@ const getDateRangeForPeriod = (period: "1week" | "2week" | "month"): { start: Da
 
 export function SettlementList() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [selectedPeriod, setSelectedPeriod] = useState<"1week" | "2week" | "month">("1week");
   const [selectedTypes, setSelectedTypes] = useState<("shop" | "florist")[]>(["shop", "florist"]);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [search, setSearch] = useState("");
+  const [settlements, setSettlements] = useState<Settlement[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const [total, setTotal] = useState(0);
+  const pageIndex = parseInt(searchParams.get("page") ?? "1", 10) - 1;
+  const pageSize = parseInt(searchParams.get("pageSize") ?? "10", 10);
 
   const dateRange = useMemo(() => getDateRangeForPeriod(selectedPeriod), [selectedPeriod]);
 
-  const periodFilteredSettlements = useMemo(() => {
-    return mockSettlements.filter((settlement) => {
-      const [year, month, day] = settlement.settlementDate.split("-").map(Number);
-      const settlementDate = new Date(year, month - 1, day);
-      return isWithinInterval(settlementDate, dateRange);
-    });
-  }, [dateRange]);
+  useEffect(() => {
+    const fetchSettlements = async () => {
+      try {
+        setIsLoading(true);
+        const params: {
+          type?: string;
+          settlementDate?: string;
+          page?: number;
+          pageSize?: number;
+        } = {
+          page: pageIndex + 1,
+          pageSize,
+        };
 
-  const settlementDates = useMemo(() => getSettlementDates(periodFilteredSettlements), [periodFilteredSettlements]);
+        if (selectedTypes.length === 1) {
+          params.type = selectedTypes[0];
+        }
 
-  const filteredData = useMemo(() => {
-    let data = periodFilteredSettlements;
+        if (selectedDate) {
+          params.settlementDate = format(selectedDate, "yyyy-MM-dd");
+        }
 
-    if (selectedTypes.length > 0) {
-      data = data.filter((settlement) => selectedTypes.includes(settlement.type));
-    }
+        const response = await getSettlements(params);
+        setSettlements(response.data);
+        setTotal(response.total);
+      } catch (error) {
+        console.error("Failed to fetch settlements:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-    if (selectedDate) {
-      const selectedDateStr = format(selectedDate, "yyyy-MM-dd");
-      data = data.filter((settlement) => {
-        return settlement.settlementDate === selectedDateStr;
-      });
-    }
+    fetchSettlements();
+  }, [pageIndex, pageSize, selectedTypes, selectedDate, dateRange]);
 
-    if (search) {
-      const searchLower = search.toLowerCase();
-      data = data.filter(
-        (settlement) =>
-          settlement.nickname.toLowerCase().includes(searchLower) ||
-          settlement.nicknameId.toLowerCase().includes(searchLower) ||
-          settlement.phone.includes(search) ||
-          settlement.email.toLowerCase().includes(searchLower),
-      );
-    }
-
-    return data;
-  }, [periodFilteredSettlements, selectedTypes, selectedDate, search]);
+  const settlementDates = useMemo(() => {
+    return getSettlementDates(settlements);
+  }, [settlements]);
 
   const handleDownload = (settlement: Settlement) => {
     const data = [
@@ -159,14 +168,39 @@ export function SettlementList() {
   const columns = useMemo(() => createSettlementColumns({ onDownload: handleDownload }), []);
 
   const { table, rowSelection } = useDataTableInstance({
-    data: filteredData,
+    data: settlements,
     columns,
     getRowId: (row) => row.id,
+    manualPagination: true,
+    pageCount: Math.ceil(total / pageSize),
+    defaultPageIndex: pageIndex,
+    defaultPageSize: pageSize,
   });
+
+  useEffect(() => {
+    const pagination = table.getState().pagination;
+    const newPageIndex = pagination.pageIndex;
+    const newPageSize = pagination.pageSize;
+
+    if (newPageIndex !== pageIndex || newPageSize !== pageSize) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("page", (newPageIndex + 1).toString());
+      params.set("pageSize", newPageSize.toString());
+      router.push(`?${params.toString()}`, { scroll: false });
+    }
+  }, [table, pageIndex, pageSize, router, searchParams]);
 
   const handleTypeToggle = (type: "shop" | "florist") => {
     setSelectedTypes((prev) => (prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]));
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full space-y-6">

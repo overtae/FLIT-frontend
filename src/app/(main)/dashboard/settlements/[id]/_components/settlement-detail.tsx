@@ -1,112 +1,50 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
+
+import { getSettlementDetail } from "@/service/settlement.service";
+import { SettlementDetail as SettlementDetailType, SettlementDetailTransaction } from "@/types/dashboard";
 
 import { PaymentMethodBreakdownDialog } from "./payment-method-breakdown-dialog";
-import { SettlementDetailTransaction } from "./settlement-detail-columns";
 import { SettlementDetailTable } from "./settlement-detail-table";
 import { SettlementInfoCard } from "./settlement-info-card";
 import { TransactionDetailModal } from "./transaction-detail-modal";
-
-interface SettlementDetailData {
-  id: string;
-  nickname: string;
-  nicknameId: string;
-  phone: string;
-  email: string;
-  settlementDate: Date;
-  lastUpdated: Date;
-  settlementAmount: number;
-  paymentAmount: number;
-  paymentCount: number;
-  deliveryCount: number;
-  commission: number;
-  refundCancelAmount: number;
-  refundCancelCount: number;
-  deliveryFee: number;
-  paymentMethodBreakdown: {
-    card: number;
-    account: number;
-    pos: number;
-  };
-}
-
-const mockSettlementDetail: SettlementDetailData = {
-  id: "1",
-  nickname: "매장A",
-  nicknameId: "shop001",
-  phone: "010-1234-5678",
-  email: "shop@example.com",
-  settlementDate: new Date(2024, 0, 15),
-  lastUpdated: new Date(2024, 0, 20, 14, 30),
-  settlementAmount: 950000,
-  paymentAmount: 1000000,
-  paymentCount: 25,
-  deliveryCount: 20,
-  commission: 100000,
-  refundCancelAmount: 50000,
-  refundCancelCount: 2,
-  deliveryFee: 50000,
-  paymentMethodBreakdown: {
-    card: 600000,
-    account: 300000,
-    pos: 100000,
-  },
-};
-
-const mockTransactions: SettlementDetailTransaction[] = [
-  {
-    id: "1",
-    orderNumber: "AAD0123AB10",
-    from: "아미화 (sm101)",
-    to: "규팀장 (QQQ)",
-    productName: "엔티크 장미 꽃다발",
-    paymentAmount: 50000,
-    orderDate: "2024-01-10",
-    paymentDate: "2024-01-10",
-    paymentMethod: "카드결제",
-    type: "바로고",
-  },
-  {
-    id: "2",
-    orderNumber: "CVD0123AC43",
-    from: "오후 (Jeon)",
-    to: "지니 (jini)",
-    productName: "장미 | 튤립 꽃바구니",
-    paymentAmount: 123000,
-    orderDate: "2024-01-11",
-    paymentDate: "2024-01-11",
-    paymentMethod: "POS결제",
-    type: "픽업",
-  },
-  {
-    id: "3",
-    orderNumber: "CDA0123CB11",
-    from: "매장A (shop001)",
-    to: "고객A",
-    productName: "장미 꽃다발",
-    paymentAmount: 45000,
-    orderDate: "2024-01-12",
-    paymentDate: "2024-01-12",
-    paymentMethod: "계좌이체",
-    type: "바로고",
-  },
-];
 
 interface SettlementDetailProps {
   settlementId: string;
 }
 
-export function SettlementDetail({ settlementId: _settlementId }: SettlementDetailProps) {
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(mockSettlementDetail.settlementDate);
+export function SettlementDetail({ settlementId }: SettlementDetailProps) {
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const [isPaymentBreakdownOpen, setIsPaymentBreakdownOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<SettlementDetailTransaction | null>(null);
   const [isTransactionModalOpen, setIsTransactionModalOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [settlementDetail, setSettlementDetail] = useState<SettlementDetailType | null>(null);
+  const [transactions, setTransactions] = useState<SettlementDetailTransaction[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchSettlementDetail = async () => {
+      try {
+        setIsLoading(true);
+        const data = await getSettlementDetail(settlementId);
+        setSettlementDetail(data.detail);
+        setTransactions(data.transactions);
+        setSelectedDate(data.detail.settlementDate);
+      } catch (error) {
+        console.error("Failed to fetch settlement detail:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchSettlementDetail();
+  }, [settlementId]);
 
   const filteredTransactions = useMemo(() => {
-    let data = mockTransactions;
+    let data = transactions;
 
     if (search) {
       const searchLower = search.toLowerCase();
@@ -120,7 +58,7 @@ export function SettlementDetail({ settlementId: _settlementId }: SettlementDeta
     }
 
     return data;
-  }, [search]);
+  }, [transactions, search]);
 
   const handleDownload = useCallback((transaction: SettlementDetailTransaction) => {
     const data = [
@@ -155,11 +93,19 @@ export function SettlementDetail({ settlementId: _settlementId }: SettlementDeta
     setIsTransactionModalOpen(true);
   }, []);
 
+  if (isLoading || !settlementDetail) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
+
   return (
     <>
       <div className="space-y-6">
         <SettlementInfoCard
-          settlement={mockSettlementDetail}
+          settlement={settlementDetail}
           selectedDate={selectedDate}
           onDateChange={setSelectedDate}
           isDatePickerOpen={isDatePickerOpen}
@@ -179,7 +125,7 @@ export function SettlementDetail({ settlementId: _settlementId }: SettlementDeta
       <PaymentMethodBreakdownDialog
         open={isPaymentBreakdownOpen}
         onOpenChange={setIsPaymentBreakdownOpen}
-        breakdown={mockSettlementDetail.paymentMethodBreakdown}
+        breakdown={settlementDetail.paymentMethodBreakdown}
       />
 
       <TransactionDetailModal

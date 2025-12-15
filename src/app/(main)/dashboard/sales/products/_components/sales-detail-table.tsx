@@ -1,6 +1,8 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useEffect, useState } from "react";
+
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { Download } from "lucide-react";
 import * as XLSX from "xlsx";
@@ -10,83 +12,66 @@ import { DataTablePagination } from "@/components/data-table/data-table-paginati
 import { DataTableWithSelection } from "@/components/data-table/data-table-with-selection";
 import { Button } from "@/components/ui/button";
 import { useDataTableInstance } from "@/hooks/use-data-table-instance";
-
-interface SalesDetail {
-  id: string;
-  name: string;
-  nickname: string;
-  nicknameId: string;
-  phone: string;
-  address: string;
-  productName: string;
-  amount: number;
-  paymentMethod: string;
-}
-
-const mockSalesDetails: SalesDetail[] = [
-  {
-    id: "1",
-    name: "홍길동",
-    nickname: "고객A",
-    nicknameId: "customer001",
-    phone: "010-1234-5678",
-    address: "서울시 강남구",
-    productName: "꽃다발",
-    amount: 50000,
-    paymentMethod: "카드",
-  },
-  {
-    id: "2",
-    name: "김철수",
-    nickname: "고객B",
-    nicknameId: "customer002",
-    phone: "010-2345-6789",
-    address: "서울시 서초구",
-    productName: "꽃바구니",
-    amount: 80000,
-    paymentMethod: "계좌이체",
-  },
-  {
-    id: "3",
-    name: "이영희",
-    nickname: "고객C",
-    nicknameId: "customer003",
-    phone: "010-3456-7890",
-    address: "경기도 성남시",
-    productName: "동양난",
-    amount: 120000,
-    paymentMethod: "현장결제",
-  },
-  {
-    id: "4",
-    name: "박민수",
-    nickname: "고객D",
-    nicknameId: "customer004",
-    phone: "010-4567-8901",
-    address: "인천시 남동구",
-    productName: "서양난",
-    amount: 150000,
-    paymentMethod: "카드",
-  },
-  {
-    id: "5",
-    name: "정수진",
-    nickname: "고객E",
-    nicknameId: "customer005",
-    phone: "010-5678-9012",
-    address: "서울시 송파구",
-    productName: "다육식물",
-    amount: 30000,
-    paymentMethod: "카드",
-  },
-];
+import { getSalesDetails } from "@/service/sales.service";
+import { SalesDetail } from "@/types/dashboard";
 
 export function SalesDetailTable() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [isLoading, setIsLoading] = useState(true);
+  const [total, setTotal] = useState(0);
+  const [salesDetails, setSalesDetails] = useState<SalesDetail[]>([]);
+
+  const pageIndex = parseInt(searchParams.get("page") ?? "1", 10) - 1;
+  const pageSize = parseInt(searchParams.get("pageSize") ?? "10", 10);
+
+  useEffect(() => {
+    const fetchSalesDetails = async () => {
+      try {
+        setIsLoading(true);
+        const response = await getSalesDetails({
+          page: pageIndex + 1,
+          pageSize,
+        });
+
+        setSalesDetails(response.data);
+        setTotal(response.total);
+      } catch (error) {
+        console.error("Failed to fetch sales details:", error);
+        setTotal(0);
+        setSalesDetails([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchSalesDetails();
+  }, [pageIndex, pageSize]);
+
   const columns = useMemo(() => productColumns, []);
+
   const { table, rowSelection } = useDataTableInstance({
-    data: mockSalesDetails,
+    data: salesDetails,
     columns,
+    getRowId: (row) => row.id,
+    manualPagination: true,
+    pageCount: total > 0 ? Math.ceil(total / pageSize) : 0,
+    defaultPageIndex: pageIndex,
+    defaultPageSize: pageSize,
   });
+
+  useEffect(() => {
+    const pagination = table.getState().pagination;
+    const newPageIndex = pagination.pageIndex;
+    const newPageSize = pagination.pageSize;
+
+    if (newPageIndex !== pageIndex || newPageSize !== pageSize) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("page", (newPageIndex + 1).toString());
+      params.set("pageSize", newPageSize.toString());
+      router.push(`?${params.toString()}`, { scroll: false });
+    }
+  }, [table, pageIndex, pageSize, router, searchParams]);
 
   const handleDownloadAll = () => {
     const filteredRows = table.getFilteredRowModel().rows;
@@ -110,6 +95,14 @@ export function SalesDetailTable() {
     const fileName = `판매상세_${new Date().toISOString().split("T")[0]}.xlsx`;
     XLSX.writeFile(workbook, fileName);
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">

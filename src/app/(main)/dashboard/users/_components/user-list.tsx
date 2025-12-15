@@ -1,72 +1,54 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 
 import { Search } from "lucide-react";
 
 import { DataTable } from "@/components/data-table/data-table";
 import { Input } from "@/components/ui/input";
 import { useDataTableInstance } from "@/hooks/use-data-table-instance";
+import { getUsers } from "@/service/user.service";
+import { User } from "@/types/dashboard";
 
-import { getUserColumns, User } from "./user-columns";
+import { getUserColumns } from "./user-columns";
 import { UserDetailModal } from "./user-detail-modal";
 import { UserFilter } from "./user-filter";
 import { UserPagination } from "./user-pagination";
-
-const mockUsers: User[] = [
-  {
-    id: "1",
-    category: "customer",
-    grade: "Green",
-    name: "전수민",
-    nickname: "오후(jeon)",
-    email: "jeon@gmail.com",
-    address: "서울시 노원구 동일로 174길 27",
-    phone: "010-0000-0000",
-    lastAccessDate: "2022.11.07",
-    joinDate: "2022.10.24",
-  },
-  {
-    id: "2",
-    category: "shop",
-    grade: "Flinney",
-    name: "아이와",
-    nickname: "아이와(Amihwa)",
-    email: "amihwa@gmail.com",
-    address: "서울시 노원구 동일로 174길 27",
-    phone: "010-0000-0000",
-    lastAccessDate: "2022.11.07",
-    joinDate: "2022.11.07",
-  },
-  {
-    id: "3",
-    category: "florist",
-    grade: "Silver",
-    name: "이플로리스트",
-    nickname: "florist123",
-    email: "florist@example.com",
-    address: "서울시 마포구",
-    phone: "010-3456-7890",
-    lastAccessDate: "2024-01-13",
-    joinDate: "2023-03-01",
-  },
-  // TODO: category seceder 추가
-];
 
 interface UserListProps {
   category?: string;
 }
 
 export function UserList({ category }: UserListProps) {
-  const [data] = useState<User[]>(() => {
-    if (category && category !== "all") {
-      return mockUsers.filter((user) => user.category === category);
-    }
-    return mockUsers;
-  });
+  const [data, setData] = useState<User[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [total, setTotal] = useState(0);
+  const [pageIndex, setPageIndex] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
   const [search, setSearch] = useState("");
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        setIsLoading(true);
+        const response = await getUsers({
+          category,
+          page: pageIndex + 1,
+          pageSize,
+        });
+        setData(response.data);
+        setTotal(response.total);
+      } catch (error) {
+        console.error("Failed to fetch users:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, [category, pageIndex, pageSize]);
 
   const handleViewDetail = (user: User) => {
     setSelectedUser(user);
@@ -75,11 +57,45 @@ export function UserList({ category }: UserListProps) {
 
   const columns = useMemo(() => getUserColumns(handleViewDetail), []);
 
+  const filteredData = useMemo(() => {
+    if (!search) return data;
+    const searchLower = search.toLowerCase();
+    return data.filter(
+      (user) =>
+        user.name.toLowerCase().includes(searchLower) ||
+        user.nickname.toLowerCase().includes(searchLower) ||
+        user.email.toLowerCase().includes(searchLower) ||
+        user.phone.includes(search),
+    );
+  }, [data, search]);
+
   const { table } = useDataTableInstance({
-    data,
+    data: filteredData,
     columns,
     getRowId: (row) => row.id,
+    manualPagination: true,
+    pageCount: Math.ceil(total / pageSize),
+    defaultPageIndex: pageIndex,
+    defaultPageSize: pageSize,
   });
+
+  useEffect(() => {
+    const pagination = table.getState().pagination;
+    if (pagination.pageIndex !== pageIndex) {
+      setPageIndex(pagination.pageIndex);
+    }
+    if (pagination.pageSize !== pageSize) {
+      setPageSize(pagination.pageSize);
+    }
+  }, [table, pageIndex, pageSize]);
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <>

@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 import {
   BarChart,
   Bar,
@@ -16,32 +18,32 @@ import {
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
-const categoryData = [
-  { category: "꽃", revenue: 4000 },
-  { category: "식물", revenue: 3000 },
-  { category: "화환", revenue: 2000 },
-  { category: "공간연출", revenue: 2780 },
-  { category: "정기배송", revenue: 1890 },
-];
-
-const dailyRevenue = [
-  { date: "1일", revenue: 4000 },
-  { date: "2일", revenue: 3000 },
-  { date: "3일", revenue: 2000 },
-  { date: "4일", revenue: 2780 },
-  { date: "5일", revenue: 1890 },
-];
-
-const yearlyData = [
-  { year: "2020", revenue: 400 },
-  { year: "2021", revenue: 300 },
-  { year: "2022", revenue: 200 },
-  { year: "2023", revenue: 278 },
-  { year: "2024", revenue: 189 },
-];
+import { getProductCategoryData, getProductDailyRevenue, getProductYearlyData } from "@/service/chart.service";
+import { CategoryChartData, RevenueChartData } from "@/types/dashboard";
 
 export function ProductDashboard() {
+  const [categoryData, setCategoryData] = useState<CategoryChartData[]>([]);
+  const [dailyRevenue, setDailyRevenue] = useState<RevenueChartData[]>([]);
+  const [yearlyData, setYearlyData] = useState<RevenueChartData[]>([]);
+
+  useEffect(() => {
+    const fetchChartData = async () => {
+      try {
+        const [category, daily, yearly] = await Promise.all([
+          getProductCategoryData(),
+          getProductDailyRevenue(),
+          getProductYearlyData(),
+        ]);
+        setCategoryData(category);
+        setDailyRevenue(daily);
+        setYearlyData(yearly);
+      } catch (error) {
+        console.error("Failed to fetch chart data:", error);
+      }
+    };
+
+    fetchChartData();
+  }, []);
   return (
     <div className="space-y-6">
       <Card>
