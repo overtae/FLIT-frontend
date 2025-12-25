@@ -1,27 +1,12 @@
-"use client";
-
 import { use } from "react";
 
-import { useRouter } from "next/navigation";
+import { getPageVerification } from "@/lib/api/client";
 
-import { ArrowLeft } from "lucide-react";
+import { SettlementDetailContent } from "../_components/settlement-detail-content";
 
-import { Button } from "@/components/ui/button";
+export default async function SettlementDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const isVerified = await getPageVerification("settlements");
 
-import { SettlementDetail } from "./_components/settlement-detail";
-
-export default function SettlementDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const router = useRouter();
-  const { id } = use(params);
-
-  return (
-    <div className="space-y-6">
-      <Button variant="ghost" onClick={() => router.back()} className="mb-4">
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        이전
-      </Button>
-
-      <SettlementDetail settlementId={id} />
-    </div>
-  );
+  return <SettlementDetailContent settlementId={id} initialVerified={isVerified} />;
 }

@@ -1,27 +1,44 @@
 "use client";
 
+import { useState, useEffect } from "react";
+
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
-const cvrData = [
-  { period: "1주", cvr: 2.5 },
-  { period: "2주", cvr: 3.0 },
-  { period: "3주", cvr: 2.8 },
-  { period: "4주", cvr: 3.2 },
-  { period: "5주", cvr: 3.5 },
-];
-
-const searchTrendData = [
-  { keyword: "장미", search: 1000, bounceRate: 25.5 },
-  { keyword: "화분", search: 800, bounceRate: 30.2 },
-  { keyword: "꽃다발", search: 600, bounceRate: 28.1 },
-  { keyword: "식물", search: 500, bounceRate: 32.5 },
-  { keyword: "화환", search: 400, bounceRate: 27.8 },
-];
+import { getOrderDashboardData } from "@/lib/api/dashboard";
 
 export function OrderDashboard() {
+  const [cvrData, setCvrData] = useState<Array<{ period: string; cvr: number }>>([]);
+  const [searchTrendData, setSearchTrendData] = useState<
+    Array<{ keyword: string; search: number; bounceRate: number }>
+  >([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        const data = await getOrderDashboardData();
+        setCvrData(data.cvrData);
+        setSearchTrendData(data.searchTrendData);
+      } catch (error) {
+        console.error("Failed to fetch order dashboard data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
   return (
     <div className="space-y-6">
       <Card>
@@ -74,8 +91,8 @@ export function OrderDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {searchTrendData.map((item, index) => (
-                  <tr key={index} className="border-b">
+                {searchTrendData.map((item) => (
+                  <tr key={item.keyword} className="border-b">
                     <td className="px-4 py-2">{item.keyword}</td>
                     <td className="px-4 py-2 text-right">{item.search.toLocaleString()}</td>
                     <td className="px-4 py-2 text-right">{item.bounceRate}%</td>

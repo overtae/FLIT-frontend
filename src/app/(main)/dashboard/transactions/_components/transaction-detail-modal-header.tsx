@@ -11,7 +11,7 @@ interface TransactionDetailModalHeaderProps {
 
 export function TransactionDetailModalHeader({ transaction, category }: TransactionDetailModalHeaderProps) {
   return (
-    <div className="border-b bg-gray-50 px-6 py-3">
+    <div className="bg-background border-b px-6 py-3">
       <div className="flex items-center justify-between gap-4 text-sm">
         <div className="flex items-center gap-4">
           <span className="font-medium">{transaction.orderNumber}</span>

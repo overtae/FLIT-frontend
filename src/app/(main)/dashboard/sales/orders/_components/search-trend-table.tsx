@@ -1,26 +1,44 @@
 "use client";
 
+import { useState, useEffect } from "react";
+
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { getSearchTrendData } from "@/lib/api/dashboard";
 
 interface SearchTrendTableProps {
   period: "weekly" | "monthly" | "yearly";
   selectedDate?: Date;
 }
 
-const searchTrendData = [
-  { rank: 1, keyword: "장미", search: 1250, bounceRate: 25.5 },
-  { rank: 2, keyword: "화분", search: 980, bounceRate: 30.2 },
-  { rank: 3, keyword: "꽃다발", search: 850, bounceRate: 28.1 },
-  { rank: 4, keyword: "식물", search: 720, bounceRate: 32.5 },
-  { rank: 5, keyword: "화환", search: 650, bounceRate: 27.8 },
-  { rank: 6, keyword: "다육식물", search: 580, bounceRate: 29.3 },
-  { rank: 7, keyword: "공기정화", search: 520, bounceRate: 26.7 },
-  { rank: 8, keyword: "플랜테리어", search: 480, bounceRate: 31.2 },
-  { rank: 9, keyword: "가드닝", search: 420, bounceRate: 28.9 },
-  { rank: 10, keyword: "정기배송", search: 380, bounceRate: 27.4 },
-];
+export function SearchTrendTable({ period }: SearchTrendTableProps) {
+  const [searchTrendData, setSearchTrendData] = useState<
+    Array<{ rank: number; keyword: string; search: number; bounceRate: number }>
+  >([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-export function SearchTrendTable({ period: _period, selectedDate: _selectedDate }: SearchTrendTableProps) {
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        const data = await getSearchTrendData({ period });
+        setSearchTrendData(data);
+      } catch (error) {
+        console.error("Failed to fetch search trend data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [period]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
   const top5 = searchTrendData.slice(0, 5);
   const bottom5 = searchTrendData.slice(5, 10);
 

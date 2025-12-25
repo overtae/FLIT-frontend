@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-import { getPasswordVerified } from "@/lib/api/client";
+import { getPageVerification } from "@/lib/api/client";
 
 import { UsersCategoryContent } from "./_components/users-category-content";
 
@@ -17,7 +17,7 @@ export default async function UsersCategoryPage({ params }: UsersCategoryPagePro
     redirect("/dashboard/users");
   }
 
-  const isVerified = await getPasswordVerified();
+  const isVerified = await getPageVerification("users");
 
   return <UsersCategoryContent category={category} initialVerified={isVerified} />;
 }

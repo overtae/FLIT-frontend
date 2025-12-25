@@ -79,3 +79,10 @@ export const mockUsers: User[] = [
     };
   }),
 ];
+
+export const rootUser = {
+  name: "전엄지",
+  email: "admin@email.com",
+  avatar: "/placeholder-avatar.jpg",
+  level: "Master",
+};

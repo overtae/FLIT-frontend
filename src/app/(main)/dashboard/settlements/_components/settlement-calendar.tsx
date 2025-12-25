@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 
 import {
   format,
@@ -23,6 +23,9 @@ interface SettlementCalendarProps {
   selectedDate: Date | null;
   onDateSelect: (date: Date) => void;
   settlementDates: Date[];
+  currentYear: number;
+  currentMonth: number;
+  onMonthChange: (year: number, month: number) => void;
   className?: string;
 }
 
@@ -30,22 +33,53 @@ export function SettlementCalendar({
   selectedDate,
   onDateSelect,
   settlementDates,
+  currentYear,
+  currentMonth: currentMonthNum,
+  onMonthChange,
   className,
 }: SettlementCalendarProps) {
-  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [currentMonth, setCurrentMonth] = useState(() => new Date(currentYear, currentMonthNum - 1, 1));
 
-  const daysInMonth = eachDayOfInterval({
-    start: startOfWeek(startOfMonth(currentMonth)),
-    end: endOfWeek(endOfMonth(currentMonth)),
-  });
+  const daysInMonth = useMemo(
+    () =>
+      eachDayOfInterval({
+        start: startOfWeek(startOfMonth(currentMonth)),
+        end: endOfWeek(endOfMonth(currentMonth)),
+      }),
+    [currentMonth],
+  );
 
   const weekDays = ["일", "월", "화", "수", "목", "금", "토"];
 
-  const prevMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
-  const nextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
+  // Sync currentMonth with props
+  useEffect(() => {
+    const newMonth = new Date(currentYear, currentMonthNum - 1, 1);
+    const currentMonthStr = format(currentMonth, "yyyy-MM");
+    const newMonthStr = format(newMonth, "yyyy-MM");
+    if (currentMonthStr !== newMonthStr) {
+      setCurrentMonth(newMonth);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentYear, currentMonthNum]);
+
+  const prevMonth = () => {
+    const newMonth = subMonths(currentMonth, 1);
+    setCurrentMonth(newMonth);
+    onMonthChange(newMonth.getFullYear(), newMonth.getMonth() + 1);
+  };
+
+  const nextMonth = () => {
+    const newMonth = addMonths(currentMonth, 1);
+    setCurrentMonth(newMonth);
+    onMonthChange(newMonth.getFullYear(), newMonth.getMonth() + 1);
+  };
+
+  const settlementDatesSet = useMemo(() => {
+    return new Set(settlementDates.map((date) => format(date, "yyyy-MM-dd")));
+  }, [settlementDates]);
 
   const isSettlementDate = (date: Date) => {
-    return settlementDates.some((settlementDate) => isSameDay(settlementDate, date));
+    return settlementDatesSet.has(format(date, "yyyy-MM-dd"));
   };
 
   return (
@@ -62,7 +96,7 @@ export function SettlementCalendar({
 
       <div className="grid flex-1 grid-cols-7 gap-1">
         {weekDays.map((day) => (
-          <div key={day} className="flex items-center justify-center p-2 text-xs font-medium text-gray-500">
+          <div key={day} className="flex items-center justify-center text-xs font-medium text-gray-500">
             {day}
           </div>
         ))}
@@ -71,10 +105,11 @@ export function SettlementCalendar({
           const isSelected = selectedDate ? isSameDay(date, selectedDate) : false;
           const isCurrentDay = isToday(date);
           const hasSettlement = isSettlementDate(date);
+          const dateKey = format(date, "yyyy-MM-dd");
 
           return (
             <button
-              key={date.toISOString()}
+              key={dateKey}
               type="button"
               onClick={(e) => {
                 e.preventDefault();
@@ -82,10 +117,10 @@ export function SettlementCalendar({
                 onDateSelect(date);
               }}
               className={cn(
-                "relative flex aspect-2/1 h-auto w-full flex-col items-center justify-center rounded-lg text-sm transition-colors",
-                isCurrentDay && "bg-main rounded-full text-white",
-                !isCurrentDay && "hover:bg-gray-100",
-                isSelected && !isCurrentDay && "bg-gray-200 font-semibold",
+                "relative mx-auto flex aspect-square h-auto w-fit flex-col items-center justify-center rounded-full px-4 text-sm transition-colors",
+                isCurrentDay && "border-main text-main border",
+                !isCurrentDay && "hover:bg-main/10",
+                isSelected && "bg-main hover:bg-main/80 font-semibold text-white",
                 !isSelected && !isCurrentDay && "text-gray-700",
               )}
             >

@@ -19,7 +19,7 @@ interface UsersCategoryContentProps {
 
 export function UsersCategoryContent({ category, initialVerified }: UsersCategoryContentProps) {
   const router = useRouter();
-  const [isVerified, setIsVerified] = useState(initialVerified);
+  const [isVerified] = useState(initialVerified);
 
   useEffect(() => {
     if (category && !validCategories.includes(category)) {
@@ -37,13 +37,13 @@ export function UsersCategoryContent({ category, initialVerified }: UsersCategor
         title="비밀번호 재확인"
         description="유저관리에 접근하기 위해 비밀번호를 입력해주세요."
         page="users"
-        onVerified={() => setIsVerified(true)}
+        onVerified={() => window.location.reload()}
       />
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="h-full space-y-6">
       {category === "seceder" && (
         <Tabs defaultValue="all" className="w-full">
           <TabsList>

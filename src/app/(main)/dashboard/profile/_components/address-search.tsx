@@ -53,29 +53,40 @@ export function AddressSearch({ value, onChange, onDetailFocus }: AddressSearchP
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const shouldFocusDetailRef = useRef(false);
+  const onChangeRef = useRef(onChange);
 
-  const { loaded: scriptLoaded } = useScript({
-    src: "//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js",
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
+
+  const { loaded: scriptLoaded, error: scriptError } = useScript({
+    src: "https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js",
     checkFunction: () => !!window.daum?.Postcode,
   });
 
   useEffect(() => {
     if (!isOpen || !scriptLoaded) return;
 
-    const container = containerRef.current;
+    if (scriptError) {
+      console.error("Script loading error");
+      return;
+    }
+
+    const Postcode = window.daum?.Postcode;
+    if (!Postcode) {
+      return;
+    }
 
     const initPostcode = () => {
-      if (!container || !window.daum?.Postcode) {
-        requestAnimationFrame(initPostcode);
+      const container = containerRef.current;
+      if (!container) {
         return;
       }
 
-      if (container.innerHTML) {
-        container.innerHTML = "";
-      }
+      container.innerHTML = "";
 
       try {
-        new window.daum.Postcode({
+        const postcode = new Postcode({
           oncomplete: (data) => {
             let addr = "";
             if (data.userSelectedType === "R") {
@@ -84,7 +95,7 @@ export function AddressSearch({ value, onChange, onDetailFocus }: AddressSearchP
               addr = data.jibunAddress;
             }
 
-            onChange(addr);
+            onChangeRef.current(addr);
             shouldFocusDetailRef.current = true;
             setIsOpen(false);
           },
@@ -93,22 +104,34 @@ export function AddressSearch({ value, onChange, onDetailFocus }: AddressSearchP
           theme: {
             bgColor: "#ffffff",
           },
-        }).embed(container);
+        });
+
+        postcode.embed(container);
       } catch (error) {
         console.error("Failed to initialize Daum Postcode:", error);
       }
     };
 
-    requestAnimationFrame(() => {
-      requestAnimationFrame(initPostcode);
-    });
+    if (containerRef.current) {
+      initPostcode();
+    } else {
+      const checkContainer = () => {
+        if (containerRef.current) {
+          initPostcode();
+        } else {
+          requestAnimationFrame(checkContainer);
+        }
+      };
+      requestAnimationFrame(checkContainer);
+    }
 
+    const container = containerRef.current;
     return () => {
       if (container) {
         container.innerHTML = "";
       }
     };
-  }, [isOpen, scriptLoaded, onChange]);
+  }, [isOpen, scriptLoaded, scriptError]);
 
   const handleOpenChange = (open: boolean) => {
     setIsOpen(open);
@@ -131,12 +154,20 @@ export function AddressSearch({ value, onChange, onDetailFocus }: AddressSearchP
           placeholder="주소를 검색하세요"
           className="flex-1 border-0 border-b bg-transparent p-0 shadow-none"
         />
-        <Button type="button" variant="outline" size="icon" onClick={() => setIsOpen(true)}>
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          onClick={(e) => {
+            (e.currentTarget as HTMLElement).blur();
+            setIsOpen(true);
+          }}
+        >
           <Search className="h-4 w-4" />
         </Button>
       </div>
       <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl" onOpenAutoFocus={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>주소 검색</DialogTitle>
             <DialogDescription>주소를 검색하여 선택하세요</DialogDescription>

@@ -4,86 +4,85 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 import { SettlementDetailTransaction } from "./settlement-detail-columns";
+import { TransactionDetailCustomerInfo } from "./transaction-detail-customer-info";
+import { TransactionDetailDeliveryInfo } from "./transaction-detail-delivery-info";
+import { TransactionDetailFloristInfo } from "./transaction-detail-florist-info";
+import { TransactionDetailModalHeader } from "./transaction-detail-modal-header";
+import { TransactionDetailPurchaseInfo } from "./transaction-detail-purchase-info";
 
 interface TransactionDetailModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   transaction: SettlementDetailTransaction | null;
+  category?: "order" | "order-request" | "canceled";
 }
 
-export function TransactionDetailModal({ open, onOpenChange, transaction }: TransactionDetailModalProps) {
+export function TransactionDetailModal({
+  open,
+  onOpenChange,
+  transaction,
+  category = "order",
+}: TransactionDetailModalProps) {
   if (!transaction) return null;
+
+  const totalAgencyFee =
+    transaction.deliveryInfo?.agencyFee &&
+    transaction.deliveryInfo.agencyFee +
+      (transaction.deliveryInfo.rainyDaySurcharge ?? 0) +
+      (transaction.deliveryInfo.vat ?? 0);
+
+  const extractTimeFromEstimated = (estimatedTime?: string) => {
+    if (!estimatedTime) return { time: "", rest: "" };
+    const match = estimatedTime.match(/(\d+분 후)/);
+    if (match) {
+      return {
+        time: match[1],
+        rest: estimatedTime.replace(match[1], "").trim(),
+      };
+    }
+    return { time: "", rest: estimatedTime };
+  };
+
+  const { time: estimatedTimeHighlight, rest: estimatedTimeRest } = extractTimeFromEstimated(
+    transaction.deliveryInfo?.estimatedTime,
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full max-w-4xl gap-0 overflow-hidden p-0 sm:max-w-4xl">
+      <DialogContent showCloseButton={false} className="w-full max-w-6xl gap-0 overflow-hidden p-0 sm:max-w-6xl">
         <DialogHeader className="sr-only">
           <DialogTitle>거래 상세 정보</DialogTitle>
         </DialogHeader>
 
         <div className="flex max-h-[80vh] flex-col overflow-hidden">
-          <div className="border-b bg-gray-50 px-6 py-3">
-            <div className="flex items-center justify-between gap-4 text-sm">
-              <div className="flex items-center gap-4">
-                <span className="font-medium">{transaction.orderNumber}</span>
-                <span>{transaction.from}</span>
-                <span>{transaction.to}</span>
-                <span>{transaction.productName}</span>
-              </div>
-              <div className="flex items-center gap-4">
-                <span>{transaction.paymentAmount.toLocaleString()}원</span>
-                <span>{transaction.orderDate}</span>
-                <span>{transaction.paymentDate}</span>
-              </div>
-            </div>
-          </div>
+          <TransactionDetailModalHeader transaction={transaction} category={category} />
 
           <div className="custom-scrollbar flex-1 overflow-y-auto bg-white px-4 py-6 sm:px-8 sm:py-8">
-            <div className="space-y-6">
-              <div>
-                <h3 className="mb-2 text-sm font-semibold">거래 정보</h3>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">주문번호</span>
-                    <span className="font-medium">{transaction.orderNumber}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">From</span>
-                    <span className="font-medium">{transaction.from}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">To</span>
-                    <span className="font-medium">{transaction.to}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">상품명</span>
-                    <span className="font-medium">{transaction.productName}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">결제금액</span>
-                    <span className="font-medium">{transaction.paymentAmount.toLocaleString()}원</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">주문접수일</span>
-                    <span className="font-medium">{transaction.orderDate}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">결제일</span>
-                    <span className="font-medium">{transaction.paymentDate}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">결제방법</span>
-                    <span className="font-medium">{transaction.paymentMethod}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">구분</span>
-                    <span className="font-medium">{transaction.type}</span>
-                  </div>
-                </div>
+            <div className="grid grid-cols-1 gap-x-8 gap-y-6 md:grid-cols-2 lg:grid-cols-3">
+              <div className="space-y-6">
+                <TransactionDetailFloristInfo transaction={transaction} />
+                <TransactionDetailCustomerInfo transaction={transaction} />
+              </div>
+
+              <div className="space-y-6">
+                <TransactionDetailPurchaseInfo transaction={transaction} category={category} />
+              </div>
+
+              <div className="space-y-6">
+                <TransactionDetailDeliveryInfo
+                  transaction={transaction}
+                  category={category}
+                  totalAgencyFee={totalAgencyFee}
+                  estimatedTimeHighlight={estimatedTimeHighlight}
+                  estimatedTimeRest={estimatedTimeRest}
+                />
               </div>
             </div>
 
             <div className="mt-6 flex justify-end gap-2">
+              <Button variant="secondary" className="rounded-md bg-gray-300 px-6 text-white hover:bg-gray-400">
+                삭제
+              </Button>
               <Button
                 variant="outline"
                 className="rounded-md border-gray-300 bg-white px-6 text-gray-900 hover:bg-gray-50"

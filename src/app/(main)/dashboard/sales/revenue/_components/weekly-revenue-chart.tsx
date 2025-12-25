@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import { ChevronDown } from "lucide-react";
 import { DateRange } from "react-day-picker";
@@ -11,21 +11,13 @@ import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { getWeeklyRevenueChartData } from "@/lib/api/dashboard";
+import { DEFAULT_CHART_MARGIN, formatYAxisValueShort } from "@/lib/chart-utils";
 
 interface WeeklyRevenueChartProps {
   paymentMethod: "total" | "card" | "pos" | "transfer";
   onPaymentMethodChange: (method: "total" | "card" | "pos" | "transfer") => void;
 }
-
-const weeklyData = [
-  { day: "Sun", thisWeek: 35000000, lastWeek: 32000000 },
-  { day: "Mon", thisWeek: 38000000, lastWeek: 35000000 },
-  { day: "Tue", thisWeek: 40000000, lastWeek: 37000000 },
-  { day: "Wed", thisWeek: 39000000, lastWeek: 36000000 },
-  { day: "Thu", thisWeek: 42000000, lastWeek: 39000000 },
-  { day: "Fri", thisWeek: 41000000, lastWeek: 38000000 },
-  { day: "Sat", thisWeek: 37000000, lastWeek: 34000000 },
-];
 
 interface CustomTooltipProps {
   active?: boolean;
@@ -58,6 +50,32 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
 export function WeeklyRevenueChart({ paymentMethod, onPaymentMethodChange }: WeeklyRevenueChartProps) {
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const [weeklyData, setWeeklyData] = useState<Array<{ day: string; thisWeek: number; lastWeek: number }>>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        const data = await getWeeklyRevenueChartData({ paymentMethod });
+        setWeeklyData(data);
+      } catch (error) {
+        console.error("Failed to fetch weekly revenue chart data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [paymentMethod]);
+
+  if (isLoading) {
+    return (
+      <div className="flex h-[400px] items-center justify-center">
+        <div className="text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -110,7 +128,7 @@ export function WeeklyRevenueChart({ paymentMethod, onPaymentMethodChange }: Wee
       </div>
 
       <ResponsiveContainer width="100%" height={400}>
-        <AreaChart data={weeklyData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+        <AreaChart data={weeklyData} margin={DEFAULT_CHART_MARGIN}>
           <defs>
             <linearGradient id="colorThisWeek" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="var(--chart-1)" stopOpacity={0.3} />
@@ -123,7 +141,7 @@ export function WeeklyRevenueChart({ paymentMethod, onPaymentMethodChange }: Wee
           </defs>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="day" />
-          <YAxis />
+          <YAxis tickFormatter={formatYAxisValueShort} width={60} />
           <Tooltip content={<CustomTooltip />} />
           <Area
             type="monotone"

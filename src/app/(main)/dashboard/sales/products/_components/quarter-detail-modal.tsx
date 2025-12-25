@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { format } from "date-fns";
 
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { getQuarterProductDetailData, QuarterProductDetailData } from "@/lib/api/dashboard";
 
 interface QuarterDetailModalProps {
   open: boolean;
@@ -17,94 +18,97 @@ interface QuarterDetailModalProps {
 
 const categories = ["꽃", "식물", "화환", "공간연출", "정기배송"];
 
-const paymentBreakdown = {
-  card: 1500000000,
-  transfer: 500000000,
-  pos: 800000000,
-};
-
 export function QuarterDetailModal({ open, onOpenChange, year }: QuarterDetailModalProps) {
+  const [data, setData] = useState<QuarterProductDetailData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState("꽃");
-  const totalAmount = 1361471840;
+
+  useEffect(() => {
+    if (!open) return;
+
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        const result = await getQuarterProductDetailData(year);
+        setData(result);
+      } catch (error) {
+        console.error("Failed to fetch quarter product detail data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [open, year]);
+
+  if (isLoading || !data) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-h-[90vh] max-w-[90vw] min-w-4xl">
+          <DialogTitle className="text-foreground text-lg font-bold">{year} 상품 총 매출</DialogTitle>
+          <div>Loading...</div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  const { totalAmount, paymentAmount, paymentCount, refundCancelAmount, refundCancelCount } = data;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto">
-        <DialogHeader>
-          <div className="flex items-center justify-between">
-            <DialogTitle>{year} 상품 총 매출</DialogTitle>
-            <RadioGroup value={selectedCategory} onValueChange={setSelectedCategory}>
-              <div className="flex items-center gap-4">
-                {categories.map((category) => (
-                  <div key={category} className="flex items-center space-x-2">
-                    <RadioGroupItem value={category} id={category} />
-                    <Label htmlFor={category} className="cursor-pointer font-normal">
-                      {category}
-                    </Label>
-                  </div>
-                ))}
-              </div>
-            </RadioGroup>
-          </div>
-        </DialogHeader>
+      <DialogContent className="max-h-[90vh] max-w-[90vw] min-w-4xl">
+        <div className="flex items-center justify-between">
+          <DialogTitle className="text-foreground text-lg font-bold">{year} 상품 총 매출</DialogTitle>
+          <RadioGroup value={selectedCategory} onValueChange={setSelectedCategory}>
+            <div className="flex items-center gap-4">
+              {categories.map((category) => (
+                <div key={category} className="flex items-center space-x-2">
+                  <RadioGroupItem value={category} id={category} />
+                  <Label htmlFor={category} className="cursor-pointer font-normal">
+                    {category}
+                  </Label>
+                </div>
+              ))}
+            </div>
+          </RadioGroup>
+        </div>
+
+        <hr />
 
         <div className="space-y-6">
-          {/* 업데이트 일시 */}
-          <div className="text-muted-foreground text-sm">
+          {/* 업데이트 시간 */}
+          <div className="text-muted-foreground text-xs">
             최종 업데이트 일시 : {format(new Date(), "yyyy-MM-dd HH:mm")}
           </div>
 
-          {/* 요약 정보 */}
-          <div className="space-y-4">
-            <div className="text-3xl font-bold">{totalAmount.toLocaleString()} 원</div>
-            <div className="grid grid-cols-4 gap-4">
-              <div className="border-border bg-background rounded-lg border p-4">
-                <div className="text-muted-foreground text-sm">결제금액</div>
-                <div className="text-lg font-semibold">{(totalAmount * 0.9).toLocaleString()}원</div>
-              </div>
-              <div className="border-border bg-background rounded-lg border p-4">
-                <div className="text-muted-foreground text-sm">결제건수</div>
-                <div className="text-lg font-semibold">1,250건</div>
-              </div>
-              <div className="border-border bg-background rounded-lg border p-4">
-                <div className="text-muted-foreground text-sm">환불(취소) 금액</div>
-                <div className="text-lg font-semibold">{(totalAmount * 0.1).toLocaleString()}원</div>
-              </div>
-              <div className="border-border bg-background rounded-lg border p-4">
-                <div className="text-muted-foreground text-sm">환불(취소) 건수</div>
-                <div className="text-lg font-semibold">25건</div>
-              </div>
+          <div className="grid grid-cols-3 gap-6">
+            {/* 메인: 총 매출액 */}
+            <div className="text-foreground self-end pb-3 text-3xl font-medium">{totalAmount.toLocaleString()} 원</div>
+
+            {/* 중앙 그리드 */}
+            <div className="grid grid-cols-2 space-y-3">
+              <div className="text-secondary-foreground text-center text-sm">결제금액</div>
+              <div className="text-foreground text-end text-sm">{paymentAmount.toLocaleString()}원</div>
+              <div className="text-secondary-foreground text-center text-sm">결제건수</div>
+              <div className="text-foreground text-end text-sm">{paymentCount}건</div>
+            </div>
+
+            {/* 우측 그리드 */}
+            <div className="grid grid-cols-2 space-y-3">
+              <div className="text-secondary-foreground text-center text-sm">환불 | 취소 금액</div>
+              <div className="text-foreground text-end text-sm">{refundCancelAmount.toLocaleString()}원</div>
+              <div className="text-secondary-foreground text-center text-sm">환불 | 취소 건수</div>
+              <div className="text-foreground text-end text-sm">{refundCancelCount}건</div>
             </div>
           </div>
 
-          {/* 결제 수단별 상세 */}
-          <div className="space-y-3">
-            <h4 className="font-semibold">결제 수단별 상세</h4>
-            <div className="space-y-2">
-              <div className="border-border bg-background rounded-lg border p-4">
-                <div className="flex items-center justify-between">
-                  <span className="font-medium">카드결제</span>
-                  <span className="text-lg font-semibold">{paymentBreakdown.card.toLocaleString()}원</span>
-                </div>
-              </div>
-              <div className="border-border bg-background rounded-lg border p-4">
-                <div className="flex items-center justify-between">
-                  <span className="font-medium">계좌이체</span>
-                  <span className="text-lg font-semibold">{paymentBreakdown.transfer.toLocaleString()}원</span>
-                </div>
-              </div>
-              <div className="border-border bg-background rounded-lg border p-4">
-                <div className="flex items-center justify-between">
-                  <span className="font-medium">현장결제(POS)</span>
-                  <span className="text-lg font-semibold">{paymentBreakdown.pos.toLocaleString()}원</span>
-                </div>
-              </div>
-            </div>
-          </div>
+          <hr />
 
-          {/* 닫기 버튼 */}
+          {/* 최하단: 닫기 버튼 */}
           <div className="flex justify-end pt-4">
-            <Button onClick={() => onOpenChange(false)}>닫기</Button>
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              닫기
+            </Button>
           </div>
         </div>
       </DialogContent>

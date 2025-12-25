@@ -106,13 +106,39 @@ export type SettlementDetailTransaction = {
   id: string;
   orderNumber: string;
   from: string;
+  fromId?: string;
   to: string;
+  toId?: string;
   productName: string;
+  productImage?: string;
   paymentAmount: number;
   orderDate: string;
   paymentDate: string;
-  paymentMethod: string;
-  type: string;
+  paymentMethod: PaymentMethod;
+  type: TransactionType;
+  subCategory?: "all" | "shop" | "florist" | "order-request";
+  refundStatus?: RefundStatus;
+  floristInfo?: {
+    phone: string;
+    address: string;
+    detailedAddress: string;
+  };
+  customerInfo?: {
+    phone: string;
+    address: string;
+    detailedAddress: string;
+  };
+  deliveryInfo?: {
+    status: string;
+    type: TransactionType;
+    distance?: number;
+    agencyFee?: number;
+    rainyDaySurcharge?: number;
+    vat?: number;
+    estimatedTime?: string;
+  };
+  rewardPoints?: number;
+  customerRequest?: string;
 };
 
 export type DashboardSection = {

@@ -9,7 +9,7 @@ import {
   getAccessToken,
   getRefreshToken,
   getVerificationToken,
-  setPasswordVerified,
+  setPageVerification,
   setTokens,
   setVerificationToken,
 } from "./client";
@@ -188,7 +188,10 @@ export async function verifyPassword(password: string, page?: string) {
 
     const data: { verificationToken: string; message: string } = await response.json();
     await setVerificationToken(data.verificationToken);
-    await setPasswordVerified();
+
+    if (page) {
+      await setPageVerification(page);
+    }
 
     return { success: true, data: { verificationToken: data.verificationToken } };
   } catch {

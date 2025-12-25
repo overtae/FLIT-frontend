@@ -4,8 +4,8 @@ import { useMemo, useState, useEffect } from "react";
 
 import { useRouter, useSearchParams } from "next/navigation";
 
+import * as XLSX from "@e965/xlsx";
 import { Search } from "lucide-react";
-import * as XLSX from "xlsx";
 
 import { DataTablePagination } from "@/components/data-table/data-table-pagination";
 import { DataTableWithSelection } from "@/components/data-table/data-table-with-selection";
@@ -27,7 +27,7 @@ interface TransactionListProps {
 export function TransactionList({ category, subCategory }: TransactionListProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(searchParams.get("search") ?? "");
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -36,12 +36,6 @@ export function TransactionList({ category, subCategory }: TransactionListProps)
 
   const pageIndex = parseInt(searchParams.get("page") ?? "1", 10) - 1;
   const pageSize = parseInt(searchParams.get("pageSize") ?? "10", 10);
-  const [filters, setFilters] = useState<{
-    types?: TransactionType[];
-    paymentMethods?: PaymentMethod[];
-    refundStatuses?: string[];
-    date?: Date;
-  }>({});
 
   useEffect(() => {
     const buildCategoryParams = (params: {
@@ -66,46 +60,51 @@ export function TransactionList({ category, subCategory }: TransactionListProps)
       }
     };
 
-    const buildFilterParams = (params: {
-      subCategory?: string;
-      refundStatus?: string;
-      type?: string;
-      paymentMethod?: string;
-      page?: number;
-      pageSize?: number;
-    }) => {
-      if (filters.types && filters.types.length > 0) {
-        params.type = filters.types[0];
-      }
-      if (filters.paymentMethods && filters.paymentMethods.length > 0) {
-        params.paymentMethod = filters.paymentMethods[0];
-      }
-    };
-
-    const buildParams = () => {
-      const params: {
-        subCategory?: string;
-        refundStatus?: string;
-        type?: string;
-        paymentMethod?: string;
-        page?: number;
-        pageSize?: number;
-      } = {
-        page: pageIndex + 1,
-        pageSize,
-      };
-
-      buildCategoryParams(params);
-      buildFilterParams(params);
-
-      return params;
-    };
-
     const fetchTransactions = async () => {
       try {
         setIsLoading(true);
-        const params = buildParams();
-        const response = await getTransactions(params);
+        const params: {
+          subCategory?: string;
+          refundStatus?: string;
+          type?: string;
+          paymentMethod?: string;
+          page?: number;
+          pageSize?: number;
+        } = {
+          page: pageIndex + 1,
+          pageSize,
+        };
+
+        buildCategoryParams(params);
+
+        const searchValue = searchParams.get("search");
+        const typesValue = searchParams.get("types");
+        const paymentMethodsValue = searchParams.get("paymentMethods");
+        const refundStatusesValue = searchParams.get("refundStatuses");
+        const dateValue = searchParams.get("date");
+
+        // URL에서 읽어온 필터 값들을 API 파라미터에 추가
+        if (typesValue) {
+          const types = typesValue.split(",");
+          if (types.length > 0) {
+            params.type = types[0] as TransactionType;
+          }
+        }
+        if (paymentMethodsValue) {
+          const methods = paymentMethodsValue.split(",");
+          if (methods.length > 0) {
+            params.paymentMethod = methods[0] as PaymentMethod;
+          }
+        }
+
+        const response = await getTransactions({
+          ...params,
+          search: searchValue ?? undefined,
+          types: typesValue ?? undefined,
+          paymentMethods: paymentMethodsValue ?? undefined,
+          refundStatuses: refundStatusesValue ?? undefined,
+          date: dateValue ?? undefined,
+        });
         setTransactions(response.data);
         setTotal(response.total);
       } catch (error) {
@@ -116,7 +115,8 @@ export function TransactionList({ category, subCategory }: TransactionListProps)
     };
 
     fetchTransactions();
-  }, [category, subCategory, pageIndex, pageSize, filters]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [category, subCategory, pageIndex, pageSize, searchParams.toString()]);
 
   const handleViewDetail = (transaction: Transaction) => {
     setSelectedTransaction(transaction);
@@ -165,19 +165,6 @@ export function TransactionList({ category, subCategory }: TransactionListProps)
     defaultPageSize: pageSize,
   });
 
-  useEffect(() => {
-    const pagination = table.getState().pagination;
-    const newPageIndex = pagination.pageIndex;
-    const newPageSize = pagination.pageSize;
-
-    if (newPageIndex !== pageIndex || newPageSize !== pageSize) {
-      const params = new URLSearchParams(searchParams.toString());
-      params.set("page", (newPageIndex + 1).toString());
-      params.set("pageSize", newPageSize.toString());
-      router.push(`?${params.toString()}`, { scroll: false });
-    }
-  }, [table, pageIndex, pageSize, router, searchParams]);
-
   const handleDownloadAll = () => {
     const selectedRows = table.getFilteredSelectedRowModel().rows;
     if (selectedRows.length === 0) return;
@@ -213,7 +200,7 @@ export function TransactionList({ category, subCategory }: TransactionListProps)
 
   return (
     <>
-      <div className="flex min-h-full flex-col space-y-4">
+      <div className="flex min-h-screen flex-col space-y-4">
         <div className="flex items-center justify-end">
           <div className="flex items-center gap-2">
             <div className="relative w-[300px]">
@@ -221,11 +208,22 @@ export function TransactionList({ category, subCategory }: TransactionListProps)
                 placeholder=""
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    const params = new URLSearchParams(searchParams.toString());
+                    if (search.trim()) {
+                      params.set("search", search.trim());
+                    } else {
+                      params.delete("search");
+                    }
+                    router.push(`?${params.toString()}`, { scroll: false });
+                  }
+                }}
                 className="h-9 rounded-full pr-10 pl-4"
               />
               <Search className="text-muted-foreground absolute top-2.5 right-3 h-4 w-4" />
             </div>
-            <TransactionFilter type={category} onFilterChange={setFilters} />
+            <TransactionFilter type={category} />
           </div>
         </div>
         <div className="flex-1 rounded-md">

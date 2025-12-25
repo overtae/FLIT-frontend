@@ -1,17 +1,6 @@
 "use client";
 
-import Image from "next/image";
-import Link from "next/link";
-
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-} from "@/components/ui/sidebar";
-import { APP_CONFIG } from "@/config/app-config";
+import { Sidebar, SidebarContent } from "@/components/ui/sidebar";
 import { sidebarItems } from "@/navigation/sidebar/sidebar-items";
 
 import { NavMain } from "./nav-main";
@@ -19,7 +8,7 @@ import { NavMain } from "./nav-main";
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar {...props}>
-      <SidebarHeader>
+      {/* <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild className="data-[slot=sidebar-menu-button]:!p-1.5">
@@ -30,7 +19,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
-      </SidebarHeader>
+      </SidebarHeader> */}
       <SidebarContent>
         <NavMain items={sidebarItems} />
       </SidebarContent>

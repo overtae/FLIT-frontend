@@ -2,10 +2,10 @@
 
 import { useMemo, useEffect, useState } from "react";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 
+import * as XLSX from "@e965/xlsx";
 import { Download } from "lucide-react";
-import * as XLSX from "xlsx";
 
 import { DataTablePagination } from "@/components/data-table/data-table-pagination";
 import { DataTableWithSelection } from "@/components/data-table/data-table-with-selection";
@@ -17,7 +17,6 @@ import { RevenueDetail } from "@/types/dashboard";
 import { revenueColumns } from "./columns.revenue";
 
 export function RevenueDetailTable() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(true);
   const [total, setTotal] = useState(0);
@@ -33,6 +32,14 @@ export function RevenueDetailTable() {
         const response = await getRevenueDetails({
           page: pageIndex + 1,
           pageSize,
+          search: searchParams.get("search") ?? undefined,
+          categories: searchParams.get("categories") ?? undefined,
+          paymentMethods: searchParams.get("paymentMethods") ?? undefined,
+          regions: searchParams.get("regions") ?? undefined,
+          orderStatuses: searchParams.get("orderStatuses") ?? undefined,
+          today: searchParams.get("today") === "true",
+          dateFrom: searchParams.get("dateFrom") ?? undefined,
+          dateTo: searchParams.get("dateTo") ?? undefined,
         });
 
         setRevenueDetails(response.data);
@@ -47,7 +54,8 @@ export function RevenueDetailTable() {
     };
 
     fetchRevenueDetails();
-  }, [pageIndex, pageSize]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pageIndex, pageSize, searchParams.toString()]);
 
   const columns = useMemo(() => revenueColumns, []);
 
@@ -60,19 +68,6 @@ export function RevenueDetailTable() {
     defaultPageIndex: pageIndex,
     defaultPageSize: pageSize,
   });
-
-  useEffect(() => {
-    const pagination = table.getState().pagination;
-    const newPageIndex = pagination.pageIndex;
-    const newPageSize = pagination.pageSize;
-
-    if (newPageIndex !== pageIndex || newPageSize !== pageSize) {
-      const params = new URLSearchParams(searchParams.toString());
-      params.set("page", (newPageIndex + 1).toString());
-      params.set("pageSize", newPageSize.toString());
-      router.push(`?${params.toString()}`, { scroll: false });
-    }
-  }, [table, pageIndex, pageSize, router, searchParams]);
 
   const handleDownloadAll = () => {
     const filteredRows = table.getFilteredRowModel().rows;
@@ -105,7 +100,7 @@ export function RevenueDetailTable() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="min-h-screen space-y-4">
       <div className="overflow-hidden rounded-md border">
         <DataTableWithSelection table={table} rowSelection={rowSelection} />
       </div>

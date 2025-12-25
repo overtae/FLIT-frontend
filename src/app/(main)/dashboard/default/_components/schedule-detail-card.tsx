@@ -22,10 +22,14 @@ export function ScheduleDetailCard({ date, events, onClose }: ScheduleDetailCard
   const groupedEvents = events.reduce(
     (acc, event) => {
       const timeKey = event.time;
-      if (!acc[timeKey]) {
-        acc[timeKey] = [];
+      if (!(timeKey in acc)) {
+        const newArray: ScheduleEvent[] = [];
+        acc[timeKey] = newArray;
       }
-      acc[timeKey].push(event);
+      const timeEvents = acc[timeKey];
+      if (timeEvents) {
+        timeEvents.push(event);
+      }
       return acc;
     },
     {} as Record<string, ScheduleEvent[]>,
@@ -33,7 +37,7 @@ export function ScheduleDetailCard({ date, events, onClose }: ScheduleDetailCard
 
   return (
     <Card className="w-full max-w-md border-none shadow-none">
-      <CardContent className="space-y-4 px-4">
+      <CardContent className="space-y-4 px-0">
         <div className="space-y-3">
           {Object.entries(groupedEvents).map(([time, timeEvents]) => (
             <div key={time} className="space-y-2">

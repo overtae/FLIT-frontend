@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { format } from "date-fns";
 import { ko } from "date-fns/locale";
@@ -10,31 +10,55 @@ import { Button } from "@/components/ui/button";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { getRevenueDashboardData, RevenueDashboardData } from "@/lib/api/dashboard";
 
 interface RevenueDashboardProps {
   selectedDate?: Date;
   onDateSelect: (date: Date | undefined) => void;
 }
 
-const paymentBreakdown = {
-  card: 150,
-  transfer: 80,
-  pos: 120,
-};
-
 export function RevenueDashboard({ selectedDate, onDateSelect }: RevenueDashboardProps) {
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
-  const [isPaymentTooltipOpen, setIsPaymentTooltipOpen] = useState(false);
-  const [isRefundAmountTooltipOpen, setIsRefundAmountTooltipOpen] = useState(false);
-  const [isRefundCountTooltipOpen, setIsRefundCountTooltipOpen] = useState(false);
+  const [isPaymentCountTooltipOpen, setIsPaymentCountTooltipOpen] = useState(false);
+  const [isPaymentAmountTooltipOpen, setIsPaymentAmountTooltipOpen] = useState(false);
+  const [isRefundCancelAmountTooltipOpen, setIsRefundCancelAmountTooltipOpen] = useState(false);
+  const [isRefundCancelCountTooltipOpen, setIsRefundCancelCountTooltipOpen] = useState(false);
+  const [dashboardData, setDashboardData] = useState<RevenueDashboardData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const totalRevenue = 32430000;
-  const paymentAmount = 30000000;
-  const paymentCount = 350;
-  const deliveryInProgress = 25;
-  const refundCancelAmount = 2430000;
-  const refundCancelCount = 15;
-  const deliveryCompleted = 310;
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        const data = await getRevenueDashboardData(selectedDate);
+        setDashboardData(data);
+      } catch (error) {
+        console.error("Failed to fetch revenue dashboard data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [selectedDate]);
+
+  if (isLoading || !dashboardData) {
+    return <div>Loading...</div>;
+  }
+
+  const {
+    totalRevenue,
+    paymentAmount,
+    paymentCount,
+    deliveryInProgress,
+    refundCancelAmount,
+    refundCancelCount,
+    deliveryCompleted,
+    paymentCountBreakdown,
+    paymentAmountBreakdown,
+    refundCancelCountBreakdown,
+    refundCancelAmountBreakdown,
+  } = dashboardData;
 
   return (
     <div className="space-y-6">
@@ -61,42 +85,53 @@ export function RevenueDashboard({ selectedDate, onDateSelect }: RevenueDashboar
         </Popover>
       </div>
 
+      <hr />
+
       {/* 최종 업데이트 일시 */}
       <div className="text-muted-foreground text-xs">최종 업데이트 일시 : {format(new Date(), "yyyy-MM-dd HH:mm")}</div>
 
       {/* 메인 지표 및 서브 지표 */}
       <div className="grid grid-cols-3 gap-6">
         {/* 좌측: 총 매출액 */}
-        <div className="col-span-1">
-          <div className="text-foreground text-4xl font-bold">{totalRevenue.toLocaleString()} 원</div>
+        <div className="col-span-1 place-content-end">
+          <div className="text-foreground text-3xl font-medium">{totalRevenue.toLocaleString()} 원</div>
         </div>
 
         {/* 우측: 서브 지표 2열 3행 그리드 */}
         <div className="col-span-2 grid grid-cols-2 gap-6">
           {/* 1열 */}
-          <div className="flex flex-col items-start justify-start gap-2">
-            <div className="text-secondary-foreground text-sm">
-              결제금액 <span className="text-foreground font-semibold">{paymentAmount.toLocaleString()}원</span>
-            </div>
+          <div className="flex flex-col gap-2">
             <TooltipProvider>
-              <Tooltip open={isPaymentTooltipOpen} onOpenChange={setIsPaymentTooltipOpen}>
+              <Tooltip open={isPaymentAmountTooltipOpen} onOpenChange={setIsPaymentAmountTooltipOpen}>
                 <TooltipTrigger asChild>
                   <button
-                    className="text-primary cursor-pointer text-sm hover:underline"
-                    onClick={() => setIsPaymentTooltipOpen(!isPaymentTooltipOpen)}
+                    className="text-secondary-foreground hover:text-main cursor-pointer"
+                    onClick={() => setIsPaymentAmountTooltipOpen(!isPaymentAmountTooltipOpen)}
                   >
-                    결제건수 {paymentCount}건
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="text-sm">결제금액</div>
+                      <div className="font-medium">{paymentAmount.toLocaleString()}원</div>
+                    </div>
                   </button>
                 </TooltipTrigger>
-                <TooltipContent className="text-foreground bg-card border-border rounded-lg border p-4 shadow-lg">
-                  <div className="space-y-2">
-                    <div className="text-sm">카드결제 {paymentBreakdown.card}건</div>
-                    <div className="text-sm">계좌이체 {paymentBreakdown.transfer}건</div>
-                    <div className="text-sm">현장결제(POS) {paymentBreakdown.pos}건</div>
+                <TooltipContent className="text-foreground bg-card border-main min-w-64 rounded-lg border p-4 shadow-lg">
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="flex w-full items-center justify-between gap-4">
+                      <div className="text-sm">카드결제</div>
+                      <div className="text-sm font-medium">{paymentAmountBreakdown.card.toLocaleString()}원</div>
+                    </div>
+                    <div className="flex w-full items-center justify-between gap-4">
+                      <div className="text-sm">계좌이체</div>
+                      <div className="text-sm font-medium">{paymentAmountBreakdown.transfer.toLocaleString()}원</div>
+                    </div>
+                    <div className="flex w-full items-center justify-between gap-4">
+                      <div className="text-sm">현장결제(POS)</div>
+                      <div className="text-sm font-medium">{paymentAmountBreakdown.pos.toLocaleString()}원</div>
+                    </div>
                     <Button
                       size="sm"
-                      className="mt-2 w-full rounded-full"
-                      onClick={() => setIsPaymentTooltipOpen(false)}
+                      className="w-fit rounded-full px-6 text-sm"
+                      onClick={() => setIsPaymentAmountTooltipOpen(false)}
                     >
                       OK
                     </Button>
@@ -104,31 +139,85 @@ export function RevenueDashboard({ selectedDate, onDateSelect }: RevenueDashboar
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-            <div className="text-secondary-foreground text-sm">
-              배송중 <span className="text-foreground font-semibold">{deliveryInProgress}건</span>
+            <TooltipProvider>
+              <Tooltip open={isPaymentCountTooltipOpen} onOpenChange={setIsPaymentCountTooltipOpen}>
+                <TooltipTrigger asChild>
+                  <button
+                    className="text-foreground hover:text-main cursor-pointer"
+                    onClick={() => setIsPaymentCountTooltipOpen(!isPaymentCountTooltipOpen)}
+                  >
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="text-sm">결제건수</div>
+                      <div className="font-medium">{paymentCount}건</div>
+                    </div>
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent className="text-foreground bg-card border-main min-w-64 rounded-lg border p-4 shadow-lg">
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="flex w-full items-center justify-between gap-4">
+                      <div className="text-sm">카드결제</div>
+                      <div className="text-sm font-medium">{paymentCountBreakdown.card}건</div>
+                    </div>
+                    <div className="flex w-full items-center justify-between gap-4">
+                      <div className="text-sm">계좌이체</div>
+                      <div className="text-sm font-medium">{paymentCountBreakdown.transfer}건</div>
+                    </div>
+                    <div className="flex w-full items-center justify-between gap-4">
+                      <div className="text-sm">현장결제(POS)</div>
+                      <div className="text-sm font-medium">{paymentCountBreakdown.pos}건</div>
+                    </div>
+                    <Button
+                      size="sm"
+                      className="w-fit rounded-full px-6 text-sm"
+                      onClick={() => setIsPaymentCountTooltipOpen(false)}
+                    >
+                      OK
+                    </Button>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <div className="flex items-center justify-between gap-4">
+              <div className="text-secondary-foreground text-sm">배송중</div>
+              <div className="text-foreground font-medium">{deliveryInProgress}건</div>
             </div>
           </div>
 
           {/* 2열 */}
           <div className="flex flex-col items-start justify-start gap-2">
             <TooltipProvider>
-              <Tooltip open={isRefundAmountTooltipOpen} onOpenChange={setIsRefundAmountTooltipOpen}>
+              <Tooltip open={isRefundCancelAmountTooltipOpen} onOpenChange={setIsRefundCancelAmountTooltipOpen}>
                 <TooltipTrigger asChild>
                   <button
-                    className="text-secondary-foreground cursor-pointer text-sm hover:underline"
-                    onClick={() => setIsRefundAmountTooltipOpen(!isRefundAmountTooltipOpen)}
+                    className="text-secondary-foreground hover:text-main w-full cursor-pointer"
+                    onClick={() => setIsRefundCancelAmountTooltipOpen(!isRefundCancelAmountTooltipOpen)}
                   >
-                    환불 | 취소 금액{" "}
-                    <span className="text-primary font-semibold">{refundCancelAmount.toLocaleString()}원</span>
+                    <div className="flex w-full items-center justify-between gap-4">
+                      <div className="text-sm">환불 | 취소 금액</div>
+                      <div className="font-medium">{refundCancelAmount.toLocaleString()}원</div>
+                    </div>
                   </button>
                 </TooltipTrigger>
-                <TooltipContent className="text-foreground bg-card border-border rounded-lg border p-4 shadow-lg">
-                  <div className="space-y-2">
-                    <div className="text-sm">환불 | 취소 금액 상세 정보</div>
+                <TooltipContent className="text-foreground bg-card border-main min-w-64 rounded-lg border p-4 shadow-lg">
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="flex w-full items-center justify-between gap-4">
+                      <div className="text-sm">카드결제</div>
+                      <div className="text-sm font-medium">{refundCancelAmountBreakdown.card.toLocaleString()}원</div>
+                    </div>
+                    <div className="flex w-full items-center justify-between gap-4">
+                      <div className="text-sm">계좌이체</div>
+                      <div className="text-sm font-medium">
+                        {refundCancelAmountBreakdown.transfer.toLocaleString()}원
+                      </div>
+                    </div>
+                    <div className="flex w-full items-center justify-between gap-4">
+                      <div className="text-sm">현장결제(POS)</div>
+                      <div className="text-sm font-medium">{refundCancelAmountBreakdown.pos.toLocaleString()}원</div>
+                    </div>
                     <Button
                       size="sm"
-                      className="mt-2 w-full rounded-full"
-                      onClick={() => setIsRefundAmountTooltipOpen(false)}
+                      className="w-fit rounded-full px-6 text-sm"
+                      onClick={() => setIsRefundCancelAmountTooltipOpen(false)}
                     >
                       OK
                     </Button>
@@ -137,22 +226,36 @@ export function RevenueDashboard({ selectedDate, onDateSelect }: RevenueDashboar
               </Tooltip>
             </TooltipProvider>
             <TooltipProvider>
-              <Tooltip open={isRefundCountTooltipOpen} onOpenChange={setIsRefundCountTooltipOpen}>
+              <Tooltip open={isRefundCancelCountTooltipOpen} onOpenChange={setIsRefundCancelCountTooltipOpen}>
                 <TooltipTrigger asChild>
                   <button
-                    className="text-secondary-foreground cursor-pointer text-sm hover:underline"
-                    onClick={() => setIsRefundCountTooltipOpen(!isRefundCountTooltipOpen)}
+                    className="text-secondary-foreground hover:text-main w-full cursor-pointer"
+                    onClick={() => setIsRefundCancelCountTooltipOpen(!isRefundCancelCountTooltipOpen)}
                   >
-                    환불 | 취소 건수 <span className="text-primary font-semibold">{refundCancelCount}건</span>
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="text-sm">환불 | 취소 건수</div>
+                      <div className="font-medium">{refundCancelCount}건</div>
+                    </div>
                   </button>
                 </TooltipTrigger>
-                <TooltipContent className="text-foreground bg-card border-border rounded-lg border p-4 shadow-lg">
-                  <div className="space-y-2">
-                    <div className="text-sm">환불 | 취소 건수 상세 정보</div>
+                <TooltipContent className="text-foreground bg-card border-main min-w-64 rounded-lg border p-4 shadow-lg">
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="flex w-full items-center justify-between gap-4">
+                      <div className="text-sm">카드결제</div>
+                      <div className="text-sm font-medium">{refundCancelCountBreakdown.card}건</div>
+                    </div>
+                    <div className="flex w-full items-center justify-between gap-4">
+                      <div className="text-sm">계좌이체</div>
+                      <div className="text-sm font-medium">{refundCancelCountBreakdown.transfer}건</div>
+                    </div>
+                    <div className="flex w-full items-center justify-between gap-4">
+                      <div className="text-sm">현장결제(POS)</div>
+                      <div className="text-sm font-medium">{refundCancelCountBreakdown.pos}건</div>
+                    </div>
                     <Button
                       size="sm"
-                      className="mt-2 w-full rounded-full"
-                      onClick={() => setIsRefundCountTooltipOpen(false)}
+                      className="w-fit rounded-full px-6 text-sm"
+                      onClick={() => setIsRefundCancelCountTooltipOpen(false)}
                     >
                       OK
                     </Button>
@@ -160,12 +263,14 @@ export function RevenueDashboard({ selectedDate, onDateSelect }: RevenueDashboar
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-            <div className="text-secondary-foreground text-sm">
-              배송완료 <span className="text-foreground font-semibold">{deliveryCompleted}건</span>
+            <div className="flex w-full items-center justify-between gap-4">
+              <div className="text-secondary-foreground text-sm">배송완료</div>
+              <div className="text-foreground font-medium">{deliveryCompleted}건</div>
             </div>
           </div>
         </div>
       </div>
+      <hr />
     </div>
   );
 }

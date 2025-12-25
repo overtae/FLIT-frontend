@@ -2,6 +2,9 @@
 
 import * as React from "react";
 
+import { useRouter, useSearchParams } from "next/navigation";
+
+import { format } from "date-fns";
 import { Settings2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -14,20 +17,101 @@ import { PaymentMethod, RefundStatus, TransactionType } from "./transaction-type
 
 interface TransactionFilterProps {
   type: "order" | "order-request" | "canceled";
-  onFilterChange?: (filters: {
-    types?: TransactionType[];
-    paymentMethods?: PaymentMethod[];
-    refundStatuses?: RefundStatus[];
-    date?: Date;
-  }) => void;
 }
 
-export function TransactionFilter({ type, onFilterChange }: TransactionFilterProps) {
-  const [selectedTypes, setSelectedTypes] = React.useState<TransactionType[]>([]);
-  const [selectedPaymentMethods, setSelectedPaymentMethods] = React.useState<PaymentMethod[]>([]);
-  const [selectedRefundStatuses, setSelectedRefundStatuses] = React.useState<RefundStatus[]>([]);
-  const [date, setDate] = React.useState<Date | undefined>(undefined);
-  const [dateEnabled, setDateEnabled] = React.useState(false);
+export function TransactionFilter({ type }: TransactionFilterProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const [selectedTypes, setSelectedTypes] = React.useState<TransactionType[]>(() => {
+    const types = searchParams.get("types");
+    return types ? (types.split(",") as TransactionType[]) : [];
+  });
+  const [selectedPaymentMethods, setSelectedPaymentMethods] = React.useState<PaymentMethod[]>(() => {
+    const methods = searchParams.get("paymentMethods");
+    return methods ? (methods.split(",") as PaymentMethod[]) : [];
+  });
+  const [selectedRefundStatuses, setSelectedRefundStatuses] = React.useState<RefundStatus[]>(() => {
+    const statuses = searchParams.get("refundStatuses");
+    return statuses ? (statuses.split(",") as RefundStatus[]) : [];
+  });
+  const [dateEnabled, setDateEnabled] = React.useState(() => {
+    return searchParams.get("date") !== null;
+  });
+  const [date, setDate] = React.useState<Date | undefined>(() => {
+    const dateParam = searchParams.get("date");
+    return dateParam ? new Date(dateParam) : undefined;
+  });
+
+  const updateURL = React.useCallback(
+    (types?: TransactionType[], paymentMethods?: PaymentMethod[], refundStatuses?: RefundStatus[], date?: Date) => {
+      const params = new URLSearchParams(searchParams.toString());
+
+      if (types && types.length > 0) {
+        params.set("types", types.join(","));
+      } else {
+        params.delete("types");
+      }
+
+      if (paymentMethods && paymentMethods.length > 0) {
+        params.set("paymentMethods", paymentMethods.join(","));
+      } else {
+        params.delete("paymentMethods");
+      }
+
+      if (refundStatuses && refundStatuses.length > 0) {
+        params.set("refundStatuses", refundStatuses.join(","));
+      } else {
+        params.delete("refundStatuses");
+      }
+
+      if (date) {
+        params.set("date", format(date, "yyyy-MM-dd"));
+      } else {
+        params.delete("date");
+      }
+
+      router.push(`?${params.toString()}`, { scroll: false });
+    },
+    [router, searchParams],
+  );
+
+  const toggleType = (type: TransactionType) => {
+    const newTypes = selectedTypes.includes(type) ? selectedTypes.filter((t) => t !== type) : [...selectedTypes, type];
+    setSelectedTypes(newTypes);
+    updateURL(
+      newTypes.length > 0 ? newTypes : undefined,
+      selectedPaymentMethods.length > 0 ? selectedPaymentMethods : undefined,
+      selectedRefundStatuses.length > 0 ? selectedRefundStatuses : undefined,
+      dateEnabled ? date : undefined,
+    );
+  };
+
+  const togglePaymentMethod = (method: PaymentMethod) => {
+    const newMethods = selectedPaymentMethods.includes(method)
+      ? selectedPaymentMethods.filter((m) => m !== method)
+      : [...selectedPaymentMethods, method];
+    setSelectedPaymentMethods(newMethods);
+    updateURL(
+      selectedTypes.length > 0 ? selectedTypes : undefined,
+      newMethods.length > 0 ? newMethods : undefined,
+      selectedRefundStatuses.length > 0 ? selectedRefundStatuses : undefined,
+      dateEnabled ? date : undefined,
+    );
+  };
+
+  const toggleRefundStatus = (status: RefundStatus) => {
+    const newStatuses = selectedRefundStatuses.includes(status)
+      ? selectedRefundStatuses.filter((s) => s !== status)
+      : [...selectedRefundStatuses, status];
+    setSelectedRefundStatuses(newStatuses);
+    updateURL(
+      selectedTypes.length > 0 ? selectedTypes : undefined,
+      selectedPaymentMethods.length > 0 ? selectedPaymentMethods : undefined,
+      newStatuses.length > 0 ? newStatuses : undefined,
+      dateEnabled ? date : undefined,
+    );
+  };
 
   const handleReset = () => {
     setSelectedTypes([]);
@@ -35,28 +119,7 @@ export function TransactionFilter({ type, onFilterChange }: TransactionFilterPro
     setSelectedRefundStatuses([]);
     setDate(undefined);
     setDateEnabled(false);
-    onFilterChange?.({});
-  };
-
-  const handleDone = () => {
-    onFilterChange?.({
-      types: selectedTypes.length > 0 ? selectedTypes : undefined,
-      paymentMethods: selectedPaymentMethods.length > 0 ? selectedPaymentMethods : undefined,
-      refundStatuses: selectedRefundStatuses.length > 0 ? selectedRefundStatuses : undefined,
-      date: dateEnabled ? date : undefined,
-    });
-  };
-
-  const toggleType = (type: TransactionType) => {
-    setSelectedTypes((prev) => (prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]));
-  };
-
-  const togglePaymentMethod = (method: PaymentMethod) => {
-    setSelectedPaymentMethods((prev) => (prev.includes(method) ? prev.filter((m) => m !== method) : [...prev, method]));
-  };
-
-  const toggleRefundStatus = (status: RefundStatus) => {
-    setSelectedRefundStatuses((prev) => (prev.includes(status) ? prev.filter((s) => s !== status) : [...prev, status]));
+    updateURL();
   };
 
   return (
@@ -67,7 +130,7 @@ export function TransactionFilter({ type, onFilterChange }: TransactionFilterPro
           <span className="sr-only">필터 설정</span>
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[300px] p-4" align="end">
+      <PopoverContent className="max-h-[80vh] w-[300px] overflow-y-auto p-4" align="end">
         <div className="space-y-4">
           {type === "order" && (
             <>
@@ -128,10 +191,17 @@ export function TransactionFilter({ type, onFilterChange }: TransactionFilterPro
               id="filter-date"
               checked={dateEnabled}
               onCheckedChange={(checked) => {
-                setDateEnabled(!!checked);
-                if (!checked) {
+                const newEnabled = !!checked;
+                setDateEnabled(newEnabled);
+                if (!newEnabled) {
                   setDate(undefined);
                 }
+                updateURL(
+                  selectedTypes.length > 0 ? selectedTypes : undefined,
+                  selectedPaymentMethods.length > 0 ? selectedPaymentMethods : undefined,
+                  selectedRefundStatuses.length > 0 ? selectedRefundStatuses : undefined,
+                  newEnabled ? date : undefined,
+                );
               }}
             />
             <Label htmlFor="filter-date" className="cursor-pointer text-sm font-normal">
@@ -141,7 +211,21 @@ export function TransactionFilter({ type, onFilterChange }: TransactionFilterPro
 
           {dateEnabled && (
             <div className="rounded-md border shadow-sm">
-              <Calendar mode="single" selected={date} onSelect={setDate} initialFocus className="p-2" />
+              <Calendar
+                mode="single"
+                selected={date}
+                onSelect={(newDate) => {
+                  setDate(newDate);
+                  updateURL(
+                    selectedTypes.length > 0 ? selectedTypes : undefined,
+                    selectedPaymentMethods.length > 0 ? selectedPaymentMethods : undefined,
+                    selectedRefundStatuses.length > 0 ? selectedRefundStatuses : undefined,
+                    newDate,
+                  );
+                }}
+                initialFocus
+                className="p-2"
+              />
             </div>
           )}
 
@@ -151,9 +235,6 @@ export function TransactionFilter({ type, onFilterChange }: TransactionFilterPro
               className="h-8 w-full rounded-full bg-gray-600 text-xs text-white hover:bg-gray-700"
             >
               Reset
-            </Button>
-            <Button onClick={handleDone} variant="outline" className="h-8 w-full rounded-full border-gray-200 text-xs">
-              Done
             </Button>
           </div>
         </div>

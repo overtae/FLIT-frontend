@@ -1,5 +1,7 @@
 "use client";
 
+import { useState, useEffect } from "react";
+
 import {
   PieChart,
   Pie,
@@ -15,31 +17,41 @@ import {
 } from "recharts";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-
-const genderData = [
-  { name: "남성", value: 400 },
-  { name: "여성", value: 600 },
-];
-
-const ageData = [
-  { age: "20대", value: 200 },
-  { age: "30대", value: 300 },
-  { age: "40대", value: 250 },
-  { age: "50대", value: 150 },
-  { age: "60대+", value: 100 },
-];
-
-const rankingData = [
-  { rank: 1, name: "고객A", amount: 1000000 },
-  { rank: 2, name: "고객B", amount: 800000 },
-  { rank: 3, name: "고객C", amount: 600000 },
-  { rank: 4, name: "고객D", amount: 500000 },
-  { rank: 5, name: "고객E", amount: 400000 },
-];
+import { getCustomerDashboardData } from "@/lib/api/dashboard";
 
 const COLORS = ["#0088FE", "#00C49F"];
 
 export function CustomerDashboard() {
+  const [genderData, setGenderData] = useState<Array<{ name: string; value: number }>>([]);
+  const [ageData, setAgeData] = useState<Array<{ age: string; value: number }>>([]);
+  const [rankingData, setRankingData] = useState<Array<{ rank: number; name: string; amount: number }>>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        const data = await getCustomerDashboardData();
+        setGenderData(data.genderData);
+        setAgeData(data.ageData);
+        setRankingData(data.rankingData);
+      } catch (error) {
+        console.error("Failed to fetch customer dashboard data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
   return (
     <div className="space-y-6">
       <div className="grid gap-6 md:grid-cols-2">
@@ -62,8 +74,11 @@ export function CustomerDashboard() {
                   fill="#8884d8"
                   dataKey="value"
                 >
-                  {genderData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  {genderData.map((entry) => (
+                    <Cell
+                      key={`cell-${entry.name}`}
+                      fill={COLORS[genderData.findIndex((e) => e.name === entry.name) % COLORS.length]}
+                    />
                   ))}
                 </Pie>
                 <Tooltip />

@@ -7,6 +7,7 @@ import {
   Store,
   HeadphonesIcon,
   type LucideIcon,
+  Home,
 } from "lucide-react";
 
 export interface NavSubItem {
@@ -39,6 +40,11 @@ export const sidebarItems: NavGroup[] = [
     id: 2,
     label: "관리",
     items: [
+      {
+        title: "Home",
+        url: "/dashboard/default",
+        icon: Home,
+      },
       {
         title: "유저관리",
         url: "/dashboard/users",

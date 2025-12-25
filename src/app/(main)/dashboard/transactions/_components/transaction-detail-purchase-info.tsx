@@ -2,8 +2,8 @@
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 import { Transaction } from "./transaction-types";
 
@@ -53,26 +53,23 @@ export function TransactionDetailPurchaseInfo({ transaction, category }: Transac
           <div className="flex items-start gap-4">
             <Label className="text-muted-foreground w-24 shrink-0 pt-2 text-xs font-normal">결제방법</Label>
             <div className="flex-1">
-              <RadioGroup value={selectedPaymentMethod} className="flex gap-2">
+              <ToggleGroup
+                type="single"
+                variant="outline"
+                spacing={1}
+                value={selectedPaymentMethod}
+                className="flex gap-2"
+              >
                 {paymentMethodOptions.map((option) => (
-                  <div key={option} className="flex items-center space-x-2">
-                    <RadioGroupItem
-                      value={option}
-                      id={`payment-${option}`}
-                      disabled
-                      className={selectedPaymentMethod === option ? "border-red-600" : ""}
-                    />
-                    <Label
-                      htmlFor={`payment-${option}`}
-                      className={`cursor-pointer text-sm font-normal ${
-                        selectedPaymentMethod === option ? "font-semibold text-red-600" : ""
-                      }`}
-                    >
-                      {option}
-                    </Label>
-                  </div>
+                  <ToggleGroupItem
+                    key={option}
+                    value={option}
+                    className={`bg-background! pointer-events-none shadow-none ${selectedPaymentMethod === option ? "border-main text-primary!" : ""}`}
+                  >
+                    {option}
+                  </ToggleGroupItem>
                 ))}
-              </RadioGroup>
+              </ToggleGroup>
             </div>
           </div>
         )}

@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useState } from "react";
+import { useState, useEffect } from "react";
 
 import { ChevronRight } from "lucide-react";
 import {
@@ -18,24 +18,10 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { getYearlyRevenueChartData } from "@/lib/api/dashboard";
+import { DEFAULT_CHART_MARGIN, formatYAxisValueShort } from "@/lib/chart-utils";
 
 import { YearlyDetailModal } from "./yearly-detail-modal";
-
-const quarterlyData = [
-  { quarter: "1분기", amount: 700000000 },
-  { quarter: "2분기", amount: 780000000 },
-  { quarter: "3분기", amount: 850000000 },
-  { quarter: "4분기", amount: 820000000 },
-];
-
-const yearlyComparisonData = [
-  { month: "1월", "2020": 100000000, "2021": 120000000, "2022": 140000000, "2023": 160000000 },
-  { month: "2월", "2020": 110000000, "2021": 130000000, "2022": 150000000, "2023": 170000000 },
-  { month: "3월", "2020": 120000000, "2021": 140000000, "2022": 160000000, "2023": 180000000 },
-  { month: "4월", "2020": 115000000, "2021": 135000000, "2022": 155000000, "2023": 175000000 },
-  { month: "5월", "2020": 125000000, "2021": 145000000, "2022": 165000000, "2023": 185000000 },
-  { month: "6월", "2020": 130000000, "2021": 150000000, "2022": 170000000, "2023": 190000000 },
-];
 
 interface CustomTooltipProps {
   active?: boolean;
@@ -108,6 +94,36 @@ export function YearlyRevenueChart() {
   const [selectedYear, setSelectedYear] = useState("2023");
   const [selectedYearRange, setSelectedYearRange] = useState("2020-2023");
   const [isYearlyModalOpen, setIsYearlyModalOpen] = useState(false);
+  const [quarterlyData, setQuarterlyData] = useState<Array<{ quarter: string; amount: number }>>([]);
+  const [yearlyComparisonData, setYearlyComparisonData] = useState<
+    Array<{ month: string; [key: string]: number | string }>
+  >([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        const data = await getYearlyRevenueChartData(selectedYear, selectedYearRange);
+        setQuarterlyData(data.quarterlyData);
+        setYearlyComparisonData(data.yearlyComparisonData);
+      } catch (error) {
+        console.error("Failed to fetch yearly revenue chart data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [selectedYear, selectedYearRange]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-5 gap-6">
@@ -133,10 +149,10 @@ export function YearlyRevenueChart() {
           </Button>
         </div>
         <ResponsiveContainer width="100%" height={400}>
-          <BarChart data={quarterlyData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+          <BarChart data={quarterlyData} margin={{ ...DEFAULT_CHART_MARGIN, top: 20 }}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="quarter" />
-            <YAxis />
+            <YAxis tickFormatter={formatYAxisValueShort} width={60} />
             <Tooltip content={<CustomBarTooltip />} />
             <Bar
               dataKey="amount"
@@ -166,10 +182,10 @@ export function YearlyRevenueChart() {
           </Select>
         </div>
         <ResponsiveContainer width="100%" height={400}>
-          <LineChart data={yearlyComparisonData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+          <LineChart data={yearlyComparisonData} margin={DEFAULT_CHART_MARGIN}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="month" />
-            <YAxis />
+            <YAxis tickFormatter={formatYAxisValueShort} width={60} />
             <Tooltip content={<CustomLineTooltip />} />
             <Line type="monotone" dataKey="2020" stroke="var(--muted-foreground)" name="2020" strokeWidth={1} />
             <Line type="monotone" dataKey="2021" stroke="var(--muted-foreground)" name="2021" strokeWidth={1} />
@@ -199,7 +215,7 @@ export function YearlyRevenueChart() {
                     />
                   );
                 }
-                return <Fragment />;
+                return null;
               }}
             />
           </LineChart>

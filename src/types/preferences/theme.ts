@@ -36,8 +36,8 @@ export const THEME_PRESET_OPTIONS = [
     label: "Flit",
     value: "flit",
     primary: {
-      light: "oklch(0.61 0.19 23.50)",
-      dark: "oklch(0.61 0.19 23.50)",
+      light: "oklch(0.61 0.19 23.5)",
+      dark: "oklch(0.61 0.19 23.5)",
     },
   },
   {

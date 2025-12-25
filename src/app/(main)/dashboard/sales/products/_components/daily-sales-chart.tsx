@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import { ChevronDown } from "lucide-react";
 import { DateRange } from "react-day-picker";
@@ -11,22 +11,14 @@ import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { getDailySalesChartData } from "@/lib/api/dashboard";
+import { DEFAULT_CHART_MARGIN, formatYAxisValueShort } from "@/lib/chart-utils";
 
 interface DailySalesChartProps {
   selectedCategory: string | null;
   paymentMethod: "total" | "card" | "pos" | "transfer";
   onPaymentMethodChange: (method: "total" | "card" | "pos" | "transfer") => void;
 }
-
-const dailyData = [
-  { date: "01", thisWeek: 5000000, lastWeek: 4500000 },
-  { date: "02", thisWeek: 5200000, lastWeek: 4800000 },
-  { date: "03", thisWeek: 4800000, lastWeek: 4400000 },
-  { date: "04", thisWeek: 5500000, lastWeek: 5000000 },
-  { date: "05", thisWeek: 5300000, lastWeek: 4900000 },
-  { date: "06", thisWeek: 5100000, lastWeek: 4700000 },
-  { date: "07", thisWeek: 5400000, lastWeek: 5100000 },
-];
 
 interface CustomTooltipProps {
   active?: boolean;
@@ -59,6 +51,35 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
 export function DailySalesChart({ selectedCategory, paymentMethod, onPaymentMethodChange }: DailySalesChartProps) {
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const [dailyData, setDailyData] = useState<Array<{ date: string; thisWeek: number; lastWeek: number }>>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        const data = await getDailySalesChartData({
+          paymentMethod,
+          category: selectedCategory ?? undefined,
+        });
+        setDailyData(data);
+      } catch (error) {
+        console.error("Failed to fetch daily sales chart data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [paymentMethod, selectedCategory]);
+
+  if (isLoading) {
+    return (
+      <div className="flex h-[400px] items-center justify-center">
+        <div className="text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
 
   const totalAmount = dailyData.reduce((sum, item) => sum + item.thisWeek, 0);
 
@@ -117,7 +138,7 @@ export function DailySalesChart({ selectedCategory, paymentMethod, onPaymentMeth
       </div>
 
       <ResponsiveContainer width="100%" height={400}>
-        <AreaChart data={dailyData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+        <AreaChart data={dailyData} margin={DEFAULT_CHART_MARGIN}>
           <defs>
             <linearGradient id="colorThisWeek" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="var(--chart-1)" stopOpacity={0.3} />
@@ -130,7 +151,7 @@ export function DailySalesChart({ selectedCategory, paymentMethod, onPaymentMeth
           </defs>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="date" />
-          <YAxis />
+          <YAxis tickFormatter={formatYAxisValueShort} width={60} />
           <Tooltip content={<CustomTooltip />} />
           <Area
             type="monotone"

@@ -28,7 +28,7 @@ export function AccountDropdown({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="hover:bg-accent flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors focus:outline-none">
+        <button className="hover:bg-sidebar-accent-foreground/10 flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors focus:outline-none">
           <span>{user.name} 님</span>
           <ChevronDown className="size-4" />
         </button>

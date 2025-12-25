@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import { ChevronDown } from "lucide-react";
 import { DateRange } from "react-day-picker";
@@ -11,21 +11,13 @@ import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { getMonthlyRevenueChartData } from "@/lib/api/dashboard";
+import { DEFAULT_CHART_MARGIN, formatYAxisValueShort } from "@/lib/chart-utils";
 
 interface MonthlyRevenueChartProps {
   paymentMethod: "total" | "card" | "pos" | "transfer";
   onPaymentMethodChange: (method: "total" | "card" | "pos" | "transfer") => void;
 }
-
-const monthlyData = [
-  { date: "01", thisMonth: 120000000, lastMonth: 110000000 },
-  { date: "05", thisMonth: 130000000, lastMonth: 120000000 },
-  { date: "10", thisMonth: 140000000, lastMonth: 130000000 },
-  { date: "15", thisMonth: 135000000, lastMonth: 125000000 },
-  { date: "20", thisMonth: 145000000, lastMonth: 135000000 },
-  { date: "25", thisMonth: 150000000, lastMonth: 140000000 },
-  { date: "31", thisMonth: 160000000, lastMonth: 150000000 },
-];
 
 interface CustomTooltipProps {
   active?: boolean;
@@ -58,6 +50,32 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
 export function MonthlyRevenueChart({ paymentMethod, onPaymentMethodChange }: MonthlyRevenueChartProps) {
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const [monthlyData, setMonthlyData] = useState<Array<{ date: string; thisMonth: number; lastMonth: number }>>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        const data = await getMonthlyRevenueChartData({ paymentMethod });
+        setMonthlyData(data);
+      } catch (error) {
+        console.error("Failed to fetch monthly revenue chart data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [paymentMethod]);
+
+  if (isLoading) {
+    return (
+      <div className="flex h-[400px] items-center justify-center">
+        <div className="text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -109,7 +127,7 @@ export function MonthlyRevenueChart({ paymentMethod, onPaymentMethodChange }: Mo
       </div>
 
       <ResponsiveContainer width="100%" height={400}>
-        <AreaChart data={monthlyData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+        <AreaChart data={monthlyData} margin={DEFAULT_CHART_MARGIN}>
           <defs>
             <linearGradient id="colorThisMonth" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="var(--chart-1)" stopOpacity={0.3} />
@@ -122,7 +140,7 @@ export function MonthlyRevenueChart({ paymentMethod, onPaymentMethodChange }: Mo
           </defs>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="date" />
-          <YAxis />
+          <YAxis tickFormatter={formatYAxisValueShort} width={60} />
           <Tooltip content={<CustomTooltip />} />
           <Area
             type="monotone"

@@ -1,101 +1,118 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 
 import { useRouter, useSearchParams } from "next/navigation";
 
-import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subWeeks } from "date-fns";
-import { Download, Search, Filter } from "lucide-react";
-import * as XLSX from "xlsx";
+import { format } from "date-fns";
+import { Download } from "lucide-react";
 
 import { DataTablePagination } from "@/components/data-table/data-table-pagination";
 import { DataTableWithSelection } from "@/components/data-table/data-table-with-selection";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useDataTableInstance } from "@/hooks/use-data-table-instance";
-import { getSettlements } from "@/service/settlement.service";
+import { getSettlementsMonthly } from "@/service/settlement-monthly.service";
 import { Settlement } from "@/types/dashboard";
+import { SettlementPeriod, SettlementType, SettlementStatus } from "@/types/settlements-monthly";
 
 import { SettlementCalendar } from "./settlement-calendar";
 import { createSettlementColumns } from "./settlement-columns";
-
-const getSettlementDates = (settlements: Settlement[]): Date[] => {
-  const dateSet = new Set<string>();
-  settlements.forEach((settlement) => {
-    dateSet.add(settlement.settlementDate);
-  });
-  return Array.from(dateSet)
-    .map((dateStr) => {
-      const [year, month, day] = dateStr.split("-").map(Number);
-      return new Date(year, month - 1, day);
-    })
-    .sort((a, b) => a.getTime() - b.getTime());
-};
-
-const getDateRangeForPeriod = (period: "1week" | "2week" | "month"): { start: Date; end: Date } => {
-  const now = new Date();
-  switch (period) {
-    case "1week":
-      return {
-        start: startOfWeek(now),
-        end: endOfWeek(now),
-      };
-    case "2week":
-      return {
-        start: startOfWeek(subWeeks(now, 1)),
-        end: endOfWeek(now),
-      };
-    case "month":
-      return {
-        start: startOfMonth(now),
-        end: endOfMonth(now),
-      };
-  }
-};
+import { downloadSettlement, downloadSettlementsAll } from "./settlement-download";
+import { SettlementFilters } from "./settlement-filters";
+import { buildSettlementSearchParams, SettlementURLUpdates, SettlementURLState } from "./settlement-url-params";
 
 export function SettlementList() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [selectedPeriod, setSelectedPeriod] = useState<"1week" | "2week" | "month">("1week");
-  const [selectedTypes, setSelectedTypes] = useState<("shop" | "florist")[]>(["shop", "florist"]);
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [search, setSearch] = useState("");
+  const [selectedPeriod, setSelectedPeriod] = useState<SettlementPeriod>(
+    (searchParams.get("period") as SettlementPeriod | null | undefined) ?? "1week",
+  );
+  const [selectedTypes, setSelectedTypes] = useState<SettlementType[]>(() => {
+    const types = searchParams.get("types");
+    if (types) {
+      return types.split(",") as SettlementType[];
+    }
+    return ["shop", "florist"];
+  });
+  const [selectedDate, setSelectedDate] = useState<Date | null>(() => {
+    const dateParam = searchParams.get("date");
+    return dateParam ? new Date(dateParam) : new Date();
+  });
+  const search = searchParams.get("nickname") ?? "";
+  const [searchInput, setSearchInput] = useState(search);
+  const [selectedStatuses, setSelectedStatuses] = useState<SettlementStatus[]>(() => {
+    const statuses = searchParams.get("statuses");
+    if (statuses) {
+      return statuses.split(",") as SettlementStatus[];
+    }
+    return [];
+  });
   const [settlements, setSettlements] = useState<Settlement[]>([]);
+  const [settlementDates, setSettlementDates] = useState<Date[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const [total, setTotal] = useState(0);
   const pageIndex = parseInt(searchParams.get("page") ?? "1", 10) - 1;
   const pageSize = parseInt(searchParams.get("pageSize") ?? "10", 10);
 
-  const dateRange = useMemo(() => getDateRangeForPeriod(selectedPeriod), [selectedPeriod]);
+  const currentDate = new Date();
+  const currentYear = parseInt(searchParams.get("year") ?? currentDate.getFullYear().toString(), 10);
+  const currentMonth = parseInt(searchParams.get("month") ?? (currentDate.getMonth() + 1).toString(), 10);
+
+  const urlState: SettlementURLState = useMemo(
+    () => ({
+      currentYear,
+      currentMonth,
+      selectedPeriod,
+      selectedTypes,
+      selectedDate,
+      search,
+      selectedStatuses,
+      pageIndex,
+      pageSize,
+    }),
+    [
+      currentYear,
+      currentMonth,
+      selectedPeriod,
+      selectedTypes,
+      selectedDate,
+      search,
+      selectedStatuses,
+      pageIndex,
+      pageSize,
+    ],
+  );
+
+  const updateURL = useCallback(
+    (updates: SettlementURLUpdates) => {
+      const params = buildSettlementSearchParams(updates, urlState);
+      router.push(`?${params.toString()}`, { scroll: false });
+    },
+    [urlState, router],
+  );
+
+  const [allMonthlyData, setAllMonthlyData] = useState<Array<{ date: string; items: Settlement[] }>>([]);
 
   useEffect(() => {
     const fetchSettlements = async () => {
       try {
         setIsLoading(true);
-        const params: {
-          type?: string;
-          settlementDate?: string;
-          page?: number;
-          pageSize?: number;
-        } = {
-          page: pageIndex + 1,
-          pageSize,
+        // 월 단위로 데이터를 불러오기 위해 period를 제거
+        const params = {
+          year: currentYear,
+          month: currentMonth,
+          period: undefined, // 월 단위로 불러오기 위해 period 제거
+          type: selectedTypes.length === 1 ? selectedTypes[0] : undefined,
+          date: undefined, // 전체 월 데이터를 가져오기 위해 date 제거
+          nickname: search ? search : undefined,
+          status: selectedStatuses.length === 1 ? selectedStatuses[0] : undefined,
+          page: 1,
+          pageSize: 1000,
         };
 
-        if (selectedTypes.length === 1) {
-          params.type = selectedTypes[0];
-        }
-
-        if (selectedDate) {
-          params.settlementDate = format(selectedDate, "yyyy-MM-dd");
-        }
-
-        const response = await getSettlements(params);
-        setSettlements(response.data);
-        setTotal(response.total);
+        const response = await getSettlementsMonthly(params);
+        setAllMonthlyData(response.data);
       } catch (error) {
         console.error("Failed to fetch settlements:", error);
       } finally {
@@ -104,68 +121,54 @@ export function SettlementList() {
     };
 
     fetchSettlements();
-  }, [pageIndex, pageSize, selectedTypes, selectedDate, dateRange]);
+  }, [currentYear, currentMonth, selectedTypes, search, selectedStatuses]);
 
-  const settlementDates = useMemo(() => {
-    return getSettlementDates(settlements);
-  }, [settlements]);
+  useEffect(() => {
+    const datesSet = new Set<string>();
+    const selectedDateStr = selectedDate ? format(selectedDate, "yyyy-MM-dd") : null;
 
-  const handleDownload = (settlement: Settlement) => {
-    const data = [
-      ["닉네임(ID)", "번호", "mail", "총매출", "수수료", "수수료 제외", "배달료", "상태"],
-      [
-        `${settlement.nickname} (${settlement.nicknameId})`,
-        settlement.phone,
-        settlement.email,
-        settlement.totalRevenue.toString(),
-        settlement.commission.toString(),
-        settlement.revenueExcludingCommission.toString(),
-        settlement.deliveryFee.toString(),
-        settlement.status,
-      ],
-    ];
+    allMonthlyData.forEach((dateData) => {
+      if (dateData.items.length > 0) {
+        datesSet.add(dateData.date);
+      }
+    });
 
-    const csvContent = data.map((row) => row.join(",")).join("\n");
-    const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute("download", `정산_${settlement.nickname}_${format(new Date(), "yyyy-MM-dd")}.csv`);
-    link.style.visibility = "hidden";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
+    const dates = Array.from(datesSet)
+      .map((dateStr) => {
+        const [year, month, day] = dateStr.split("-").map(Number);
+        return new Date(year, month - 1, day);
+      })
+      .sort((a, b) => a.getTime() - b.getTime());
+
+    setSettlementDates(dates);
+
+    let filteredSettlements: Settlement[] = [];
+    if (selectedDateStr) {
+      const selectedDateData = allMonthlyData.find((d) => d.date === selectedDateStr);
+      if (selectedDateData) {
+        filteredSettlements = selectedDateData.items;
+      }
+    }
+
+    const startIndex = pageIndex * pageSize;
+    const endIndex = startIndex + pageSize;
+    const paginatedSettlements = filteredSettlements.slice(startIndex, endIndex);
+
+    setSettlements(paginatedSettlements);
+    setTotal(filteredSettlements.length);
+  }, [allMonthlyData, selectedDate, pageIndex, pageSize]);
 
   const handleDownloadAll = () => {
     const filteredRows = table.getFilteredRowModel().rows;
-    const selectedRows = filteredRows.filter((row) => row.getIsSelected());
-    if (selectedRows.length === 0) return;
-
-    const data = selectedRows.map((row) => ({
-      "닉네임(ID)": `${row.original.nickname} (${row.original.nicknameId})`,
-      번호: row.original.phone,
-      mail: row.original.email,
-      총매출: row.original.totalRevenue.toLocaleString(),
-      수수료: row.original.commission.toLocaleString(),
-      "수수료 제외": row.original.revenueExcludingCommission.toLocaleString(),
-      배달료: row.original.deliveryFee.toLocaleString(),
-      상태: row.original.status,
-    }));
-
-    const worksheet = XLSX.utils.json_to_sheet(data);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "정산 목록");
-
-    const fileName = `정산목록_${format(new Date(), "yyyy-MM-dd")}.xlsx`;
-    XLSX.writeFile(workbook, fileName);
+    const selectedRows = filteredRows.filter((row) => row.getIsSelected()).map((row) => row.original);
+    downloadSettlementsAll(selectedRows);
   };
 
   const handleRowClick = (settlement: Settlement) => {
     router.push(`/dashboard/settlements/${settlement.id}`);
   };
 
-  const columns = useMemo(() => createSettlementColumns({ onDownload: handleDownload }), []);
+  const columns = useMemo(() => createSettlementColumns({ onDownload: downloadSettlement }), []);
 
   const { table, rowSelection } = useDataTableInstance({
     data: settlements,
@@ -177,27 +180,32 @@ export function SettlementList() {
     defaultPageSize: pageSize,
   });
 
-  useEffect(() => {
-    const pagination = table.getState().pagination;
-    const newPageIndex = pagination.pageIndex;
-    const newPageSize = pagination.pageSize;
+  const handleTypeToggle = (type: SettlementType) => {
+    const newTypes = selectedTypes.includes(type) ? selectedTypes.filter((t) => t !== type) : [...selectedTypes, type];
+    setSelectedTypes(newTypes);
+    updateURL({ types: newTypes });
+  };
 
-    if (newPageIndex !== pageIndex || newPageSize !== pageSize) {
-      const params = new URLSearchParams(searchParams.toString());
-      params.set("page", (newPageIndex + 1).toString());
-      params.set("pageSize", newPageSize.toString());
-      router.push(`?${params.toString()}`, { scroll: false });
-    }
-  }, [table, pageIndex, pageSize, router, searchParams]);
+  const handlePeriodChange = (period: SettlementPeriod) => {
+    setSelectedPeriod(period);
+    setSelectedDate(null);
+    updateURL({ period, date: null });
+  };
 
-  const handleTypeToggle = (type: "shop" | "florist") => {
-    setSelectedTypes((prev) => (prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]));
+  const handleStatusesChange = (statuses: SettlementStatus[]) => {
+    setSelectedStatuses(statuses);
+    updateURL({ statuses });
+  };
+
+  const handleDateChange = (date: Date | null) => {
+    setSelectedDate(date);
+    updateURL({ date });
   };
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="text-muted-foreground">Loading...</div>
+        <div className="text-muted-foreground">로딩 중...</div>
       </div>
     );
   }
@@ -205,64 +213,36 @@ export function SettlementList() {
   return (
     <div className="w-full space-y-6">
       <div className="grid grid-cols-2 gap-3">
-        <div className="flex flex-col gap-6">
-          <Tabs
-            value={selectedPeriod}
-            onValueChange={(value) => {
-              setSelectedPeriod(value as "1week" | "2week" | "month");
-              setSelectedDate(null);
-            }}
-          >
-            <TabsList>
-              <TabsTrigger value="1week">1week</TabsTrigger>
-              <TabsTrigger value="2week">2week</TabsTrigger>
-              <TabsTrigger value="month">Month</TabsTrigger>
-            </TabsList>
-          </Tabs>
-
-          <div className="flex items-center gap-4">
-            <Checkbox
-              id="shop"
-              checked={selectedTypes.includes("shop")}
-              onCheckedChange={() => handleTypeToggle("shop")}
-            />
-            <label htmlFor="shop" className="cursor-pointer text-sm font-medium">
-              shop
-            </label>
-            <Checkbox
-              id="florist"
-              checked={selectedTypes.includes("florist")}
-              onCheckedChange={() => handleTypeToggle("florist")}
-            />
-            <label htmlFor="florist" className="cursor-pointer text-sm font-medium">
-              florist
-            </label>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <div className="relative max-w-sm flex-1">
-              <Search className="text-muted-foreground absolute top-2.5 left-2 h-4 w-4" />
-              <Input
-                placeholder="검색..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-8"
-              />
-            </div>
-            <Button variant="outline" size="sm">
-              <Filter className="mr-2 h-4 w-4" />
-              필터
-            </Button>
-          </div>
-        </div>
+        <SettlementFilters
+          selectedPeriod={selectedPeriod}
+          onPeriodChange={handlePeriodChange}
+          selectedTypes={selectedTypes}
+          onTypeToggle={handleTypeToggle}
+          search={searchInput}
+          onSearchChange={setSearchInput}
+          onSearchEnter={(value) => {
+            if (value.trim()) {
+              updateURL({ nickname: value.trim() });
+            } else {
+              updateURL({ nickname: "" });
+            }
+          }}
+          selectedStatuses={selectedStatuses}
+          onStatusesChange={handleStatusesChange}
+          selectedDate={selectedDate}
+          onDateChange={handleDateChange}
+        />
 
         <div className="h-full">
           <SettlementCalendar
             selectedDate={selectedDate}
-            onDateSelect={(date) => {
-              setSelectedDate(date);
-            }}
+            onDateSelect={handleDateChange}
             settlementDates={settlementDates}
+            currentYear={currentYear}
+            currentMonth={currentMonth}
+            onMonthChange={(year, month) => {
+              updateURL({ year, month });
+            }}
             className="h-full"
           />
         </div>

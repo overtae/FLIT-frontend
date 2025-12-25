@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import { ChevronRight } from "lucide-react";
 import {
@@ -18,6 +18,8 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { getYearlySalesChartData } from "@/lib/api/dashboard";
+import { DEFAULT_CHART_MARGIN, formatYAxisValueShort } from "@/lib/chart-utils";
 
 import { QuarterDetailModal } from "./quarter-detail-modal";
 
@@ -25,28 +27,44 @@ interface YearlySalesChartProps {
   selectedCategory: string | null;
 }
 
-const quarterlyData = [
-  { quarter: "1분기", card: 400000000, pos: 200000000, transfer: 100000000 },
-  { quarter: "2분기", card: 450000000, pos: 220000000, transfer: 110000000 },
-  { quarter: "3분기", card: 500000000, pos: 250000000, transfer: 120000000 },
-  { quarter: "4분기", card: 480000000, pos: 240000000, transfer: 115000000 },
-];
-
-const yearlyComparisonData = [
-  { month: "1월", "2020": 100000000, "2021": 120000000, "2022": 140000000, "2023": 160000000 },
-  { month: "2월", "2020": 110000000, "2021": 130000000, "2022": 150000000, "2023": 170000000 },
-  { month: "3월", "2020": 120000000, "2021": 140000000, "2022": 160000000, "2023": 180000000 },
-  { month: "4월", "2020": 115000000, "2021": 135000000, "2022": 155000000, "2023": 175000000 },
-  { month: "5월", "2020": 125000000, "2021": 145000000, "2022": 165000000, "2023": 185000000 },
-  { month: "6월", "2020": 130000000, "2021": 150000000, "2022": 170000000, "2023": 190000000 },
-];
-
 export function YearlySalesChart(_props: YearlySalesChartProps) {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const _ = _props;
   const [selectedYear, setSelectedYear] = useState("2024");
   const [selectedYearRange, setSelectedYearRange] = useState(["2020", "2023"]);
   const [isQuarterModalOpen, setIsQuarterModalOpen] = useState(false);
+  const [quarterlyData, setQuarterlyData] = useState<
+    Array<{ quarter: string; card: number; pos: number; transfer: number }>
+  >([]);
+  const [yearlyComparisonData, setYearlyComparisonData] = useState<
+    Array<{ month: string; [key: string]: number | string }>
+  >([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        const data = await getYearlySalesChartData(selectedYear, selectedYearRange.join("-"));
+        setQuarterlyData(data.quarterlyData);
+        setYearlyComparisonData(data.yearlyComparisonData);
+      } catch (error) {
+        console.error("Failed to fetch yearly sales chart data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [selectedYear, selectedYearRange]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-5 gap-6">
@@ -72,10 +90,10 @@ export function YearlySalesChart(_props: YearlySalesChartProps) {
           </Button>
         </div>
         <ResponsiveContainer width="100%" height={400}>
-          <BarChart data={quarterlyData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+          <BarChart data={quarterlyData} margin={{ ...DEFAULT_CHART_MARGIN, top: 20 }}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="quarter" />
-            <YAxis />
+            <YAxis tickFormatter={formatYAxisValueShort} width={60} />
             <Tooltip formatter={(value: number) => `${value.toLocaleString()}원`} />
             <Legend />
             <Bar dataKey="card" stackId="a" fill="var(--chart-1)" name="카드" />
@@ -100,10 +118,10 @@ export function YearlySalesChart(_props: YearlySalesChartProps) {
           </Select>
         </div>
         <ResponsiveContainer width="100%" height={400}>
-          <LineChart data={yearlyComparisonData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+          <LineChart data={yearlyComparisonData} margin={DEFAULT_CHART_MARGIN}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="month" />
-            <YAxis />
+            <YAxis tickFormatter={formatYAxisValueShort} width={60} />
             <Tooltip formatter={(value: number) => `${value.toLocaleString()}원`} />
             <Legend />
             <Line type="monotone" dataKey="2020" stroke="var(--muted-foreground)" name="2020" strokeWidth={1} />

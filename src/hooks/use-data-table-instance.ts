@@ -129,11 +129,15 @@ export function useDataTableInstance<TData, TValue>({
   }, [data.length, pagination.pageIndex]);
 
   React.useEffect(() => {
-    setPagination((prev) => ({
-      ...prev,
-      pageIndex: defaultPageIndex,
-      pageSize: defaultPageSize,
-    }));
+    setPagination((prev) => {
+      if (prev.pageIndex !== defaultPageIndex || prev.pageSize !== defaultPageSize) {
+        return {
+          pageIndex: defaultPageIndex,
+          pageSize: defaultPageSize,
+        };
+      }
+      return prev;
+    });
   }, [defaultPageIndex, defaultPageSize]);
 
   const table = useReactTable(

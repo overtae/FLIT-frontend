@@ -14,8 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import { getInitials } from "@/lib/utils";
-
-import { User } from "./user-columns";
+import { User } from "@/types/dashboard";
 
 interface UserDetailModalProps {
   open: boolean;

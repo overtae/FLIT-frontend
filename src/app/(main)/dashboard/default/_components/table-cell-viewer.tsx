@@ -19,17 +19,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { getVisitorsChartData } from "@/lib/api/dashboard";
 
 import { sectionSchema } from "./schema";
-
-const chartData = [
-  { month: "January", desktop: 186, mobile: 80 },
-  { month: "February", desktop: 305, mobile: 200 },
-  { month: "March", desktop: 237, mobile: 120 },
-  { month: "April", desktop: 73, mobile: 190 },
-  { month: "May", desktop: 209, mobile: 130 },
-  { month: "June", desktop: 214, mobile: 140 },
-];
 
 const chartConfig = {
   desktop: {
@@ -44,6 +36,40 @@ const chartConfig = {
 
 export function TableCellViewer({ item }: { item: z.infer<typeof sectionSchema> }) {
   const isMobile = useIsMobile();
+  const [chartData, setChartData] = React.useState<Array<{ month: string; desktop: number; mobile: number }>>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        const data = await getVisitorsChartData({ timeRange: "90d" });
+        // Convert date format to month format for this component
+        const monthlyData = data.reduce(
+          (acc, item) => {
+            const date = new Date(item.date);
+            const month = date.toLocaleDateString("en-US", { month: "long" });
+            const existing = acc.find((d) => d.month === month);
+            if (existing) {
+              existing.desktop += item.desktop;
+              existing.mobile += item.mobile;
+            } else {
+              acc.push({ month, desktop: item.desktop, mobile: item.mobile });
+            }
+            return acc;
+          },
+          [] as Array<{ month: string; desktop: number; mobile: number }>,
+        );
+        setChartData(monthlyData);
+      } catch (error) {
+        console.error("Failed to fetch chart data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   return (
     <Drawer direction={isMobile ? "bottom" : "right"}>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import {
   LineChart,
@@ -17,42 +17,13 @@ import {
   Bar,
 } from "recharts";
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Subtitle } from "@/components/ui/subtitle";
+import { getUserOverview } from "@/service/user.service";
 
-import { UserList } from "./user-list";
-
-// --- Dummy Data ---
-
-const totalUserData = [
-  { date: "10-01", count: 2000 },
-  { date: "10-05", count: 2500 },
-  { date: "10-10", count: 3200 },
-  { date: "10-15", count: 3000 },
-  { date: "10-20", count: 4000 },
-  { date: "10-25", count: 4800 },
-  { date: "10-30", count: 5200 },
-];
-
-const genderData = [
-  { name: "여성", value: 60 },
-  { name: "남성", value: 35 },
-  { name: "기타", value: 5 },
-];
-
-const ageData = [
-  { name: "10대", value: 120 },
-  { name: "20대", value: 450 },
-  { name: "30대", value: 380 },
-  { name: "40대", value: 220 },
-  { name: "50대", value: 150 },
-  { name: "60대", value: 80 },
-  { name: "70대+", value: 40 },
-];
-
-const COLORS = ["#F472B6", "#60A5FA", "#9CA3AF"];
+const COLORS = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)"];
 
 interface UserOverviewProps {
   category?: string;
@@ -61,19 +32,55 @@ interface UserOverviewProps {
 export function UserOverview({ category = "all" }: UserOverviewProps) {
   const [period, setPeriod] = useState("last-month");
   const [customerType, setCustomerType] = useState("all");
+  const [totalUserData, setTotalUserData] = useState<Array<{ date: string; count: number }>>([]);
+  const [genderData, setGenderData] = useState<Array<{ name: string; value: number }>>([]);
+  const [ageData, setAgeData] = useState<Array<{ name: string; value: number }>>([]);
+  const [quickStats, setQuickStats] = useState({
+    customer: { total: 0, change: 0, label: "전체 고객 수" },
+    store: { total: 0, change: 0, label: "전체 꽃집 수" },
+    florist: { total: 0, change: 0, label: "전체 플로리스트 수" },
+    out: { total: 0, change: 0, label: "탈퇴 회원 수" },
+  });
+  const [isLoading, setIsLoading] = useState(true);
 
-  const isAllCategory = category === "all";
+  useEffect(() => {
+    const fetchOverview = async () => {
+      try {
+        setIsLoading(true);
+        const data = await getUserOverview({
+          category,
+          period,
+          customerType,
+        });
+        setTotalUserData(data.totalUserData);
+        setGenderData(data.genderData);
+        setAgeData(data.ageData);
+        setQuickStats(data.quickStats);
+      } catch (error) {
+        console.error("Failed to fetch user overview:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchOverview();
+  }, [category, period, customerType]);
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       {/* Top Section: Total User & Quick Stats */}
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid space-y-6 space-x-8 md:grid-cols-2">
         {/* 1. Total User Chart */}
-        <Card className="flex flex-col">
-          <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
-            <div>
-              <CardTitle>Total User</CardTitle>
-            </div>
+        <section className="flex flex-col gap-3">
+          <div className="flex flex-row items-start justify-end space-y-0">
             <div className="flex items-center gap-4">
               {category === "customer" && (
                 <RadioGroup value={customerType} onValueChange={setCustomerType} className="flex items-center gap-2">
@@ -92,7 +99,7 @@ export function UserOverview({ category = "all" }: UserOverviewProps) {
                 </RadioGroup>
               )}
               <Select value={period} onValueChange={setPeriod}>
-                <SelectTrigger className="w-[120px]">
+                <SelectTrigger>
                   <SelectValue placeholder="기간 선택" />
                 </SelectTrigger>
                 <SelectContent>
@@ -102,128 +109,138 @@ export function UserOverview({ category = "all" }: UserOverviewProps) {
                 </SelectContent>
               </Select>
             </div>
-          </CardHeader>
-          <CardContent className="flex-1 pb-4">
-            <div className="h-[250px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={totalUserData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} dy={10} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
-                  <Tooltip
-                    contentStyle={{ borderRadius: "8px", border: "none", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="count"
-                    stroke="#EF4444"
-                    strokeWidth={2}
-                    dot={{ r: 4, fill: "#EF4444" }}
-                    activeDot={{ r: 6 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+          <h3 className="text-xl font-bold">Total User</h3>
+          <div className="min-h-[250px] w-full flex-1">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={totalUserData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} dy={10} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "hsl(var(--card))",
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: "0.5rem",
+                  }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="count"
+                  stroke="var(--chart-1)"
+                  strokeWidth={2}
+                  dot={{ r: 4, fill: "var(--chart-1)" }}
+                  activeDot={{ r: 6 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </section>
 
         {/* 2. Quick Stats */}
-        <Card className="flex flex-col">
-          <CardHeader>
-            <CardTitle>Quick Stats</CardTitle>
-          </CardHeader>
-          <CardContent className="grid flex-1 grid-cols-4 gap-4">
+        <section className="flex flex-col justify-center gap-3">
+          <h3 className="text-xl font-bold">Quick Stats</h3>
+          <div className="grid grid-cols-4 gap-4">
             <div className="flex flex-col justify-center rounded-lg p-4">
-              <p className="text-muted-foreground text-3xl">67,790</p>
-              <p className="text-muted-foreground mt-1 text-sm">+145</p>
-              <p className="text-muted-foreground mt-1 text-sm">전체 고객 수</p>
+              <p className="text-muted-foreground text-3xl">{quickStats.customer.total.toLocaleString()}</p>
+              <p className="text-muted-foreground mt-1 text-xs">+{quickStats.customer.change}</p>
+              <p className="text-muted-foreground mt-1 text-xs">{quickStats.customer.label}</p>
               <p className="text-stroke-1 text-muted mt-2 text-lg font-bold tracking-wider">Customer</p>
             </div>
             <div className="flex flex-col justify-center rounded-lg p-4">
-              <p className="text-muted-foreground text-3xl">4,500</p>
-              <p className="text-muted-foreground mt-1 text-sm">+14</p>
-              <p className="text-muted-foreground mt-1 text-sm">전체 꽃집 수</p>
+              <p className="text-muted-foreground text-3xl">{quickStats.store.total.toLocaleString()}</p>
+              <p className="text-muted-foreground mt-1 text-xs">+{quickStats.store.change}</p>
+              <p className="text-muted-foreground mt-1 text-xs">{quickStats.store.label}</p>
               <p className="text-stroke-1 text-muted mt-2 text-lg font-bold tracking-wider">Store</p>
             </div>
             <div className="flex flex-col justify-center rounded-lg p-4">
-              <p className="text-muted-foreground text-3xl">4,300</p>
-              <p className="text-muted-foreground mt-1 text-sm">+13</p>
-              <p className="text-muted-foreground mt-1 text-sm">전체 플로리스트 수</p>
+              <p className="text-muted-foreground text-3xl">{quickStats.florist.total.toLocaleString()}</p>
+              <p className="text-muted-foreground mt-1 text-xs">+{quickStats.florist.change}</p>
+              <p className="text-muted-foreground mt-1 text-xs">{quickStats.florist.label}</p>
               <p className="text-stroke-1 text-muted mt-2 text-lg font-bold tracking-wider">Florist</p>
             </div>
             <div className="flex flex-col justify-center rounded-lg p-4">
-              <p className="text-muted-foreground text-3xl">34</p>
-              <p className="text-muted-foreground mt-1 text-sm">+13</p>
-              <p className="text-muted-foreground mt-1 text-sm">탈퇴 회원 수</p>
+              <p className="text-muted-foreground text-3xl">{quickStats.out.total.toLocaleString()}</p>
+              <p className="text-muted-foreground mt-1 text-xs">+{quickStats.out.change}</p>
+              <p className="text-muted-foreground mt-1 text-xs">{quickStats.out.label}</p>
               <p className="text-stroke-1 text-muted mt-2 text-lg font-bold tracking-wider">Out</p>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </section>
       </div>
 
       {/* Bottom Section: Gender & Age Group */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Gender & Age Group</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-8 md:grid-cols-2">
-            {/* Gender Donut Chart */}
-            <div className="flex flex-col items-center justify-center">
-              <div className="h-[250px] w-full max-w-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={genderData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={80}
-                      paddingAngle={5}
-                      dataKey="value"
-                    >
-                      {genderData.map((entry, index) => (
-                        <Cell key={`cell-${entry.name}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="mt-4 flex gap-4">
-                {genderData.map((entry, index) => (
-                  <div key={entry.name} className="flex items-center gap-2">
-                    <div className="h-3 w-3 rounded-full" style={{ backgroundColor: COLORS[index] }} />
-                    <span className="text-sm font-medium">{entry.name}</span>
-                    <span className="text-muted-foreground text-sm">{entry.value}%</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Age Bar Chart */}
-            <div className="h-[250px] w-full">
+      <section className="flex h-80 flex-col gap-6">
+        <Subtitle>Gender & Age Group</Subtitle>
+        <div className="flex h-full flex-1 gap-8">
+          {/* Gender Donut Chart */}
+          <div className="flex h-full w-fit shrink-0 flex-col items-center justify-center">
+            <div className="h-full w-[300px] flex-1">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={ageData} margin={{ top: 20, right: 0, left: 0, bottom: 0 }}>
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
-                  <Tooltip cursor={{ fill: "transparent" }} />
-                  <Bar
+                <PieChart>
+                  <Pie
+                    data={genderData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={5}
                     dataKey="value"
-                    fill="#8884d8"
-                    radius={[4, 4, 0, 0]}
-                    barSize={40}
-                    label={{ position: "top", fill: "#6B7280", fontSize: 12 }}
                   >
-                    {ageData.map((entry) => (
-                      <Cell key={`cell-${entry.name}`} fill="#93C5FD" />
+                    {genderData.map((entry, index) => (
+                      <Cell key={`cell-${entry.name}`} fill={COLORS[index % COLORS.length]} />
                     ))}
-                  </Bar>
-                </BarChart>
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "hsl(var(--card))",
+                      border: "1px solid hsl(var(--border))",
+                      borderRadius: "0.5rem",
+                    }}
+                  />
+                </PieChart>
               </ResponsiveContainer>
             </div>
+            <div className="flex flex-col gap-4">
+              {genderData.map((entry, index) => (
+                <div key={entry.name} className="flex items-center gap-2">
+                  <div className="h-3 w-3" style={{ backgroundColor: COLORS[index] ?? COLORS[0] }} />
+                  <span className="text-sm font-medium">{entry.name}</span>
+                  <span className="text-muted-foreground text-sm">{entry.value}%</span>
+                </div>
+              ))}
+            </div>
           </div>
-        </CardContent>
-      </Card>
+
+          {/* Age Bar Chart */}
+          <div className="flex-1">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={ageData} margin={{ top: 20, right: 0, left: 0, bottom: 0 }}>
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
+                <Tooltip
+                  cursor={{ fill: "transparent" }}
+                  contentStyle={{
+                    backgroundColor: "hsl(var(--card))",
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: "0.5rem",
+                  }}
+                />
+                <Bar
+                  dataKey="value"
+                  fill="var(--chart-1)"
+                  radius={[4, 4, 0, 0]}
+                  barSize={40}
+                  label={{ position: "top", fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+                >
+                  {ageData.map((entry, index) => (
+                    <Cell key={`cell-${entry.name}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

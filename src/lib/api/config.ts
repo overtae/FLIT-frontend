@@ -31,8 +31,8 @@ export const TOKEN_COOKIE_OPTIONS = {
     ...COOKIE_OPTIONS,
     maxAge: 60 * 15,
   },
-  passwordVerified: {
+  pageVerification: {
     ...COOKIE_OPTIONS,
-    maxAge: 60 * 60 * 24,
+    maxAge: 60 * 60,
   },
 } as const;

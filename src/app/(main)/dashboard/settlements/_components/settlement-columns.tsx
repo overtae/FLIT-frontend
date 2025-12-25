@@ -68,38 +68,38 @@ export function createSettlementColumns({ onDownload }: CreateSettlementColumnsP
   return [
     {
       id: "select",
-      header: ({ table }) => (
-        <div
-          className="flex items-center justify-center"
-          onClick={(e) => e.stopPropagation()}
-          onMouseDown={(e) => e.stopPropagation()}
-        >
+      header: ({ table }) => {
+        const checked = table.getIsAllPageRowsSelected()
+          ? true
+          : table.getIsSomePageRowsSelected()
+            ? "indeterminate"
+            : false;
+
+        return (
           <Checkbox
-            checked={table.getIsAllPageRowsSelected()}
+            checked={checked}
             onCheckedChange={(value) => {
               table.toggleAllPageRowsSelected(!!value);
             }}
-            onClick={(e) => e.stopPropagation()}
-            aria-label="전체 선택"
+            aria-label="Select all"
           />
-        </div>
-      ),
-      cell: ({ row }) => (
-        <div
-          className="flex items-center justify-center"
-          onClick={(e) => e.stopPropagation()}
-          onMouseDown={(e) => e.stopPropagation()}
-        >
+        );
+      },
+      cell: ({ row }) => {
+        const checked = row.getIsSelected();
+
+        return (
           <Checkbox
-            checked={row.getIsSelected()}
+            checked={checked}
+            disabled={!row.getCanSelect()}
             onCheckedChange={(value) => {
               row.toggleSelected(!!value);
             }}
             onClick={(e) => e.stopPropagation()}
-            aria-label="행 선택"
+            aria-label="Select row"
           />
-        </div>
-      ),
+        );
+      },
       enableSorting: false,
       enableHiding: false,
     },

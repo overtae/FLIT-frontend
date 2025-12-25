@@ -2,14 +2,14 @@
 
 import { useMemo, useCallback } from "react";
 
+import * as XLSX from "@e965/xlsx";
 import { format } from "date-fns";
-import { Download, Search, Filter } from "lucide-react";
-import * as XLSX from "xlsx";
+import { Download, Search } from "lucide-react";
 
+import { SettlementDetailFilter } from "@/app/(main)/dashboard/settlements/[id]/_components/settlement-detail-filter";
 import { DataTablePagination } from "@/components/data-table/data-table-pagination";
 import { DataTableWithSelection } from "@/components/data-table/data-table-with-selection";
 import { Button } from "@/components/ui/button";
-import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useDataTableInstance } from "@/hooks/use-data-table-instance";
 
@@ -28,12 +28,8 @@ export function SettlementDetailTable({
   search,
   onSearchChange,
   onViewDetail,
-  onDownload,
 }: SettlementDetailTableProps) {
-  const columns = useMemo(
-    () => createSettlementDetailColumns({ onDownload, onViewDetail }),
-    [onDownload, onViewDetail],
-  );
+  const columns = useMemo(() => createSettlementDetailColumns({ onViewDetail }), [onViewDetail]);
 
   const { table, rowSelection } = useDataTableInstance({
     data: transactions,
@@ -68,37 +64,20 @@ export function SettlementDetailTable({
   }, [table]);
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>정산 상세</CardTitle>
-        <CardAction>
-          <div className="flex items-center gap-2">
-            <div className="relative max-w-sm flex-1">
-              <Search className="text-muted-foreground absolute top-2.5 left-2 h-4 w-4" />
-              <Input
-                placeholder="검색..."
-                value={search}
-                onChange={(e) => onSearchChange(e.target.value)}
-                className="pl-8"
-              />
-            </div>
-            <Button variant="outline" size="sm">
-              <Filter className="mr-2 h-4 w-4" />
-              필터
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleDownloadAll}
-              disabled={Object.keys(rowSelection).length === 0}
-            >
-              <Download className="mr-2 h-4 w-4" />
-              엑셀 다운로드
-            </Button>
-          </div>
-        </CardAction>
-      </CardHeader>
-      <CardContent className="flex size-full flex-col gap-4">
+    <section className="w-full space-y-4">
+      <div className="flex items-center justify-end gap-2">
+        <div className="relative max-w-sm flex-1">
+          <Search className="text-muted-foreground absolute top-2.5 left-2 h-4 w-4" />
+          <Input
+            placeholder="검색..."
+            value={search}
+            onChange={(e) => onSearchChange(e.target.value)}
+            className="pl-8"
+          />
+        </div>
+        <SettlementDetailFilter />
+      </div>
+      <div className="flex w-full flex-col gap-4">
         <div className="overflow-hidden rounded-md border">
           <DataTableWithSelection table={table} rowSelection={rowSelection} onRowClick={onViewDetail} />
         </div>
@@ -111,7 +90,7 @@ export function SettlementDetailTable({
             </Button>
           }
         />
-      </CardContent>
-    </Card>
+      </div>
+    </section>
   );
 }

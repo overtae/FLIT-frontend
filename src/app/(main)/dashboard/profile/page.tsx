@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { useRouter } from "next/navigation";
 
@@ -22,7 +22,7 @@ import {
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { rootUser } from "@/data/users";
+import { getCurrentUserProfile, updateUserProfile } from "@/service/user.service";
 
 import { AddressSearch } from "./_components/address-search";
 import { ImageUploader } from "./_components/image-uploader";
@@ -47,25 +47,68 @@ export default function ProfilePage() {
   const router = useRouter();
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const detailAddressRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
-      name: "전엄지",
-      nickname: "Admin",
-      phone: "010.6536.0429",
-      level: "Master",
-      code: "maaaa000",
+      name: "",
+      nickname: "",
+      phone: "",
+      level: "",
+      code: "",
       address: "",
       detailAddress: "",
-      sns: "instagram / dearflora",
+      sns: "",
     },
   });
 
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        setIsLoading(true);
+        const profileData = await getCurrentUserProfile();
+        form.reset({
+          name: profileData.name,
+          nickname: profileData.nickname,
+          phone: profileData.phone,
+          level: profileData.level,
+          code: profileData.code,
+          address: profileData.address,
+          detailAddress: profileData.detailAddress,
+          sns: profileData.sns,
+        });
+      } catch {
+        toast.error("프로필 정보를 불러오는데 실패했습니다.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, [form]);
+
   const onSubmit = async (data: ProfileFormValues) => {
-    toast.success("프로필이 업데이트되었습니다.");
-    console.log({ ...data, profileImage });
+    try {
+      setIsSubmitting(true);
+      await updateUserProfile({
+        name: data.name,
+        nickname: data.nickname,
+        phone: data.phone,
+        level: data.level,
+        address: data.address,
+        detailAddress: data.detailAddress,
+        sns: data.sns,
+        profileImage: profileImage ?? undefined,
+      });
+      toast.success("프로필이 업데이트되었습니다.");
+    } catch {
+      toast.error("프로필 업데이트에 실패했습니다.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleDelete = () => {
@@ -97,179 +140,192 @@ export default function ProfilePage() {
         <h1 className="text-xl font-bold">정보수정</h1>
       </div>
 
-      <div className="mb-12 flex justify-center">
-        <ImageUploader
-          value={rootUser.avatar}
-          onChange={(file) => {
-            setProfileImage(file);
-          }}
-        />
-      </div>
-
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 px-24">
-          <div className="grid grid-cols-1 gap-x-12 gap-y-6 md:grid-cols-2">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Name</FormLabel>
-                  <FormControl>
-                    <Input {...field} readOnly className="border-0 border-b bg-transparent p-0 shadow-none" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="level"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Level</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger className="border-0 border-b bg-transparent p-0 shadow-none">
-                        <SelectValue />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {levels.map((level) => (
-                        <SelectItem key={level} value={level}>
-                          {level}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="nickname"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nickname</FormLabel>
-                  <FormControl>
-                    <Input {...field} className="border-0 border-b bg-transparent p-0 shadow-none" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="code"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Code</FormLabel>
-                  <FormControl>
-                    <div className="flex items-center gap-2">
-                      <Input {...field} readOnly className="border-0 border-b bg-transparent p-0 shadow-none" />
-                      <Button type="button" variant="ghost" size="icon" onClick={handleCopyCode} className="h-6 w-6">
-                        <Copy className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="phone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Phone</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      onChange={(e) => {
-                        const formatted = formatPhone(e.target.value);
-                        field.onChange(formatted);
-                      }}
-                      className="border-0 border-b bg-transparent p-0 shadow-none"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="address"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Address</FormLabel>
-                  <FormControl>
-                    <AddressSearch
-                      value={field.value ?? ""}
-                      onChange={field.onChange}
-                      onDetailFocus={() => {
-                        detailAddressRef.current?.focus();
-                      }}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="sns"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>SNS</FormLabel>
-                  <FormControl>
-                    <Input {...field} className="border-0 border-b bg-transparent p-0 shadow-none" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="detailAddress"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Detail</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      ref={detailAddressRef}
-                      className="border-0 border-b bg-transparent p-0 shadow-none"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+      {isLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="text-muted-foreground">로딩 중...</div>
+        </div>
+      ) : (
+        <>
+          <div className="mb-12 flex justify-center">
+            <ImageUploader
+              onChange={(file) => {
+                setProfileImage(file);
+              }}
             />
           </div>
 
-          <div className="flex justify-end gap-4">
-            <Button
-              type="button"
-              variant="outline"
-              className="border-primary text-primary hover:text-primary rounded-full"
-              onClick={() => setIsDeleteDialogOpen(true)}
-            >
-              Delete
-            </Button>
-            <Button type="submit" className="rounded-full">
-              Save
-            </Button>
-          </div>
-        </form>
-      </Form>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 px-24">
+              <div className="grid grid-cols-1 gap-x-12 gap-y-6 md:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Name</FormLabel>
+                      <FormControl>
+                        <Input {...field} readOnly className="border-0 border-b bg-transparent p-0 shadow-none" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="level"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Level</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="border-0 border-b bg-transparent p-0 shadow-none">
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {levels.map((level) => (
+                            <SelectItem key={level} value={level}>
+                              {level}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="nickname"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nickname</FormLabel>
+                      <FormControl>
+                        <Input {...field} className="border-0 border-b bg-transparent p-0 shadow-none" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="code"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Code</FormLabel>
+                      <FormControl>
+                        <div className="flex items-center gap-2">
+                          <Input {...field} readOnly className="border-0 border-b bg-transparent p-0 shadow-none" />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={handleCopyCode}
+                            className="h-6 w-6"
+                          >
+                            <Copy className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phone</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          onChange={(e) => {
+                            const formatted = formatPhone(e.target.value);
+                            field.onChange(formatted);
+                          }}
+                          className="border-0 border-b bg-transparent p-0 shadow-none"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="address"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Address</FormLabel>
+                      <FormControl>
+                        <AddressSearch
+                          value={field.value ?? ""}
+                          onChange={field.onChange}
+                          onDetailFocus={() => {
+                            detailAddressRef.current?.focus();
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="sns"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>SNS</FormLabel>
+                      <FormControl>
+                        <Input {...field} className="border-0 border-b bg-transparent p-0 shadow-none" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="detailAddress"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Detail</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          ref={detailAddressRef}
+                          className="border-0 border-b bg-transparent p-0 shadow-none"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="flex justify-end gap-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="border-primary text-primary hover:text-primary rounded-full"
+                  onClick={() => setIsDeleteDialogOpen(true)}
+                >
+                  Delete
+                </Button>
+                <Button type="submit" className="rounded-full" disabled={isSubmitting}>
+                  {isSubmitting ? "저장 중..." : "Save"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </>
+      )}
 
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>

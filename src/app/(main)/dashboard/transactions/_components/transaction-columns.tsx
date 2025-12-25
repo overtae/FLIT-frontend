@@ -1,7 +1,6 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { Download } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,38 +10,48 @@ import { Transaction } from "./transaction-types";
 
 interface CreateColumnsProps {
   onViewDetail: (transaction: Transaction) => void;
-  onDownload: (transaction: Transaction) => void;
   category?: "order" | "order-request" | "canceled";
 }
 
 export function createTransactionColumns({
   onViewDetail,
-  onDownload,
   category = "order",
 }: CreateColumnsProps): ColumnDef<Transaction>[] {
   const baseColumns: ColumnDef<Transaction>[] = [
     {
       id: "select",
-      header: ({ table }) => (
-        <Checkbox
-          checked={table.getIsAllRowsSelected()}
-          onCheckedChange={() => {
-            if (table.getIsAllRowsSelected()) {
-              table.toggleAllRowsSelected(false);
-            } else {
-              table.toggleAllRowsSelected(true);
-            }
-          }}
-          aria-label="전체 선택"
-        />
-      ),
-      cell: ({ row }) => (
-        <Checkbox
-          checked={row.getIsSelected()}
-          onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label="행 선택"
-        />
-      ),
+      header: ({ table }) => {
+        const checked = table.getIsAllPageRowsSelected()
+          ? true
+          : table.getIsSomePageRowsSelected()
+            ? "indeterminate"
+            : false;
+
+        return (
+          <Checkbox
+            checked={checked}
+            onCheckedChange={(value) => {
+              table.toggleAllPageRowsSelected(!!value);
+            }}
+            aria-label="Select all"
+          />
+        );
+      },
+      cell: ({ row }) => {
+        const checked = row.getIsSelected();
+
+        return (
+          <Checkbox
+            checked={checked}
+            disabled={!row.getCanSelect()}
+            onCheckedChange={(value) => {
+              row.toggleSelected(!!value);
+            }}
+            onClick={(e) => e.stopPropagation()}
+            aria-label="Select row"
+          />
+        );
+      },
       enableSorting: false,
       enableHiding: false,
     },
@@ -120,15 +129,11 @@ export function createTransactionColumns({
 
       return (
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={() => onDownload(transaction)} className="h-8 w-8 p-0">
-            <Download className="h-4 w-4" />
-            <span className="sr-only">다운로드</span>
-          </Button>
           <Button
             variant="outline"
             size="sm"
             onClick={() => onViewDetail(transaction)}
-            className="h-8 text-red-600 hover:bg-red-50 hover:text-red-700"
+            className="hover:bg-main/5 hover:text-main hover:border-main rounded-full"
           >
             Detail
           </Button>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import { ChevronDown } from "lucide-react";
 import { DateRange } from "react-day-picker";
@@ -11,21 +11,14 @@ import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { getMonthlySalesChartData } from "@/lib/api/dashboard";
+import { DEFAULT_CHART_MARGIN, formatYAxisValueShort } from "@/lib/chart-utils";
 
 interface MonthlySalesChartProps {
   selectedCategory: string | null;
   paymentMethod: "total" | "card" | "pos" | "transfer";
   onPaymentMethodChange: (method: "total" | "card" | "pos" | "transfer") => void;
 }
-
-const monthlyData = [
-  { month: "1월", thisMonth: 120000000, lastMonth: 110000000 },
-  { month: "2월", thisMonth: 130000000, lastMonth: 120000000 },
-  { month: "3월", thisMonth: 140000000, lastMonth: 130000000 },
-  { month: "4월", thisMonth: 135000000, lastMonth: 125000000 },
-  { month: "5월", thisMonth: 145000000, lastMonth: 135000000 },
-  { month: "6월", thisMonth: 150000000, lastMonth: 140000000 },
-];
 
 interface CustomTooltipProps {
   active?: boolean;
@@ -58,6 +51,35 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
 export function MonthlySalesChart({ selectedCategory, paymentMethod, onPaymentMethodChange }: MonthlySalesChartProps) {
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const [monthlyData, setMonthlyData] = useState<Array<{ month: string; thisMonth: number; lastMonth: number }>>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        const data = await getMonthlySalesChartData({
+          paymentMethod,
+          category: selectedCategory ?? undefined,
+        });
+        setMonthlyData(data);
+      } catch (error) {
+        console.error("Failed to fetch monthly sales chart data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [paymentMethod, selectedCategory]);
+
+  if (isLoading) {
+    return (
+      <div className="flex h-[400px] items-center justify-center">
+        <div className="text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
 
   const totalAmount = monthlyData.reduce((sum, item) => sum + item.thisMonth, 0);
 
@@ -116,7 +138,7 @@ export function MonthlySalesChart({ selectedCategory, paymentMethod, onPaymentMe
       </div>
 
       <ResponsiveContainer width="100%" height={400}>
-        <AreaChart data={monthlyData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+        <AreaChart data={monthlyData} margin={DEFAULT_CHART_MARGIN}>
           <defs>
             <linearGradient id="colorThisMonth" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="var(--chart-1)" stopOpacity={0.3} />
@@ -129,7 +151,7 @@ export function MonthlySalesChart({ selectedCategory, paymentMethod, onPaymentMe
           </defs>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="month" />
-          <YAxis />
+          <YAxis tickFormatter={formatYAxisValueShort} width={60} />
           <Tooltip content={<CustomTooltip />} />
           <Area
             type="monotone"

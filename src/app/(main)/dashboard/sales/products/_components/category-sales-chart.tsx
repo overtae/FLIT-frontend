@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
 
+import { DEFAULT_CHART_MARGIN, formatYAxisValueShort } from "@/lib/chart-utils";
 import { getCategoryChartData } from "@/service/chart.service";
 import { CategoryChartData } from "@/types/dashboard";
 
@@ -50,10 +51,10 @@ export function CategorySalesChart({ viewMode, onCategoryClick }: CategorySalesC
 
   return (
     <ResponsiveContainer width="100%" height={400}>
-      <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+      <BarChart data={data} margin={{ ...DEFAULT_CHART_MARGIN, top: 20 }}>
         <CartesianGrid strokeDasharray="3 3" />
         <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
-        <YAxis />
+        <YAxis tickFormatter={formatYAxisValueShort} width={60} />
         <Tooltip
           formatter={(value: number) => `${value.toLocaleString()}원`}
           contentStyle={{

@@ -11,14 +11,15 @@ interface SettlementsContentProps {
 }
 
 export function SettlementsContent({ initialVerified }: SettlementsContentProps) {
-  const [isVerified, setIsVerified] = useState(initialVerified);
+  const [isVerified] = useState(initialVerified);
 
   if (!isVerified) {
     return (
       <PasswordVerification
         title="비밀번호 재확인"
         description="정산관리에 접근하기 위해 비밀번호를 입력해주세요."
-        onVerified={() => setIsVerified(true)}
+        page="settlements"
+        onVerified={() => window.location.reload()}
       />
     );
   }

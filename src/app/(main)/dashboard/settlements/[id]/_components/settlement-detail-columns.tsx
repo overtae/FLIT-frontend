@@ -1,32 +1,19 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { Download } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { SettlementDetailTransaction } from "@/types/dashboard";
 
-export type SettlementDetailTransaction = {
-  id: string;
-  orderNumber: string;
-  from: string;
-  to: string;
-  productName: string;
-  paymentAmount: number;
-  orderDate: string;
-  paymentDate: string;
-  paymentMethod: string;
-  type: string;
-};
+export type { SettlementDetailTransaction };
 
 interface CreateSettlementDetailColumnsProps {
-  onDownload: (transaction: SettlementDetailTransaction) => void;
   onViewDetail: (transaction: SettlementDetailTransaction) => void;
 }
 
 export function createSettlementDetailColumns({
-  onDownload,
   onViewDetail,
 }: CreateSettlementDetailColumnsProps): ColumnDef<SettlementDetailTransaction>[] {
   return [
@@ -102,27 +89,6 @@ export function createSettlementDetailColumns({
       },
     },
     {
-      id: "download",
-      header: "다운로드",
-      cell: ({ row }) => {
-        const transaction = row.original;
-        return (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              onDownload(transaction);
-            }}
-            className="h-8 w-8 p-0"
-          >
-            <Download className="h-4 w-4" />
-            <span className="sr-only">다운로드</span>
-          </Button>
-        );
-      },
-    },
-    {
       id: "actions",
       header: "",
       cell: ({ row }) => {
@@ -135,7 +101,7 @@ export function createSettlementDetailColumns({
               e.stopPropagation();
               onViewDetail(transaction);
             }}
-            className="h-8 text-red-600 hover:bg-red-50 hover:text-red-700"
+            className="hover:bg-main/5 hover:border-main hover:text-main rounded-full"
           >
             Detail
           </Button>

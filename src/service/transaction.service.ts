@@ -13,6 +13,11 @@ const buildSearchParams = (params?: {
   subCategory?: string;
   page?: number;
   pageSize?: number;
+  search?: string;
+  types?: string;
+  paymentMethods?: string;
+  refundStatuses?: string;
+  date?: string;
 }): URLSearchParams => {
   const searchParams = new URLSearchParams();
   if (!params) return searchParams;
@@ -23,6 +28,11 @@ const buildSearchParams = (params?: {
   appendIfExists(searchParams, "subCategory", params.subCategory);
   appendIfExists(searchParams, "page", params.page);
   appendIfExists(searchParams, "pageSize", params.pageSize);
+  appendIfExists(searchParams, "search", params.search);
+  appendIfExists(searchParams, "types", params.types);
+  appendIfExists(searchParams, "paymentMethods", params.paymentMethods);
+  appendIfExists(searchParams, "refundStatuses", params.refundStatuses);
+  appendIfExists(searchParams, "date", params.date);
 
   return searchParams;
 };
@@ -34,6 +44,11 @@ export async function getTransactions(params?: {
   subCategory?: string;
   page?: number;
   pageSize?: number;
+  search?: string;
+  types?: string;
+  paymentMethods?: string;
+  refundStatuses?: string;
+  date?: string;
 }): Promise<PaginatedResponse<Transaction>> {
   const searchParams = buildSearchParams(params);
   const response = await fetch(`/api/dashboard/transactions?${searchParams.toString()}`);

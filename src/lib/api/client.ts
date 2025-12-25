@@ -35,14 +35,16 @@ export async function setVerificationToken(verificationToken: string): Promise<v
   cookieStore.set("verificationToken", verificationToken, TOKEN_COOKIE_OPTIONS.verificationToken);
 }
 
-export async function getPasswordVerified(): Promise<boolean> {
+export async function getPageVerification(page: string): Promise<boolean> {
   const cookieStore = await cookies();
-  return cookieStore.get("passwordVerified")?.value === "true";
+  const cookieName = `pageVerification_${page}`;
+  return cookieStore.get(cookieName)?.value === "true";
 }
 
-export async function setPasswordVerified(): Promise<void> {
+export async function setPageVerification(page: string): Promise<void> {
   const cookieStore = await cookies();
-  cookieStore.set("passwordVerified", "true", TOKEN_COOKIE_OPTIONS.passwordVerified);
+  const cookieName = `pageVerification_${page}`;
+  cookieStore.set(cookieName, "true", TOKEN_COOKIE_OPTIONS.pageVerification);
 }
 
 export async function fetchWithAuth(endpoint: string, options: RequestInit = {}): Promise<Response> {
