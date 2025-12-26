@@ -10,16 +10,13 @@ import { cn } from "@/lib/utils";
 import type { ContentLayout, NavbarStyle, SidebarCollapsible, SidebarVariant } from "@/types/preferences/layout";
 
 export default async function Layout({ children }: Readonly<{ children: ReactNode }>) {
-  const cookieStore = await cookies();
-  const defaultOpen = cookieStore.get("sidebar_state")?.value === "true";
-
   const sidebarVariant: SidebarVariant = "sidebar";
   const sidebarCollapsible: SidebarCollapsible = "icon";
   const contentLayout: ContentLayout = "full-width";
   const navbarStyle: NavbarStyle = "sticky";
 
   return (
-    <SidebarProvider defaultOpen={defaultOpen}>
+    <SidebarProvider defaultOpen>
       <AppSidebar variant={sidebarVariant} collapsible={sidebarCollapsible} className="top-12! h-[calc(100vh-3rem)]!" />
       <header
         data-navbar-style={navbarStyle}
