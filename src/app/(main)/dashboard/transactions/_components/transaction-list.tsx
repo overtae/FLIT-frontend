@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useCallback } from "react";
 
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -118,12 +118,12 @@ export function TransactionList({ category, subCategory }: TransactionListProps)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [category, subCategory, pageIndex, pageSize, searchParams.toString()]);
 
-  const handleViewDetail = (transaction: Transaction) => {
+  const handleViewDetail = useCallback((transaction: Transaction) => {
     setSelectedTransaction(transaction);
     setIsModalOpen(true);
-  };
+  }, []);
 
-  const handleDownload = (transaction: Transaction) => {
+  const handleDownload = useCallback((transaction: Transaction) => {
     const data = [
       {
         주문번호: transaction.orderNumber,
@@ -143,7 +143,7 @@ export function TransactionList({ category, subCategory }: TransactionListProps)
     XLSX.utils.book_append_sheet(workbook, worksheet, "거래 내역");
     const fileName = `${transaction.orderNumber}.xlsx`;
     XLSX.writeFile(workbook, fileName);
-  };
+  }, []);
 
   const columns = useMemo(
     () =>
@@ -152,7 +152,7 @@ export function TransactionList({ category, subCategory }: TransactionListProps)
         onDownload: handleDownload,
         category,
       }),
-    [category],
+    [category, handleViewDetail, handleDownload],
   );
 
   const { table, rowSelection } = useDataTableInstance({

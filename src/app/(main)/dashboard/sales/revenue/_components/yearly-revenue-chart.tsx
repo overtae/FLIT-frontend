@@ -215,7 +215,7 @@ export function YearlyRevenueChart() {
                     />
                   );
                 }
-                return null;
+                return <g />;
               }}
             />
           </LineChart>

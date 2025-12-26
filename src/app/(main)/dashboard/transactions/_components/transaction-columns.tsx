@@ -10,11 +10,13 @@ import { Transaction } from "./transaction-types";
 
 interface CreateColumnsProps {
   onViewDetail: (transaction: Transaction) => void;
+  onDownload: (transaction: Transaction) => void;
   category?: "order" | "order-request" | "canceled";
 }
 
 export function createTransactionColumns({
   onViewDetail,
+  onDownload,
   category = "order",
 }: CreateColumnsProps): ColumnDef<Transaction>[] {
   const baseColumns: ColumnDef<Transaction>[] = [
@@ -136,6 +138,14 @@ export function createTransactionColumns({
             className="hover:bg-main/5 hover:text-main hover:border-main rounded-full"
           >
             Detail
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onDownload(transaction)}
+            className="hover:bg-main/5 hover:text-main hover:border-main rounded-full"
+          >
+            Download
           </Button>
         </div>
       );

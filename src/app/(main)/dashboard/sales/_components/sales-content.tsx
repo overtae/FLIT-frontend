@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 import { PasswordVerification } from "@/components/password-verification";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -14,6 +16,8 @@ interface SalesContentProps {
 }
 
 export function SalesContent({ initialVerified }: SalesContentProps) {
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+
   if (!initialVerified) {
     return (
       <PasswordVerification
@@ -40,7 +44,7 @@ export function SalesContent({ initialVerified }: SalesContentProps) {
           <TabsTrigger value="orders">주문분석</TabsTrigger>
         </TabsList>
         <TabsContent value="revenue" className="mt-6">
-          <RevenueDashboard />
+          <RevenueDashboard selectedDate={selectedDate} onDateSelect={setSelectedDate} />
         </TabsContent>
         <TabsContent value="products" className="mt-6">
           <ProductDashboard />

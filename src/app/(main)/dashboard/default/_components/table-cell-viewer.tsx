@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+
 import { TrendingUp } from "lucide-react";
 import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
 import { z } from "zod";
@@ -36,10 +38,10 @@ const chartConfig = {
 
 export function TableCellViewer({ item }: { item: z.infer<typeof sectionSchema> }) {
   const isMobile = useIsMobile();
-  const [chartData, setChartData] = React.useState<Array<{ month: string; desktop: number; mobile: number }>>([]);
-  const [isLoading, setIsLoading] = React.useState(true);
+  const [chartData, setChartData] = useState<Array<{ month: string; desktop: number; mobile: number }>>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const fetchData = async () => {
       try {
         setIsLoading(true);
