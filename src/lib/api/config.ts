@@ -1,4 +1,5 @@
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://workspace.taeyoung2da.com";
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
+export const USE_MOCK_DATA = !process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export const API_ENDPOINTS = {
   auth: {

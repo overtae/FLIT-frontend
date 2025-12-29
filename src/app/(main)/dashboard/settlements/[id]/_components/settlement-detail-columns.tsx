@@ -5,9 +5,10 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { SettlementDetailTransaction } from "@/types/dashboard";
+import { SERVICE_CONFIG } from "@/config/service-config";
+import type { SettlementDetail } from "@/types/settlement.type";
 
-export type { SettlementDetailTransaction };
+type SettlementDetailTransaction = SettlementDetail["transactions"][0];
 
 interface CreateSettlementDetailColumnsProps {
   onViewDetail: (transaction: SettlementDetailTransaction) => void;
@@ -41,15 +42,15 @@ export function createSettlementDetailColumns({
       enableHiding: false,
     },
     {
-      accessorKey: "orderNumber",
+      accessorKey: "transactionNumber",
       header: "주문번호",
     },
     {
-      accessorKey: "from",
+      accessorKey: "fromNickname",
       header: "From",
     },
     {
-      accessorKey: "to",
+      accessorKey: "toNickname",
       header: "To",
     },
     {
@@ -77,7 +78,9 @@ export function createSettlementDetailColumns({
       header: "결제방법",
       cell: ({ row }) => {
         const method = row.original.paymentMethod;
-        return <Badge variant="outline">{method}</Badge>;
+        const methodLabel =
+          Object.entries(SERVICE_CONFIG.paymentMethod).find(([key]) => key === method.toUpperCase())?.[1] ?? method;
+        return <Badge variant="outline">{methodLabel}</Badge>;
       },
     },
     {
@@ -85,7 +88,9 @@ export function createSettlementDetailColumns({
       header: "구분",
       cell: ({ row }) => {
         const type = row.original.type;
-        return <Badge variant="secondary">{type}</Badge>;
+        const typeLabel =
+          Object.entries(SERVICE_CONFIG.transactionType).find(([key]) => key === type.toUpperCase())?.[1] ?? type;
+        return <Badge variant="secondary">{typeLabel}</Badge>;
       },
     },
     {

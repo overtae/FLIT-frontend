@@ -12,14 +12,13 @@ import { DataTablePagination } from "@/components/data-table/data-table-paginati
 import { DataTableWithSelection } from "@/components/data-table/data-table-with-selection";
 import { Button } from "@/components/ui/button";
 import { useDataTableInstance } from "@/hooks/use-data-table-instance";
-import { getSalesDetails } from "@/service/sales.service";
-import { SalesDetail } from "@/types/dashboard";
+import { getProductDetail } from "@/service/sales.service";
+import type { ProductDetailItem } from "@/types/sales.type";
 
 export function SalesDetailTable() {
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(true);
-  const [total, setTotal] = useState(0);
-  const [salesDetails, setSalesDetails] = useState<SalesDetail[]>([]);
+  const [allSalesDetails, setAllSalesDetails] = useState<ProductDetailItem[]>([]);
 
   const pageIndex = parseInt(searchParams.get("page") ?? "1", 10) - 1;
   const pageSize = parseInt(searchParams.get("pageSize") ?? "10", 10);
@@ -28,42 +27,60 @@ export function SalesDetailTable() {
     const fetchSalesDetails = async () => {
       try {
         setIsLoading(true);
-        const response = await getSalesDetails({
-          page: pageIndex + 1,
-          pageSize,
-          search: searchParams.get("search") ?? undefined,
-          categories: searchParams.get("categories") ?? undefined,
-          paymentMethods: searchParams.get("paymentMethods") ?? undefined,
-          regions: searchParams.get("regions") ?? undefined,
-          orderStatuses: searchParams.get("orderStatuses") ?? undefined,
-          today: searchParams.get("today") === "true",
-          dateFrom: searchParams.get("dateFrom") ?? undefined,
-          dateTo: searchParams.get("dateTo") ?? undefined,
-        });
+        const params: Parameters<typeof getProductDetail>[0] = {};
+        if (searchParams.get("page")) params.page = parseInt(searchParams.get("page")!, 10);
+        if (searchParams.get("size")) params.size = parseInt(searchParams.get("size")!, 10);
+        if (searchParams.get("startDate")) params.startDate = searchParams.get("startDate")!;
+        if (searchParams.get("endDate")) params.endDate = searchParams.get("endDate")!;
+        if (searchParams.get("category")) params.category = searchParams.get("category") as any;
+        if (searchParams.get("paymentMethod")) params.paymentMethod = searchParams.get("paymentMethod") as any;
+        if (searchParams.get("region")) params.region = searchParams.get("region") as any;
+        if (searchParams.get("status")) params.status = searchParams.get("status") as any;
 
-        setSalesDetails(response.data);
-        setTotal(response.total);
+        const data = await getProductDetail(params);
+        setAllSalesDetails(data);
       } catch (error) {
         console.error("Failed to fetch sales details:", error);
-        setTotal(0);
-        setSalesDetails([]);
+        setAllSalesDetails([]);
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchSalesDetails();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pageIndex, pageSize, searchParams.toString()]);
+  }, [searchParams]);
+
+  const filteredData = useMemo(() => {
+    let filtered = [...allSalesDetails];
+
+    const search = searchParams.get("search");
+    if (search) {
+      const searchLower = search.toLowerCase();
+      filtered = filtered.filter(
+        (item) => item.nickname.toLowerCase().includes(searchLower) || item.loginId.toLowerCase().includes(searchLower),
+      );
+    }
+
+    return filtered;
+  }, [allSalesDetails, searchParams]);
+
+  const paginatedData = useMemo(() => {
+    const start = pageIndex * pageSize;
+    const end = start + pageSize;
+    return filteredData.slice(start, end);
+  }, [filteredData, pageIndex, pageSize]);
+
+  const total = filteredData.length;
+  const pageCount = Math.ceil(total / pageSize);
 
   const columns = useMemo(() => productColumns, []);
 
   const { table, rowSelection } = useDataTableInstance({
-    data: salesDetails,
+    data: paginatedData,
     columns,
-    getRowId: (row) => row.id,
+    getRowId: (row) => row.transactionId.toString(),
     manualPagination: true,
-    pageCount: total > 0 ? Math.ceil(total / pageSize) : 0,
+    pageCount,
     defaultPageIndex: pageIndex,
     defaultPageSize: pageSize,
   });
@@ -75,8 +92,8 @@ export function SalesDetailTable() {
 
     const data = selectedRows.map((row) => ({
       이름: row.original.name,
-      "닉네임(ID)": `${row.original.nickname} (${row.original.nicknameId})`,
-      번호: row.original.phone,
+      "닉네임(ID)": `${row.original.nickname} (${row.original.loginId})`,
+      번호: row.original.phoneNumber,
       주소: row.original.address,
       상품명: row.original.productName,
       금액: `${row.original.amount.toLocaleString()}원`,

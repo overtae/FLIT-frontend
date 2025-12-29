@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { getQuarterProductDetailData, QuarterProductDetailData } from "@/lib/api/dashboard";
+import { getProductNetQuarterDetail } from "@/service/sales.service";
+import type { ProductNetQuarterDetailResponse } from "@/types/sales.type";
 
 interface QuarterDetailModalProps {
   open: boolean;
@@ -16,12 +17,19 @@ interface QuarterDetailModalProps {
   year: string;
 }
 
-const categories = ["꽃", "식물", "화환", "공간연출", "정기배송"];
+const categories = ["FLOWER", "PLANTS", "WREATH", "SCENOGRAPHY", "REGULAR_DELIVERY"];
+const categoryLabels: Record<string, string> = {
+  FLOWER: "꽃",
+  PLANTS: "식물",
+  WREATH: "화환",
+  SCENOGRAPHY: "공간연출",
+  REGULAR_DELIVERY: "정기배송",
+};
 
 export function QuarterDetailModal({ open, onOpenChange, year }: QuarterDetailModalProps) {
-  const [data, setData] = useState<QuarterProductDetailData | null>(null);
+  const [data, setData] = useState<ProductNetQuarterDetailResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedCategory, setSelectedCategory] = useState("꽃");
+  const [selectedCategory, setSelectedCategory] = useState("FLOWER");
 
   useEffect(() => {
     if (!open) return;
@@ -29,7 +37,7 @@ export function QuarterDetailModal({ open, onOpenChange, year }: QuarterDetailMo
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        const result = await getQuarterProductDetailData(year);
+        const result = await getProductNetQuarterDetail();
         setData(result);
       } catch (error) {
         console.error("Failed to fetch quarter product detail data:", error);
@@ -41,7 +49,9 @@ export function QuarterDetailModal({ open, onOpenChange, year }: QuarterDetailMo
     fetchData();
   }, [open, year]);
 
-  if (isLoading || !data) {
+  const selectedData = data.find((item) => item.category === selectedCategory);
+
+  if (isLoading || !selectedData) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-h-[90vh] max-w-[90vw] min-w-4xl">
@@ -52,7 +62,19 @@ export function QuarterDetailModal({ open, onOpenChange, year }: QuarterDetailMo
     );
   }
 
-  const { totalAmount, paymentAmount, paymentCount, refundCancelAmount, refundCancelCount } = data;
+  const totalAmount = selectedData.totalSales;
+  const paymentAmount =
+    selectedData.paymentAmount.card + selectedData.paymentAmount.bankTransfer + selectedData.paymentAmount.pos;
+  const paymentCount =
+    selectedData.paymentCount.card + selectedData.paymentCount.bankTransfer + selectedData.paymentCount.pos;
+  const refundCancelAmount =
+    selectedData.refundCancelAmount.card +
+    selectedData.refundCancelAmount.bankTransfer +
+    selectedData.refundCancelAmount.pos;
+  const refundCancelCount =
+    selectedData.refundCancelCount.card +
+    selectedData.refundCancelCount.bankTransfer +
+    selectedData.refundCancelCount.pos;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -65,7 +87,7 @@ export function QuarterDetailModal({ open, onOpenChange, year }: QuarterDetailMo
                 <div key={category} className="flex items-center space-x-2">
                   <RadioGroupItem value={category} id={category} />
                   <Label htmlFor={category} className="cursor-pointer font-normal">
-                    {category}
+                    {categoryLabels[category]}
                   </Label>
                 </div>
               ))}
@@ -78,7 +100,7 @@ export function QuarterDetailModal({ open, onOpenChange, year }: QuarterDetailMo
         <div className="space-y-6">
           {/* 업데이트 시간 */}
           <div className="text-muted-foreground text-xs">
-            최종 업데이트 일시 : {format(new Date(), "yyyy-MM-dd HH:mm")}
+            최종 업데이트 일시 : {format(new Date(selectedData.lastUpdatedAt), "yyyy-MM-dd HH:mm")}
           </div>
 
           <div className="grid grid-cols-3 gap-6">

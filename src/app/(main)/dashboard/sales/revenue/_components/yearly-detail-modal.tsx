@@ -6,7 +6,8 @@ import { format } from "date-fns";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { getYearlyRevenueDetailData, YearlyRevenueDetailData } from "@/lib/api/dashboard";
+import { getRevenueNetQuarterDetail } from "@/service/sales.service";
+import type { RevenueOverviewResponse } from "@/types/sales.type";
 
 interface YearlyDetailModalProps {
   open: boolean;
@@ -15,7 +16,7 @@ interface YearlyDetailModalProps {
 }
 
 export function YearlyDetailModal({ open, onOpenChange, year }: YearlyDetailModalProps) {
-  const [data, setData] = useState<YearlyRevenueDetailData | null>(null);
+  const [data, setData] = useState<RevenueOverviewResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -24,7 +25,7 @@ export function YearlyDetailModal({ open, onOpenChange, year }: YearlyDetailModa
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        const result = await getYearlyRevenueDetailData(year);
+        const result = await getRevenueNetQuarterDetail();
         setData(result);
       } catch (error) {
         console.error("Failed to fetch yearly revenue detail data:", error);
@@ -46,15 +47,15 @@ export function YearlyDetailModal({ open, onOpenChange, year }: YearlyDetailModa
     );
   }
 
-  const {
-    totalAmount,
-    paymentAmount,
-    paymentCount,
-    deliveryInProgress,
-    refundCancelAmount,
-    refundCancelCount,
-    deliveryCompleted,
-  } = data;
+  const totalAmount = data.totalSales;
+  const paymentAmount = data.paymentAmount.card + data.paymentAmount.bankTransfer + data.paymentAmount.pos;
+  const paymentCount = data.paymentCount.card + data.paymentCount.bankTransfer + data.paymentCount.pos;
+  const deliveryInProgress = data.shippingCount;
+  const refundCancelAmount =
+    data.refundCancelAmount.card + data.refundCancelAmount.bankTransfer + data.refundCancelAmount.pos;
+  const refundCancelCount =
+    data.refundCancelCount.card + data.refundCancelCount.bankTransfer + data.refundCancelCount.pos;
+  const deliveryCompleted = data.shippingCompletedCount;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

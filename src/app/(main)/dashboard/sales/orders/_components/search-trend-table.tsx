@@ -2,25 +2,61 @@
 
 import { useState, useEffect } from "react";
 
+import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear } from "date-fns";
+
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { getSearchTrendData } from "@/lib/api/dashboard";
+import { getOrderKeywordTrend } from "@/service/sales.service";
+import type { OrderPeriod } from "@/types/sales.type";
 
 interface SearchTrendTableProps {
   period: "weekly" | "monthly" | "yearly";
   selectedDate?: Date;
 }
 
-export function SearchTrendTable({ period }: SearchTrendTableProps) {
+const periodMap: Record<"weekly" | "monthly" | "yearly", OrderPeriod> = {
+  weekly: "WEEKLY",
+  monthly: "MONTHLY",
+  yearly: "YEARLY",
+};
+
+export function SearchTrendTable({ period, selectedDate }: SearchTrendTableProps) {
   const [searchTrendData, setSearchTrendData] = useState<
-    Array<{ rank: number; keyword: string; search: number; bounceRate: number }>
+    Array<{ rank: number; keyword: string; searchCount: number; bounceRate: number }>
   >([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    if (!selectedDate) return;
+
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        const data = await getSearchTrendData({ period });
+        let startDate: Date;
+        let endDate: Date;
+
+        switch (period) {
+          case "weekly": {
+            endDate = endOfWeek(selectedDate);
+            startDate = startOfWeek(selectedDate);
+            break;
+          }
+          case "monthly": {
+            endDate = endOfMonth(selectedDate);
+            startDate = startOfMonth(selectedDate);
+            break;
+          }
+          case "yearly": {
+            endDate = endOfYear(selectedDate);
+            startDate = startOfYear(selectedDate);
+            break;
+          }
+        }
+
+        const data = await getOrderKeywordTrend({
+          period: periodMap[period],
+          startDate: format(startDate, "yyyy-MM-dd"),
+          endDate: format(endDate, "yyyy-MM-dd"),
+        });
         setSearchTrendData(data);
       } catch (error) {
         console.error("Failed to fetch search trend data:", error);
@@ -30,9 +66,9 @@ export function SearchTrendTable({ period }: SearchTrendTableProps) {
     };
 
     fetchData();
-  }, [period]);
+  }, [period, selectedDate]);
 
-  if (isLoading) {
+  if (isLoading || !selectedDate) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="text-muted-foreground">Loading...</div>
@@ -63,7 +99,7 @@ export function SearchTrendTable({ period }: SearchTrendTableProps) {
               <TableRow key={item.rank}>
                 <TableCell className="w-12 text-center text-sm">{item.rank}</TableCell>
                 <TableCell className="text-sm">{item.keyword}</TableCell>
-                <TableCell className="text-right text-sm">{item.search.toLocaleString()}</TableCell>
+                <TableCell className="text-right text-sm">{item.searchCount.toLocaleString()}</TableCell>
                 <TableCell className="text-center text-sm">{item.bounceRate}%</TableCell>
               </TableRow>
             ))}
@@ -89,7 +125,7 @@ export function SearchTrendTable({ period }: SearchTrendTableProps) {
               <TableRow key={item.rank}>
                 <TableCell className="w-12 text-center text-sm">{item.rank}</TableCell>
                 <TableCell className="text-sm">{item.keyword}</TableCell>
-                <TableCell className="text-right text-sm">{item.search.toLocaleString()}</TableCell>
+                <TableCell className="text-right text-sm">{item.searchCount.toLocaleString()}</TableCell>
                 <TableCell className="text-center text-sm">{item.bounceRate}%</TableCell>
               </TableRow>
             ))}

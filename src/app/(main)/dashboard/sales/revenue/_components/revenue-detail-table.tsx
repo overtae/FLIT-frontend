@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { useSearchParams } from "next/navigation";
 
@@ -11,16 +11,15 @@ import { DataTablePagination } from "@/components/data-table/data-table-paginati
 import { DataTableWithSelection } from "@/components/data-table/data-table-with-selection";
 import { Button } from "@/components/ui/button";
 import { useDataTableInstance } from "@/hooks/use-data-table-instance";
-import { getRevenueDetails } from "@/service/sales.service";
-import { RevenueDetail } from "@/types/dashboard";
+import { getRevenueDetail } from "@/service/sales.service";
+import type { RevenueDetailItem } from "@/types/sales.type";
 
 import { revenueColumns } from "./columns.revenue";
 
 export function RevenueDetailTable() {
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(true);
-  const [total, setTotal] = useState(0);
-  const [revenueDetails, setRevenueDetails] = useState<RevenueDetail[]>([]);
+  const [allRevenueDetails, setAllRevenueDetails] = useState<RevenueDetailItem[]>([]);
 
   const pageIndex = parseInt(searchParams.get("page") ?? "1", 10) - 1;
   const pageSize = parseInt(searchParams.get("pageSize") ?? "10", 10);
@@ -29,42 +28,60 @@ export function RevenueDetailTable() {
     const fetchRevenueDetails = async () => {
       try {
         setIsLoading(true);
-        const response = await getRevenueDetails({
-          page: pageIndex + 1,
-          pageSize,
-          search: searchParams.get("search") ?? undefined,
-          categories: searchParams.get("categories") ?? undefined,
-          paymentMethods: searchParams.get("paymentMethods") ?? undefined,
-          regions: searchParams.get("regions") ?? undefined,
-          orderStatuses: searchParams.get("orderStatuses") ?? undefined,
-          today: searchParams.get("today") === "true",
-          dateFrom: searchParams.get("dateFrom") ?? undefined,
-          dateTo: searchParams.get("dateTo") ?? undefined,
-        });
+        const params: Parameters<typeof getRevenueDetail>[0] = {};
+        if (searchParams.get("page")) params.page = parseInt(searchParams.get("page")!, 10);
+        if (searchParams.get("size")) params.size = parseInt(searchParams.get("size")!, 10);
+        if (searchParams.get("startDate")) params.startDate = searchParams.get("startDate")!;
+        if (searchParams.get("endDate")) params.endDate = searchParams.get("endDate")!;
+        if (searchParams.get("category")) params.category = searchParams.get("category") as any;
+        if (searchParams.get("paymentMethod")) params.paymentMethod = searchParams.get("paymentMethod") as any;
+        if (searchParams.get("region")) params.region = searchParams.get("region") as any;
+        if (searchParams.get("status")) params.status = searchParams.get("status") as any;
 
-        setRevenueDetails(response.data);
-        setTotal(response.total);
+        const data = await getRevenueDetail(params);
+        setAllRevenueDetails(data);
       } catch (error) {
         console.error("Failed to fetch revenue details:", error);
-        setTotal(0);
-        setRevenueDetails([]);
+        setAllRevenueDetails([]);
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchRevenueDetails();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pageIndex, pageSize, searchParams.toString()]);
+  }, [searchParams]);
+
+  const filteredData = useMemo(() => {
+    let filtered = [...allRevenueDetails];
+
+    const search = searchParams.get("search");
+    if (search) {
+      const searchLower = search.toLowerCase();
+      filtered = filtered.filter(
+        (item) => item.nickname.toLowerCase().includes(searchLower) || item.loginId.toLowerCase().includes(searchLower),
+      );
+    }
+
+    return filtered;
+  }, [allRevenueDetails, searchParams]);
+
+  const paginatedData = useMemo(() => {
+    const start = pageIndex * pageSize;
+    const end = start + pageSize;
+    return filteredData.slice(start, end);
+  }, [filteredData, pageIndex, pageSize]);
+
+  const total = filteredData.length;
+  const pageCount = Math.ceil(total / pageSize);
 
   const columns = useMemo(() => revenueColumns, []);
 
   const { table, rowSelection } = useDataTableInstance({
-    data: revenueDetails,
+    data: paginatedData,
     columns,
-    getRowId: (row) => row.id,
+    getRowId: (row) => row.transactionId.toString(),
     manualPagination: true,
-    pageCount: total > 0 ? Math.ceil(total / pageSize) : 0,
+    pageCount,
     defaultPageIndex: pageIndex,
     defaultPageSize: pageSize,
   });
@@ -75,12 +92,12 @@ export function RevenueDetailTable() {
     if (selectedRows.length === 0) return;
 
     const data = selectedRows.map((row) => ({
-      "닉네임(ID)": `${row.original.nickname} (${row.original.nicknameId})`,
-      번호: row.original.phone,
+      "닉네임(ID)": `${row.original.nickname} (${row.original.loginId})`,
+      번호: row.original.phoneNumber,
       주소: row.original.address,
-      "매출액(건수)": `${row.original.revenueAmount.toLocaleString()}원 (${row.original.revenueCount}건)`,
-      "취소금액 (건수)": `${row.original.cancelAmount.toLocaleString()}원 (${row.original.cancelCount}건)`,
-      "환불금액 (건수)": `${row.original.refundAmount.toLocaleString()}원 (${row.original.refundCount}건)`,
+      매출액: `${row.original.salesAmount.toLocaleString()}원`,
+      취소금액: `${row.original.canceledAmount.toLocaleString()}원`,
+      환불금액: `${row.original.refundAmount.toLocaleString()}원`,
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(data);

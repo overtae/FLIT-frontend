@@ -8,7 +8,7 @@ interface PaymentMethodBreakdownDialogProps {
   onOpenChange: (open: boolean) => void;
   breakdown: {
     card: number;
-    account: number;
+    bankTransfer: number;
     pos: number;
   };
 }
@@ -27,7 +27,7 @@ export function PaymentMethodBreakdownDialog({ open, onOpenChange, breakdown }: 
           </div>
           <div className="flex items-center justify-between">
             <span className="text-sm text-gray-600">계좌이체</span>
-            <span className="font-semibold">{breakdown.account.toLocaleString()}원</span>
+            <span className="font-semibold">{breakdown.bankTransfer.toLocaleString()}원</span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-sm text-gray-600">현장결제(POS)</span>

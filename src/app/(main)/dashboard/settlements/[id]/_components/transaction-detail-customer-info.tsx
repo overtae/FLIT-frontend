@@ -3,8 +3,9 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import type { SettlementDetail } from "@/types/settlement.type";
 
-import { SettlementDetailTransaction } from "./settlement-detail-columns";
+type SettlementDetailTransaction = SettlementDetail["transactions"][0];
 
 interface TransactionDetailCustomerInfoProps {
   transaction: SettlementDetailTransaction;

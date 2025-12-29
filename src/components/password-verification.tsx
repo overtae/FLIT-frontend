@@ -10,7 +10,7 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { verifyPassword } from "@/lib/api/auth";
+import { verifyPassword } from "@/service/auth.service";
 
 const passwordSchema = z.object({
   password: z.string().min(1, { message: "비밀번호를 입력해주세요." }),
@@ -36,21 +36,15 @@ export function PasswordVerification({ title, description, page, onVerified }: P
   const onSubmit = async (data: z.infer<typeof passwordSchema>) => {
     setIsLoading(true);
     try {
-      const result = await verifyPassword(data.password, page);
-
-      if (!result.success) {
-        toast.error(result.error ?? "비밀번호가 일치하지 않습니다.");
-        form.setError("password", {
-          type: "server",
-          message: result.error ?? "비밀번호가 일치하지 않습니다.",
-        });
-        return;
-      }
-
+      await verifyPassword({ password: data.password, page });
       toast.success("인증되었습니다.");
       onVerified();
-    } catch {
-      toast.error("인증 중 오류가 발생했습니다.");
+    } catch (error) {
+      toast.error("비밀번호가 일치하지 않습니다.");
+      form.setError("password", {
+        type: "server",
+        message: "비밀번호가 일치하지 않습니다.",
+      });
     } finally {
       setIsLoading(false);
     }

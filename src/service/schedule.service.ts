@@ -1,44 +1,18 @@
-import { ScheduleEvent } from "@/types/dashboard";
-import { ScheduleItem, ScheduleCalendarDate } from "@/types/schedules";
+import { fetchWithAuth } from "@/lib/api/client-fetch";
+import type { ScheduleParams, Schedule } from "@/types/schedule.type";
 
-export async function getSchedules(params?: { date?: string }): Promise<{
-  data: ScheduleItem[];
-  total: number;
-}> {
+export async function getSchedules(params?: ScheduleParams): Promise<Schedule[]> {
   const searchParams = new URLSearchParams();
-  if (params?.date) {
-    searchParams.append("date", params.date);
-  }
+  if (params?.year) searchParams.append("year", params.year);
+  if (params?.month) searchParams.append("month", params.month);
 
-  const response = await fetch(`/api/dashboard/schedules?${searchParams.toString()}`);
+  const queryString = searchParams.toString();
+  const endpoint = queryString ? `/api/v1/schedule?${queryString}` : "/api/v1/schedule";
+
+  const response = await fetchWithAuth(endpoint);
   if (!response.ok) {
     throw new Error("Failed to fetch schedules");
   }
 
   return response.json();
-}
-
-export async function getScheduleCalendarDates(): Promise<{
-  data: ScheduleCalendarDate[];
-  total: number;
-}> {
-  const response = await fetch("/api/dashboard/schedules");
-  if (!response.ok) {
-    throw new Error("Failed to fetch schedule calendar dates");
-  }
-
-  return response.json();
-}
-
-export async function getScheduleEvents(): Promise<ScheduleEvent[]> {
-  const response = await fetch("/api/dashboard/schedules?events=true");
-  if (!response.ok) {
-    throw new Error("Failed to fetch schedule events");
-  }
-
-  const data = await response.json();
-  return data.map((event: Omit<ScheduleEvent, "date"> & { date: string }) => ({
-    ...event,
-    date: new Date(event.date),
-  }));
 }

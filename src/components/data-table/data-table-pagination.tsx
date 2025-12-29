@@ -14,6 +14,7 @@ interface DataTablePaginationProps<TData> {
   rightSlot?: React.ReactNode;
   className?: string;
   sectionSize?: number;
+  forceUpdateKey?: string | number;
 }
 
 export function DataTablePagination<TData>({
@@ -22,16 +23,34 @@ export function DataTablePagination<TData>({
   rightSlot,
   className,
   sectionSize = 5,
+  forceUpdateKey,
 }: DataTablePaginationProps<TData>) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const pageCount = Math.max(table.getPageCount(), 1);
-  const currentPage = table.getState().pagination.pageIndex;
+  const [, forceUpdate] = React.useReducer((x) => x + 1, 0);
 
-  const currentSection = Math.floor(currentPage / sectionSize);
-  const sectionStartPage = currentSection * sectionSize;
-  const sectionEndPage = Math.min(sectionStartPage + sectionSize - 1, pageCount - 1);
-  const totalSections = Math.ceil(pageCount / sectionSize);
+  React.useEffect(() => {
+    if (forceUpdateKey !== undefined) {
+      forceUpdate();
+    }
+  }, [forceUpdateKey]);
+
+  const urlPage = React.useMemo(
+    () => (searchParams.get("page") ? parseInt(searchParams.get("page")!, 10) - 1 : 0),
+    [searchParams],
+  );
+
+  const paginationState = table.getState().pagination;
+  const pageCount = Math.max(table.getPageCount(), 1);
+  const currentPage = urlPage >= 0 && urlPage < pageCount ? urlPage : paginationState.pageIndex;
+
+  const currentSection = React.useMemo(() => Math.floor(currentPage / sectionSize), [currentPage, sectionSize]);
+  const sectionStartPage = React.useMemo(() => currentSection * sectionSize, [currentSection, sectionSize]);
+  const sectionEndPage = React.useMemo(
+    () => Math.min(sectionStartPage + sectionSize - 1, pageCount - 1),
+    [sectionStartPage, sectionSize, pageCount],
+  );
+  const totalSections = React.useMemo(() => Math.ceil(pageCount / sectionSize), [pageCount, sectionSize]);
 
   const pages = React.useMemo(() => {
     const pages: number[] = [];
@@ -50,6 +69,11 @@ export function DataTablePagination<TData>({
       params.set("page", (newPageIndex + 1).toString());
       if (newPageSize !== undefined) {
         params.set("pageSize", newPageSize.toString());
+      } else {
+        const currentPageSize = searchParams.get("pageSize");
+        if (currentPageSize) {
+          params.set("pageSize", currentPageSize);
+        }
       }
       router.push(`?${params.toString()}`, { scroll: false });
     },

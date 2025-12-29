@@ -5,12 +5,12 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-
-import { Transaction } from "./transaction-types";
+import { SERVICE_CONFIG } from "@/config/service-config";
+import type { Transaction, CanceledTransaction } from "@/types/transaction.type";
 
 interface CreateColumnsProps {
-  onViewDetail: (transaction: Transaction) => void;
-  onDownload: (transaction: Transaction) => void;
+  onViewDetail: (transaction: Transaction | CanceledTransaction) => void;
+  onDownload: (transaction: Transaction | CanceledTransaction) => void;
   category?: "order" | "order-request" | "canceled";
 }
 
@@ -18,8 +18,8 @@ export function createTransactionColumns({
   onViewDetail,
   onDownload,
   category = "order",
-}: CreateColumnsProps): ColumnDef<Transaction>[] {
-  const baseColumns: ColumnDef<Transaction>[] = [
+}: CreateColumnsProps): ColumnDef<Transaction | CanceledTransaction>[] {
+  const baseColumns: ColumnDef<Transaction | CanceledTransaction>[] = [
     {
       id: "select",
       header: ({ table }) => {
@@ -58,15 +58,15 @@ export function createTransactionColumns({
       enableHiding: false,
     },
     {
-      accessorKey: "orderNumber",
+      accessorKey: "transactionNumber",
       header: "주문번호",
     },
     {
-      accessorKey: "from",
+      accessorKey: "fromNickname",
       header: "From",
     },
     {
-      accessorKey: "to",
+      accessorKey: "toNickname",
       header: "To",
     },
     {
@@ -93,11 +93,15 @@ export function createTransactionColumns({
 
   if (category === "canceled") {
     baseColumns.push({
-      accessorKey: "refundStatus",
+      accessorKey: "status",
       header: "상태",
       cell: ({ row }) => {
-        const status = row.original.refundStatus;
-        return <Badge variant="outline">{status ?? ""}</Badge>;
+        if ("status" in row.original) {
+          const statusKey = row.original.status as keyof typeof SERVICE_CONFIG.refundStatus;
+          const statusLabel = SERVICE_CONFIG.refundStatus[statusKey];
+          return <Badge variant="outline">{statusLabel}</Badge>;
+        }
+        return null;
       },
     });
   } else {
@@ -106,8 +110,12 @@ export function createTransactionColumns({
         accessorKey: "paymentMethod",
         header: "결제방법",
         cell: ({ row }) => {
-          const method = row.original.paymentMethod;
-          return <Badge variant="outline">{method}</Badge>;
+          if ("paymentMethod" in row.original) {
+            const methodKey = row.original.paymentMethod as keyof typeof SERVICE_CONFIG.paymentMethod;
+            const methodLabel = SERVICE_CONFIG.paymentMethod[methodKey];
+            return <Badge variant="outline">{methodLabel}</Badge>;
+          }
+          return null;
         },
       });
     }
@@ -116,8 +124,12 @@ export function createTransactionColumns({
         accessorKey: "type",
         header: "구분",
         cell: ({ row }) => {
-          const type = row.original.type;
-          return <Badge variant="secondary">{type}</Badge>;
+          if ("type" in row.original) {
+            const typeKey = row.original.type as keyof typeof SERVICE_CONFIG.transactionType;
+            const typeLabel = SERVICE_CONFIG.transactionType[typeKey];
+            return <Badge variant="secondary">{typeLabel}</Badge>;
+          }
+          return null;
         },
       });
     }
@@ -138,14 +150,6 @@ export function createTransactionColumns({
             className="hover:bg-main/5 hover:text-main hover:border-main rounded-full"
           >
             Detail
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onDownload(transaction)}
-            className="hover:bg-main/5 hover:text-main hover:border-main rounded-full"
-          >
-            Download
           </Button>
         </div>
       );

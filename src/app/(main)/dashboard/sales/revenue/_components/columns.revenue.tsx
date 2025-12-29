@@ -1,12 +1,11 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Download } from "lucide-react";
-import z from "zod";
 
-import { revenueSchema } from "@/app/(main)/dashboard/sales/revenue/_components/schema";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import type { RevenueDetailItem } from "@/types/sales.type";
 
-export const revenueColumns: ColumnDef<z.infer<typeof revenueSchema>>[] = [
+export const revenueColumns: ColumnDef<RevenueDetailItem>[] = [
   {
     id: "select",
     header: ({ table }) => {
@@ -47,10 +46,10 @@ export const revenueColumns: ColumnDef<z.infer<typeof revenueSchema>>[] = [
   {
     accessorKey: "nickname",
     header: "닉네임(ID)",
-    cell: ({ row }) => `${row.original.nickname} (${row.original.nicknameId})`,
+    cell: ({ row }) => `${row.original.nickname} (${row.original.loginId})`,
   },
   {
-    accessorKey: "phone",
+    accessorKey: "phoneNumber",
     header: "번호",
   },
   {
@@ -58,19 +57,19 @@ export const revenueColumns: ColumnDef<z.infer<typeof revenueSchema>>[] = [
     header: "주소",
   },
   {
-    id: "revenue",
-    header: "매출액(건수)",
-    cell: ({ row }) => `${row.original.revenueAmount.toLocaleString()}원 (${row.original.revenueCount}건)`,
+    id: "salesAmount",
+    header: "매출액",
+    cell: ({ row }) => `${row.original.salesAmount.toLocaleString()}원`,
   },
   {
-    id: "cancel",
-    header: "취소금액 (건수)",
-    cell: ({ row }) => `${row.original.cancelAmount.toLocaleString()}원 (${row.original.cancelCount}건)`,
+    id: "canceledAmount",
+    header: "취소금액",
+    cell: ({ row }) => `${row.original.canceledAmount.toLocaleString()}원`,
   },
   {
-    id: "refund",
-    header: "환불금액 (건수)",
-    cell: ({ row }) => `${row.original.refundAmount.toLocaleString()}원 (${row.original.refundCount}건)`,
+    id: "refundAmount",
+    header: "환불금액",
+    cell: ({ row }) => `${row.original.refundAmount.toLocaleString()}원`,
   },
   {
     id: "download",

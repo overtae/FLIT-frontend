@@ -11,8 +11,8 @@ import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { getMonthlyRevenueChartData } from "@/lib/api/dashboard";
 import { DEFAULT_CHART_MARGIN, formatYAxisValueShort } from "@/lib/chart-utils";
+import { getRevenueNet } from "@/service/sales.service";
 
 interface MonthlyRevenueChartProps {
   paymentMethod: "total" | "card" | "pos" | "transfer";
@@ -57,8 +57,39 @@ export function MonthlyRevenueChart({ paymentMethod, onPaymentMethodChange }: Mo
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        const data = await getMonthlyRevenueChartData({ paymentMethod });
-        setMonthlyData(data);
+        const today = new Date();
+        const startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+        const endDate = today.toISOString().split("T")[0];
+        const startDateStr = startDate.toISOString().split("T")[0];
+
+        const apiPaymentMethod =
+          paymentMethod === "total"
+            ? "ALL"
+            : paymentMethod === "card"
+              ? "CARD"
+              : paymentMethod === "pos"
+                ? "POS"
+                : "BANK_TRANSFER";
+
+        const response = await getRevenueNet({
+          period: "MONTHLY",
+          paymentMethod: apiPaymentMethod,
+          startDate: startDateStr,
+          endDate,
+        });
+
+        const transformedData = response.current.map((item, index) => {
+          const date = new Date(item.date);
+          const day = date.getDate();
+          const lastItem = response.last[index];
+          return {
+            date: `${day}일`,
+            thisMonth: item.value,
+            lastMonth: lastItem?.value ?? 0,
+          };
+        });
+
+        setMonthlyData(transformedData);
       } catch (error) {
         console.error("Failed to fetch monthly revenue chart data:", error);
       } finally {

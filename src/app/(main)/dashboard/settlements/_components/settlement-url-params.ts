@@ -1,10 +1,10 @@
 import { format } from "date-fns";
 
-import { SettlementPeriod, SettlementType, SettlementStatus } from "@/types/settlements-monthly";
+import type { SettlementPeriod, SettlementStatus } from "@/types/settlement.type";
 
 export interface SettlementURLUpdates {
   period?: SettlementPeriod;
-  types?: SettlementType[];
+  types?: Array<"SHOP" | "FLORIST">;
   date?: Date | null;
   nickname?: string;
   statuses?: SettlementStatus[];
@@ -18,7 +18,7 @@ export interface SettlementURLState {
   currentYear: number;
   currentMonth: number;
   selectedPeriod: SettlementPeriod;
-  selectedTypes: SettlementType[];
+  selectedTypes: Array<"SHOP" | "FLORIST">;
   selectedDate: Date | null;
   search: string;
   selectedStatuses: SettlementStatus[];
@@ -32,7 +32,7 @@ const setOptionalParam = (params: URLSearchParams, key: string, value: string | 
   }
 };
 
-const setTypesParam = (params: URLSearchParams, types: SettlementType[]) => {
+const setTypesParam = (params: URLSearchParams, types: Array<"SHOP" | "FLORIST">) => {
   if (types.length > 0 && types.length < 2) {
     params.set("types", types.join(","));
   }

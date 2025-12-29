@@ -5,15 +5,15 @@ import { Search } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { SettlementPeriod, SettlementType, SettlementStatus } from "@/types/settlements-monthly";
+import type { SettlementPeriod, SettlementStatus } from "@/types/settlement.type";
 
 import { SettlementFilter } from "./settlement-filter";
 
 interface SettlementFiltersProps {
   selectedPeriod: SettlementPeriod;
   onPeriodChange: (period: SettlementPeriod) => void;
-  selectedTypes: SettlementType[];
-  onTypeToggle: (type: SettlementType) => void;
+  selectedTypes: Array<"SHOP" | "FLORIST">;
+  onTypeToggle: (type: "SHOP" | "FLORIST") => void;
   search: string;
   onSearchChange: (value: string) => void;
   onSearchEnter: (value: string) => void;
@@ -40,21 +40,21 @@ export function SettlementFilters({
     <div className="flex flex-col gap-6">
       <Tabs value={selectedPeriod} onValueChange={(value) => onPeriodChange(value as SettlementPeriod)}>
         <TabsList>
-          <TabsTrigger value="1week">1week</TabsTrigger>
-          <TabsTrigger value="2week">2week</TabsTrigger>
-          <TabsTrigger value="month">Month</TabsTrigger>
+          <TabsTrigger value="ONE_WEEK">1week</TabsTrigger>
+          <TabsTrigger value="TWO_WEEK">2week</TabsTrigger>
+          <TabsTrigger value="MONTH">Month</TabsTrigger>
         </TabsList>
       </Tabs>
 
       <div className="flex items-center gap-4">
-        <Checkbox id="shop" checked={selectedTypes.includes("shop")} onCheckedChange={() => onTypeToggle("shop")} />
+        <Checkbox id="shop" checked={selectedTypes.includes("SHOP")} onCheckedChange={() => onTypeToggle("SHOP")} />
         <label htmlFor="shop" className="cursor-pointer text-sm font-medium">
           shop
         </label>
         <Checkbox
           id="florist"
-          checked={selectedTypes.includes("florist")}
-          onCheckedChange={() => onTypeToggle("florist")}
+          checked={selectedTypes.includes("FLORIST")}
+          onCheckedChange={() => onTypeToggle("FLORIST")}
         />
         <label htmlFor="florist" className="cursor-pointer text-sm font-medium">
           florist

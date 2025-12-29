@@ -1,19 +1,35 @@
-import { ReactNode } from "react";
+"use client";
 
-import { cookies } from "next/headers";
+import { ReactNode, useEffect, useState } from "react";
 
 import { AccountDropdown } from "@/app/(main)/dashboard/_components/sidebar/account-dropdown";
 import { AppSidebar } from "@/app/(main)/dashboard/_components/sidebar/app-sidebar";
 import { NotificationPopover } from "@/app/(main)/dashboard/_components/sidebar/notification-popover";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
+import { getUserMe } from "@/service/auth.service";
+import type { UserMeResponse } from "@/types/auth.type";
 import type { ContentLayout, NavbarStyle, SidebarCollapsible, SidebarVariant } from "@/types/preferences/layout";
 
-export default async function Layout({ children }: Readonly<{ children: ReactNode }>) {
+export default function Layout({ children }: Readonly<{ children: ReactNode }>) {
   const sidebarVariant: SidebarVariant = "sidebar";
   const sidebarCollapsible: SidebarCollapsible = "icon";
   const contentLayout: ContentLayout = "full-width";
   const navbarStyle: NavbarStyle = "sticky";
+
+  const [user, setUser] = useState<UserMeResponse>({
+    userId: 0,
+    nickname: "Guest",
+    level: "",
+  });
+
+  useEffect(() => {
+    getUserMe()
+      .then(setUser)
+      .catch(() => {
+        // 로그인되지 않은 경우 기본값 유지
+      });
+  }, []);
 
   return (
     <SidebarProvider defaultOpen>
@@ -28,12 +44,7 @@ export default async function Layout({ children }: Readonly<{ children: ReactNod
       >
         <div className="flex w-full items-center justify-end px-4 lg:px-6">
           <div className="flex items-center gap-2">
-            <AccountDropdown
-              user={{
-                name: "Admin",
-                email: "admin@email.com",
-              }}
-            />
+            <AccountDropdown user={user} />
             <NotificationPopover />
           </div>
         </div>

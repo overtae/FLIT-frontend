@@ -6,19 +6,27 @@ import * as XLSX from "@e965/xlsx";
 import { format } from "date-fns";
 import { Download, Search } from "lucide-react";
 
-import { SettlementDetailFilter } from "@/app/(main)/dashboard/settlements/[id]/_components/settlement-detail-filter";
 import { DataTablePagination } from "@/components/data-table/data-table-pagination";
 import { DataTableWithSelection } from "@/components/data-table/data-table-with-selection";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useDataTableInstance } from "@/hooks/use-data-table-instance";
+import type { SettlementDetail } from "@/types/settlement.type";
+import type { PaymentMethod } from "@/types/transaction.type";
 
-import { createSettlementDetailColumns, SettlementDetailTransaction } from "./settlement-detail-columns";
+import { createSettlementDetailColumns } from "./settlement-detail-columns";
+import { SettlementDetailFilter } from "./settlement-detail-filter";
+
+type SettlementDetailTransaction = SettlementDetail["transactions"][0];
 
 interface SettlementDetailTableProps {
   transactions: SettlementDetailTransaction[];
   search: string;
   onSearchChange: (value: string) => void;
+  selectedPaymentMethods: PaymentMethod[];
+  onPaymentMethodsChange: (methods: PaymentMethod[]) => void;
+  selectedDate: Date | undefined;
+  onDateChange: (date: Date | undefined) => void;
   onViewDetail: (transaction: SettlementDetailTransaction) => void;
   onDownload: (transaction: SettlementDetailTransaction) => void;
 }
@@ -27,6 +35,10 @@ export function SettlementDetailTable({
   transactions,
   search,
   onSearchChange,
+  selectedPaymentMethods,
+  onPaymentMethodsChange,
+  selectedDate,
+  onDateChange,
   onViewDetail,
 }: SettlementDetailTableProps) {
   const columns = useMemo(() => createSettlementDetailColumns({ onViewDetail }), [onViewDetail]);
@@ -34,7 +46,7 @@ export function SettlementDetailTable({
   const { table, rowSelection } = useDataTableInstance({
     data: transactions,
     columns,
-    getRowId: (row) => row.id,
+    getRowId: (row) => row.transactionId.toString(),
     manualFiltering: true,
   });
 
@@ -44,9 +56,9 @@ export function SettlementDetailTable({
     if (selectedRows.length === 0) return;
 
     const data = selectedRows.map((row) => ({
-      주문번호: row.original.orderNumber,
-      From: row.original.from,
-      To: row.original.to,
+      주문번호: row.original.transactionNumber,
+      From: row.original.fromNickname,
+      To: row.original.toNickname,
       상품명: row.original.productName,
       결제금액: row.original.paymentAmount.toLocaleString(),
       주문접수일: row.original.orderDate,
@@ -75,7 +87,12 @@ export function SettlementDetailTable({
             className="pl-8"
           />
         </div>
-        <SettlementDetailFilter />
+        <SettlementDetailFilter
+          selectedPaymentMethods={selectedPaymentMethods}
+          onPaymentMethodsChange={onPaymentMethodsChange}
+          selectedDate={selectedDate}
+          onDateChange={onDateChange}
+        />
       </div>
       <div className="flex w-full flex-col gap-4">
         <div className="overflow-hidden rounded-md border">

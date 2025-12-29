@@ -6,58 +6,27 @@ import { Download } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { SERVICE_CONFIG } from "@/config/service-config";
+import type { Settlement, SettlementStatus } from "@/types/settlement.type";
 
-export type Settlement = {
-  id: string;
-  nickname: string;
-  nicknameId: string;
-  phone: string;
-  email: string;
-  totalRevenue: number;
-  commission: number;
-  revenueExcludingCommission: number;
-  deliveryFee: number;
-  status: "pending" | "completed" | "cancelled";
-  settlementDate: string;
-  type: "shop" | "florist";
+const statusLabels: Record<SettlementStatus, string> = {
+  PENDING: "대기중",
+  COMPLETED: "완료",
+  CANCELED: "취소",
 };
 
-const statusLabels: Record<Settlement["status"], string> = {
-  pending: "대기중",
-  completed: "완료",
-  cancelled: "취소",
+const statusColors: Record<SettlementStatus, "default" | "secondary" | "destructive"> = {
+  PENDING: "default",
+  COMPLETED: "secondary",
+  CANCELED: "destructive",
 };
 
-const statusColors: Record<Settlement["status"], "default" | "secondary" | "destructive"> = {
-  pending: "default",
-  completed: "secondary",
-  cancelled: "destructive",
+const getStatusLabel = (status: SettlementStatus): string => {
+  return statusLabels[status] ?? status;
 };
 
-const getStatusLabel = (status: Settlement["status"]): string => {
-  switch (status) {
-    case "pending":
-      return statusLabels.pending;
-    case "completed":
-      return statusLabels.completed;
-    case "cancelled":
-      return statusLabels.cancelled;
-    default:
-      return status;
-  }
-};
-
-const getStatusVariant = (status: Settlement["status"]): "default" | "secondary" | "destructive" => {
-  switch (status) {
-    case "pending":
-      return statusColors.pending;
-    case "completed":
-      return statusColors.completed;
-    case "cancelled":
-      return statusColors.cancelled;
-    default:
-      return "default";
-  }
+const getStatusVariant = (status: SettlementStatus): "default" | "secondary" | "destructive" => {
+  return statusColors[status] ?? "default";
 };
 
 interface CreateSettlementColumnsProps {
@@ -110,24 +79,24 @@ export function createSettlementColumns({ onDownload }: CreateSettlementColumnsP
         const settlement = row.original;
         return (
           <span>
-            {settlement.nickname} ({settlement.nicknameId})
+            {settlement.nickname} ({settlement.loginId})
           </span>
         );
       },
     },
     {
-      accessorKey: "phone",
+      accessorKey: "phoneNumber",
       header: "번호",
     },
     {
-      accessorKey: "email",
+      accessorKey: "mail",
       header: "mail",
     },
     {
-      accessorKey: "totalRevenue",
+      accessorKey: "totalSales",
       header: "총매출",
       cell: ({ row }) => {
-        const amount = row.original.totalRevenue;
+        const amount = row.original.totalSales;
         return <span>{amount.toLocaleString()}원</span>;
       },
     },
@@ -140,18 +109,18 @@ export function createSettlementColumns({ onDownload }: CreateSettlementColumnsP
       },
     },
     {
-      accessorKey: "revenueExcludingCommission",
+      id: "revenueExcludingCommission",
       header: "수수료 제외",
       cell: ({ row }) => {
-        const amount = row.original.revenueExcludingCommission;
+        const amount = row.original.totalSales - row.original.commission;
         return <span>{amount.toLocaleString()}원</span>;
       },
     },
     {
-      accessorKey: "deliveryFee",
+      accessorKey: "deliveryAmount",
       header: "배달료",
       cell: ({ row }) => {
-        const amount = row.original.deliveryFee;
+        const amount = row.original.deliveryAmount;
         return <span>{amount.toLocaleString()}원</span>;
       },
     },

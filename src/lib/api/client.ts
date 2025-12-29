@@ -1,4 +1,4 @@
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 
 import { API_BASE_URL, TOKEN_COOKIE_OPTIONS } from "./config";
 
@@ -47,19 +47,85 @@ export async function setPageVerification(page: string): Promise<void> {
   cookieStore.set(cookieName, "true", TOKEN_COOKIE_OPTIONS.pageVerification);
 }
 
-export async function fetchWithAuth(endpoint: string, options: RequestInit = {}): Promise<Response> {
-  const accessToken = await getAccessToken();
-
-  const headers = new Headers(options.headers);
-  headers.set("Content-Type", "application/json");
-
-  if (accessToken) {
-    headers.set("Authorization", `Bearer ${accessToken}`);
+async function refreshTokenAndRetry(endpoint: string, options: RequestInit): Promise<Response> {
+  const refreshToken = await getRefreshToken();
+  if (!refreshToken) {
+    await clearTokens();
+    throw new Error("No refresh token available");
   }
+
+  const reqHeaders = await headers();
+  const cookie = reqHeaders.get("cookie") ?? "";
+
+  const refreshResponse = await fetch(`${API_BASE_URL}/auth/refresh`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      cookie,
+    },
+    body: JSON.stringify({ refreshToken }),
+    cache: "no-store",
+  });
+
+  if (!refreshResponse.ok) {
+    await clearTokens();
+    throw new Error("Failed to refresh token");
+  }
+
+  const refreshData = await refreshResponse.json();
+  const { accessToken: newAccessToken, refreshToken: newRefreshToken } = refreshData as {
+    accessToken: string;
+    refreshToken: string;
+  };
+
+  await setTokens(newAccessToken, newRefreshToken);
+
+  const requestHeaders = new Headers(options.headers);
+  if (!(options.body instanceof FormData)) {
+    requestHeaders.set("Content-Type", "application/json");
+  }
+  requestHeaders.set("Authorization", `Bearer ${newAccessToken}`);
+
+  const newReqHeaders = await headers();
+  const newCookie = newReqHeaders.get("cookie") ?? "";
 
   return fetch(`${API_BASE_URL}${endpoint}`, {
     ...options,
-    headers,
+    headers: {
+      ...Object.fromEntries(requestHeaders.entries()),
+      cookie: newCookie,
+    },
     cache: "no-store",
   });
+}
+
+export async function fetchWithAuth(endpoint: string, options: RequestInit = {}): Promise<Response> {
+  const accessToken = await getAccessToken();
+  const reqHeaders = await headers();
+  const cookie = reqHeaders.get("cookie") ?? "";
+
+  const requestHeaders = new Headers(options.headers);
+
+  if (!(options.body instanceof FormData)) {
+    requestHeaders.set("Content-Type", "application/json");
+  }
+
+  if (accessToken) {
+    requestHeaders.set("Authorization", `Bearer ${accessToken}`);
+  }
+
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    ...options,
+    headers: {
+      ...Object.fromEntries(requestHeaders.entries()),
+      cookie,
+    },
+    cache: "no-store",
+  });
+
+  if (response.status === 401 && accessToken) {
+    return refreshTokenAndRetry(endpoint, options);
+  }
+
+  return response;
 }

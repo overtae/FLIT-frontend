@@ -1,19 +1,19 @@
 import * as XLSX from "@e965/xlsx";
 import { format } from "date-fns";
 
-import { Settlement } from "@/types/dashboard";
+import type { Settlement } from "@/types/settlement.type";
 
 export const downloadSettlement = (settlement: Settlement) => {
   const data = [
     ["닉네임(ID)", "번호", "mail", "총매출", "수수료", "수수료 제외", "배달료", "상태"],
     [
-      `${settlement.nickname} (${settlement.nicknameId})`,
-      settlement.phone,
-      settlement.email,
-      settlement.totalRevenue.toString(),
+      `${settlement.nickname} (${settlement.loginId})`,
+      settlement.phoneNumber,
+      settlement.mail,
+      settlement.totalSales.toString(),
       settlement.commission.toString(),
-      settlement.revenueExcludingCommission.toString(),
-      settlement.deliveryFee.toString(),
+      (settlement.totalSales - settlement.commission).toString(),
+      settlement.deliveryAmount.toString(),
       settlement.status,
     ],
   ];
@@ -34,13 +34,13 @@ export const downloadSettlementsAll = (settlements: Settlement[]) => {
   if (settlements.length === 0) return;
 
   const data = settlements.map((settlement) => ({
-    "닉네임(ID)": `${settlement.nickname} (${settlement.nicknameId})`,
-    번호: settlement.phone,
-    mail: settlement.email,
-    총매출: settlement.totalRevenue.toLocaleString(),
+    "닉네임(ID)": `${settlement.nickname} (${settlement.loginId})`,
+    번호: settlement.phoneNumber,
+    mail: settlement.mail,
+    총매출: settlement.totalSales.toLocaleString(),
     수수료: settlement.commission.toLocaleString(),
-    "수수료 제외": settlement.revenueExcludingCommission.toLocaleString(),
-    배달료: settlement.deliveryFee.toLocaleString(),
+    "수수료 제외": (settlement.totalSales - settlement.commission).toLocaleString(),
+    배달료: settlement.deliveryAmount.toLocaleString(),
     상태: settlement.status,
   }));
 

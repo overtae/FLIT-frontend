@@ -19,8 +19,8 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { getCustomerAnalysis } from "@/service/customer-analysis.service";
-import { GenderData, ItemRanking, StackedBarData } from "@/types/customer-analysis";
+import { getCustomerGender } from "@/service/sales.service";
+import type { CustomerGenderResponse } from "@/types/sales.type";
 
 interface GenderTabProps {
   selectedDate?: Date;
@@ -31,6 +31,24 @@ const GENDER_COLORS = {
   남성: "var(--chart-3)",
   기타: "var(--chart-5)",
 };
+
+interface GenderData {
+  name: string;
+  value: number;
+}
+
+interface ItemRanking {
+  rank: number;
+  name: string;
+  count: number;
+}
+
+interface StackedBarData {
+  item: string;
+  여성: number;
+  남성: number;
+  기타: number;
+}
 
 export function GenderTab({ selectedDate }: GenderTabProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -44,17 +62,41 @@ export function GenderTab({ selectedDate }: GenderTabProps) {
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        const params = {
-          period: "last-month" as const,
-          date: selectedDate ? selectedDate.toISOString().split("T")[0] : undefined,
-        };
-        const response = await getCustomerAnalysis(params);
-        setGenderData(response.genderData);
-        setTopItems(response.topItems);
-        setAllItems(response.allItems);
-        setStackedBarData(response.stackedBarData);
+        const targetDate = selectedDate
+          ? selectedDate.toISOString().split("T")[0]
+          : new Date().toISOString().split("T")[0];
+        const response: CustomerGenderResponse = await getCustomerGender({ targetDate });
+
+        const genderDataList: GenderData[] = [
+          { name: "여성", value: response.ratio.female },
+          { name: "남성", value: response.ratio.male },
+          { name: "기타", value: response.ratio.etc },
+        ];
+        setGenderData(genderDataList);
+
+        const topItemsList: ItemRanking[] = response.productsRanking.slice(0, 5).map((item) => ({
+          rank: item.rank,
+          name: item.productName,
+          count: item.count,
+        }));
+        setTopItems(topItemsList);
+
+        const allItemsList: ItemRanking[] = response.productsRanking.map((item) => ({
+          rank: item.rank,
+          name: item.productName,
+          count: item.count,
+        }));
+        setAllItems(allItemsList);
+
+        const stackedBarDataList: StackedBarData[] = response.products.map((product) => ({
+          item: product.productName,
+          여성: product.female,
+          남성: product.male,
+          기타: product.etc,
+        }));
+        setStackedBarData(stackedBarDataList);
       } catch (error) {
-        console.error("Failed to fetch customer analysis:", error);
+        console.error("Failed to fetch customer gender:", error);
       } finally {
         setIsLoading(false);
       }

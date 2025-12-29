@@ -1,3 +1,4 @@
+import { fetchWithAuth } from "@/lib/api/client-fetch";
 import { SettlementMonthlyParams, SettlementMonthlyResponse } from "@/types/settlements-monthly";
 
 const buildSearchParams = (params: SettlementMonthlyParams): URLSearchParams => {
@@ -32,7 +33,7 @@ const buildSearchParams = (params: SettlementMonthlyParams): URLSearchParams => 
 
 export async function getSettlementsMonthly(params: SettlementMonthlyParams): Promise<SettlementMonthlyResponse> {
   const searchParams = buildSearchParams(params);
-  const response = await fetch(`/api/dashboard/settlements-monthly?${searchParams.toString()}`);
+  const response = await fetchWithAuth(`/api/dashboard/settlements-monthly?${searchParams.toString()}`);
   if (!response.ok) {
     throw new Error("Failed to fetch settlements monthly");
   }

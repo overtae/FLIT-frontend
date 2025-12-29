@@ -10,7 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { getRevenueDashboardData, RevenueDashboardData } from "@/lib/api/dashboard";
+import { getRevenueOverview } from "@/service/sales.service";
+import type { RevenueOverviewResponse } from "@/types/sales.type";
 
 interface RevenueDashboardProps {
   selectedDate?: Date;
@@ -23,14 +24,15 @@ export function RevenueDashboard({ selectedDate, onDateSelect }: RevenueDashboar
   const [isPaymentAmountTooltipOpen, setIsPaymentAmountTooltipOpen] = useState(false);
   const [isRefundCancelAmountTooltipOpen, setIsRefundCancelAmountTooltipOpen] = useState(false);
   const [isRefundCancelCountTooltipOpen, setIsRefundCancelCountTooltipOpen] = useState(false);
-  const [dashboardData, setDashboardData] = useState<RevenueDashboardData | null>(null);
+  const [dashboardData, setDashboardData] = useState<RevenueOverviewResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        const data = await getRevenueDashboardData(selectedDate);
+        const targetDate = selectedDate ? selectedDate.toISOString().split("T")[0] : undefined;
+        const data = await getRevenueOverview(targetDate ? { targetDate } : undefined);
         setDashboardData(data);
       } catch (error) {
         console.error("Failed to fetch revenue dashboard data:", error);
@@ -46,19 +48,41 @@ export function RevenueDashboard({ selectedDate, onDateSelect }: RevenueDashboar
     return <div>Loading...</div>;
   }
 
-  const {
-    totalRevenue,
-    paymentAmount,
-    paymentCount,
-    deliveryInProgress,
-    refundCancelAmount,
-    refundCancelCount,
-    deliveryCompleted,
-    paymentCountBreakdown,
-    paymentAmountBreakdown,
-    refundCancelCountBreakdown,
-    refundCancelAmountBreakdown,
-  } = dashboardData;
+  const totalRevenue = dashboardData.totalSales;
+  const paymentAmount =
+    dashboardData.paymentAmount.card + dashboardData.paymentAmount.bankTransfer + dashboardData.paymentAmount.pos;
+  const paymentCount =
+    dashboardData.paymentCount.card + dashboardData.paymentCount.bankTransfer + dashboardData.paymentCount.pos;
+  const deliveryInProgress = dashboardData.shippingCount;
+  const refundCancelAmount =
+    dashboardData.refundCancelAmount.card +
+    dashboardData.refundCancelAmount.bankTransfer +
+    dashboardData.refundCancelAmount.pos;
+  const refundCancelCount =
+    dashboardData.refundCancelCount.card +
+    dashboardData.refundCancelCount.bankTransfer +
+    dashboardData.refundCancelCount.pos;
+  const deliveryCompleted = dashboardData.shippingCompletedCount;
+  const paymentAmountBreakdown = {
+    card: dashboardData.paymentAmount.card,
+    transfer: dashboardData.paymentAmount.bankTransfer,
+    pos: dashboardData.paymentAmount.pos,
+  };
+  const paymentCountBreakdown = {
+    card: dashboardData.paymentCount.card,
+    transfer: dashboardData.paymentCount.bankTransfer,
+    pos: dashboardData.paymentCount.pos,
+  };
+  const refundCancelAmountBreakdown = {
+    card: dashboardData.refundCancelAmount.card,
+    transfer: dashboardData.refundCancelAmount.bankTransfer,
+    pos: dashboardData.refundCancelAmount.pos,
+  };
+  const refundCancelCountBreakdown = {
+    card: dashboardData.refundCancelCount.card,
+    transfer: dashboardData.refundCancelCount.bankTransfer,
+    pos: dashboardData.refundCancelCount.pos,
+  };
 
   return (
     <div className="space-y-6">
@@ -88,7 +112,9 @@ export function RevenueDashboard({ selectedDate, onDateSelect }: RevenueDashboar
       <hr />
 
       {/* 최종 업데이트 일시 */}
-      <div className="text-muted-foreground text-xs">최종 업데이트 일시 : {format(new Date(), "yyyy-MM-dd HH:mm")}</div>
+      <div className="text-muted-foreground text-xs">
+        최종 업데이트 일시 : {format(new Date(dashboardData.lastUpdatedAt), "yyyy-MM-dd HH:mm")}
+      </div>
 
       {/* 메인 지표 및 서브 지표 */}
       <div className="grid grid-cols-3 gap-6">

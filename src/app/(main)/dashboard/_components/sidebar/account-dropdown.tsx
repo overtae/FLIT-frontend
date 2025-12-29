@@ -11,25 +11,19 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { signOut } from "@/lib/api/auth";
+import { logout } from "@/service/auth.service";
+import type { UserMeResponse } from "@/types/auth.type";
 
-export function AccountDropdown({
-  user,
-}: {
-  readonly user: {
-    readonly name: string;
-    readonly email: string;
-  };
-}) {
+export function AccountDropdown({ user }: { readonly user: UserMeResponse }) {
   const handleLogout = async () => {
-    await signOut();
+    await logout();
   };
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button className="hover:bg-sidebar-accent-foreground/10 flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors focus:outline-none">
-          <span>{user.name} 님</span>
+          <span>{user.nickname} 님</span>
           <ChevronDown className="size-4" />
         </button>
       </DropdownMenuTrigger>

@@ -11,108 +11,95 @@ import { DataTablePagination } from "@/components/data-table/data-table-paginati
 import { DataTableWithSelection } from "@/components/data-table/data-table-with-selection";
 import { Button } from "@/components/ui/button";
 import { useDataTableInstance } from "@/hooks/use-data-table-instance";
-import { getSettlementsMonthly } from "@/service/settlement-monthly.service";
-import { Settlement } from "@/types/dashboard";
-import { SettlementPeriod, SettlementType, SettlementStatus } from "@/types/settlements-monthly";
+import { useFilteredPagination } from "@/hooks/use-filtered-pagination";
+import { getSettlements } from "@/service/settlement.service";
+import type { Settlement, SettlementListParams, SettlementPeriod, SettlementStatus } from "@/types/settlement.type";
 
 import { SettlementCalendar } from "./settlement-calendar";
 import { createSettlementColumns } from "./settlement-columns";
 import { downloadSettlement, downloadSettlementsAll } from "./settlement-download";
 import { SettlementFilters } from "./settlement-filters";
-import { buildSettlementSearchParams, SettlementURLUpdates, SettlementURLState } from "./settlement-url-params";
 
 export function SettlementList() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [selectedPeriod, setSelectedPeriod] = useState<SettlementPeriod>(
-    (searchParams.get("period") as SettlementPeriod | null | undefined) ?? "1week",
-  );
-  const [selectedTypes, setSelectedTypes] = useState<SettlementType[]>(() => {
-    const types = searchParams.get("types");
-    if (types) {
-      return types.split(",") as SettlementType[];
-    }
-    return ["shop", "florist"];
-  });
-  const [selectedDate, setSelectedDate] = useState<Date | null>(() => {
-    const dateParam = searchParams.get("date");
-    return dateParam ? new Date(dateParam) : new Date();
-  });
-  const search = searchParams.get("nickname") ?? "";
-  const [searchInput, setSearchInput] = useState(search);
-  const [selectedStatuses, setSelectedStatuses] = useState<SettlementStatus[]>(() => {
-    const statuses = searchParams.get("statuses");
-    if (statuses) {
-      return statuses.split(",") as SettlementStatus[];
-    }
-    return [];
-  });
-  const [settlements, setSettlements] = useState<Settlement[]>([]);
-  const [settlementDates, setSettlementDates] = useState<Date[]>([]);
+  const [selectedPeriod, setSelectedPeriod] = useState<SettlementPeriod>("ONE_WEEK");
+  const [selectedTypes, setSelectedTypes] = useState<Array<"SHOP" | "FLORIST">>(["SHOP", "FLORIST"]);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
+  const [search, setSearch] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const [selectedStatuses, setSelectedStatuses] = useState<SettlementStatus[]>([]);
+  const [settlementsMap, setSettlementsMap] = useState<Map<string, Settlement[]>>(new Map());
   const [isLoading, setIsLoading] = useState(true);
 
-  const [total, setTotal] = useState(0);
-  const pageIndex = parseInt(searchParams.get("page") ?? "1", 10) - 1;
-  const pageSize = parseInt(searchParams.get("pageSize") ?? "10", 10);
+  const urlYear = searchParams.get("year");
+  const urlMonth = searchParams.get("month");
+  const urlPeriod = searchParams.get("period") as SettlementPeriod | null;
+  const urlType = searchParams.get("type") as "ALL" | "SHOP" | "FLORIST" | null;
 
-  const currentDate = new Date();
-  const currentYear = parseInt(searchParams.get("year") ?? currentDate.getFullYear().toString(), 10);
-  const currentMonth = parseInt(searchParams.get("month") ?? (currentDate.getMonth() + 1).toString(), 10);
+  const currentYear = useMemo(() => {
+    if (urlYear) return parseInt(urlYear, 10);
+    if (typeof window !== "undefined") {
+      return new Date().getFullYear();
+    }
+    return 2025;
+  }, [urlYear]);
+  const currentMonth = useMemo(() => {
+    if (urlMonth) return parseInt(urlMonth, 10);
+    if (typeof window !== "undefined") {
+      return new Date().getMonth() + 1;
+    }
+    return 1;
+  }, [urlMonth]);
 
-  const urlState: SettlementURLState = useMemo(
-    () => ({
-      currentYear,
-      currentMonth,
-      selectedPeriod,
-      selectedTypes,
-      selectedDate,
-      search,
-      selectedStatuses,
-      pageIndex,
-      pageSize,
-    }),
-    [
-      currentYear,
-      currentMonth,
-      selectedPeriod,
-      selectedTypes,
-      selectedDate,
-      search,
-      selectedStatuses,
-      pageIndex,
-      pageSize,
-    ],
+  useEffect(() => {
+    if (urlPeriod && ["ONE_WEEK", "TWO_WEEK", "MONTH"].includes(urlPeriod)) {
+      setSelectedPeriod(urlPeriod);
+    }
+  }, [urlPeriod]);
+
+  useEffect(() => {
+    if (urlType === "SHOP" || urlType === "FLORIST") {
+      setSelectedTypes([urlType]);
+    } else {
+      setSelectedTypes(["SHOP", "FLORIST"]);
+    }
+  }, [urlType]);
+
+  const urlPage = useMemo(
+    () => (searchParams.get("page") ? parseInt(searchParams.get("page")!, 10) - 1 : 0),
+    [searchParams],
+  );
+  const urlPageSize = useMemo(
+    () => (searchParams.get("pageSize") ? parseInt(searchParams.get("pageSize")!, 10) : 10),
+    [searchParams],
   );
 
-  const updateURL = useCallback(
-    (updates: SettlementURLUpdates) => {
-      const params = buildSettlementSearchParams(updates, urlState);
-      router.push(`?${params.toString()}`, { scroll: false });
-    },
-    [urlState, router],
-  );
-
-  const [allMonthlyData, setAllMonthlyData] = useState<Array<{ date: string; items: Settlement[] }>>([]);
+  const settlementType = useMemo(() => {
+    return selectedTypes.length === 1 ? selectedTypes[0] : "ALL";
+  }, [selectedTypes]);
 
   useEffect(() => {
     const fetchSettlements = async () => {
       try {
         setIsLoading(true);
-        // 월 단위로 데이터를 불러오기 위해 period를 제거
-        const params = {
-          year: currentYear,
-          month: currentMonth,
-          period: undefined, // 월 단위로 불러오기 위해 period 제거
-          type: selectedTypes.length === 1 ? selectedTypes[0] : undefined,
-          date: undefined, // 전체 월 데이터를 가져오기 위해 date 제거
-          nickname: search ? search : undefined,
-          status: selectedStatuses.length === 1 ? selectedStatuses[0] : undefined,
-          page: 1,
-          pageSize: 1000,
+        const params: SettlementListParams = {
+          year: currentYear.toString(),
+          month: currentMonth.toString().padStart(2, "0"),
+          period: selectedPeriod,
+          type: settlementType,
         };
 
-        const response = await getSettlementsMonthly(params);
-        setAllMonthlyData(response.data);
+        const data = await getSettlements(params);
+
+        const map = new Map<string, Settlement[]>();
+        data.forEach((settlement) => {
+          const dateKey = settlement.settlementDate.split("T")[0];
+          const existing = map.get(dateKey) ?? [];
+          map.set(dateKey, [...existing, settlement]);
+        });
+
+        setSettlementsMap(map);
       } catch (error) {
         console.error("Failed to fetch settlements:", error);
       } finally {
@@ -121,85 +108,138 @@ export function SettlementList() {
     };
 
     fetchSettlements();
-  }, [currentYear, currentMonth, selectedTypes, search, selectedStatuses]);
+  }, [currentYear, currentMonth, selectedPeriod, settlementType]);
 
-  useEffect(() => {
-    const datesSet = new Set<string>();
-    const selectedDateStr = selectedDate ? format(selectedDate, "yyyy-MM-dd") : null;
+  const allSettlements = useMemo(() => {
+    return Array.from(settlementsMap.values()).flat();
+  }, [settlementsMap]);
 
-    allMonthlyData.forEach((dateData) => {
-      if (dateData.items.length > 0) {
-        datesSet.add(dateData.date);
-      }
-    });
-
-    const dates = Array.from(datesSet)
+  const settlementDates = useMemo(() => {
+    return Array.from(settlementsMap.keys())
       .map((dateStr) => {
         const [year, month, day] = dateStr.split("-").map(Number);
         return new Date(year, month - 1, day);
       })
       .sort((a, b) => a.getTime() - b.getTime());
+  }, [settlementsMap]);
 
-    setSettlementDates(dates);
-
-    let filteredSettlements: Settlement[] = [];
-    if (selectedDateStr) {
-      const selectedDateData = allMonthlyData.find((d) => d.date === selectedDateStr);
-      if (selectedDateData) {
-        filteredSettlements = selectedDateData.items;
+  const filterFn = useMemo(
+    () => (settlement: Settlement) => {
+      if (selectedDate) {
+        const dateKey = format(selectedDate, "yyyy-MM-dd");
+        const settlementDate = settlement.settlementDate.split("T")[0];
+        if (settlementDate !== dateKey) {
+          return false;
+        }
       }
-    }
 
-    const startIndex = pageIndex * pageSize;
-    const endIndex = startIndex + pageSize;
-    const paginatedSettlements = filteredSettlements.slice(startIndex, endIndex);
+      if (search) {
+        const searchLower = search.toLowerCase();
+        const matchesSearch =
+          settlement.nickname.toLowerCase().includes(searchLower) ||
+          settlement.loginId.toLowerCase().includes(searchLower);
+        if (!matchesSearch) {
+          return false;
+        }
+      }
 
-    setSettlements(paginatedSettlements);
-    setTotal(filteredSettlements.length);
-  }, [allMonthlyData, selectedDate, pageIndex, pageSize]);
+      if (selectedStatuses.length > 0) {
+        if (!selectedStatuses.includes(settlement.status)) {
+          return false;
+        }
+      }
+
+      return true;
+    },
+    [selectedDate, search, selectedStatuses],
+  );
+
+  const { paginatedData, pageCount, pageIndex, resetPagination } = useFilteredPagination({
+    data: allSettlements,
+    filterFn,
+    initialPageIndex: urlPage,
+    initialPageSize: urlPageSize,
+  });
+
+  useEffect(() => {
+    resetPagination();
+  }, [selectedDate, resetPagination]);
+
+  const filterKey = useMemo(
+    () =>
+      JSON.stringify({
+        search,
+        selectedDate: selectedDate?.toISOString(),
+        selectedStatuses,
+      }),
+    [search, selectedDate, selectedStatuses],
+  );
+
+  const updateURL = useCallback(
+    (year: number, month: number, resetPage = false, period?: SettlementPeriod, type?: "ALL" | "SHOP" | "FLORIST") => {
+      const params = new URLSearchParams();
+      params.set("year", year.toString());
+      params.set("month", month.toString());
+      params.set("period", period ?? selectedPeriod);
+      params.set("type", type ?? settlementType);
+      if (resetPage) {
+        params.set("page", "1");
+      } else if (urlPage > 0) {
+        params.set("page", (urlPage + 1).toString());
+      }
+      if (urlPageSize !== 10) {
+        params.set("pageSize", urlPageSize.toString());
+      }
+      router.push(`?${params.toString()}`, { scroll: false });
+    },
+    [urlPage, urlPageSize, router, selectedPeriod, settlementType],
+  );
 
   const handleDownloadAll = () => {
-    const filteredRows = table.getFilteredRowModel().rows;
-    const selectedRows = filteredRows.filter((row) => row.getIsSelected()).map((row) => row.original);
+    const selectedRows = table.getFilteredSelectedRowModel().rows.map((row) => row.original);
     downloadSettlementsAll(selectedRows);
   };
 
   const handleRowClick = (settlement: Settlement) => {
-    router.push(`/dashboard/settlements/${settlement.id}`);
+    router.push(`/dashboard/settlements/${settlement.settlementId}`);
   };
 
   const columns = useMemo(() => createSettlementColumns({ onDownload: downloadSettlement }), []);
 
   const { table, rowSelection } = useDataTableInstance({
-    data: settlements,
+    data: paginatedData,
     columns,
-    getRowId: (row) => row.id,
+    getRowId: (row) => row.settlementId.toString(),
     manualPagination: true,
-    pageCount: Math.ceil(total / pageSize),
-    defaultPageIndex: pageIndex,
-    defaultPageSize: pageSize,
+    pageCount,
+    defaultPageIndex: urlPage,
+    defaultPageSize: urlPageSize,
   });
 
-  const handleTypeToggle = (type: SettlementType) => {
+  const handleTypeToggle = (type: "SHOP" | "FLORIST") => {
     const newTypes = selectedTypes.includes(type) ? selectedTypes.filter((t) => t !== type) : [...selectedTypes, type];
     setSelectedTypes(newTypes);
-    updateURL({ types: newTypes });
+    resetPagination();
+    const newType = newTypes.length === 1 ? newTypes[0] : "ALL";
+    updateURL(currentYear, currentMonth, true, undefined, newType);
   };
 
   const handlePeriodChange = (period: SettlementPeriod) => {
     setSelectedPeriod(period);
     setSelectedDate(null);
-    updateURL({ period, date: null });
+    resetPagination();
+    updateURL(currentYear, currentMonth, true, period);
   };
 
   const handleStatusesChange = (statuses: SettlementStatus[]) => {
     setSelectedStatuses(statuses);
-    updateURL({ statuses });
+    resetPagination();
+    updateURL(currentYear, currentMonth, true, selectedPeriod, settlementType);
   };
 
   const handleDateChange = (date: Date | null) => {
     setSelectedDate(date);
-    updateURL({ date });
+    updateURL(currentYear, currentMonth, true, selectedPeriod, settlementType);
   };
 
   if (isLoading) {
@@ -221,11 +261,9 @@ export function SettlementList() {
           search={searchInput}
           onSearchChange={setSearchInput}
           onSearchEnter={(value) => {
-            if (value.trim()) {
-              updateURL({ nickname: value.trim() });
-            } else {
-              updateURL({ nickname: "" });
-            }
+            setSearch(value.trim());
+            resetPagination();
+            updateURL(currentYear, currentMonth, true, selectedPeriod, settlementType);
           }}
           selectedStatuses={selectedStatuses}
           onStatusesChange={handleStatusesChange}
@@ -241,7 +279,8 @@ export function SettlementList() {
             currentYear={currentYear}
             currentMonth={currentMonth}
             onMonthChange={(year, month) => {
-              updateURL({ year, month });
+              resetPagination();
+              updateURL(year, month, true, selectedPeriod, settlementType);
             }}
             className="h-full"
           />
@@ -250,10 +289,16 @@ export function SettlementList() {
 
       <div className="w-full space-y-4">
         <div className="overflow-hidden rounded-md border">
-          <DataTableWithSelection table={table} rowSelection={rowSelection} onRowClick={handleRowClick} />
+          <DataTableWithSelection
+            table={table}
+            rowSelection={rowSelection}
+            onRowClick={handleRowClick}
+            filterKey={filterKey}
+          />
         </div>
         <DataTablePagination
           table={table}
+          forceUpdateKey={`${pageIndex}-${pageCount}`}
           leftSlot={
             <Button variant="outline" onClick={handleDownloadAll} disabled={Object.keys(rowSelection).length === 0}>
               <Download className="mr-2 h-4 w-4" />

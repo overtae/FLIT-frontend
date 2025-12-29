@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getInitials } from "@/lib/utils";
-import { User } from "@/types/dashboard";
+import type { User } from "@/types/user.type";
 
 export const getUserColumns = (onViewDetail: (user: User) => void): ColumnDef<User>[] => [
   {
@@ -39,7 +39,7 @@ export const getUserColumns = (onViewDetail: (user: User) => void): ColumnDef<Us
       return (
         <div className="flex items-center gap-2">
           <Avatar className="h-8 w-8">
-            <AvatarImage src={undefined} />
+            <AvatarImage src={user.profileImageUrl} />
             <AvatarFallback className="bg-gray-100 text-[10px] text-gray-500">{getInitials(user.name)}</AvatarFallback>
           </Avatar>
           <span className="text-sm font-medium">{user.name}</span>
@@ -53,9 +53,9 @@ export const getUserColumns = (onViewDetail: (user: User) => void): ColumnDef<Us
     cell: ({ row }) => <span className="text-muted-foreground text-sm">{row.getValue("nickname")}</span>,
   },
   {
-    accessorKey: "email",
+    accessorKey: "mail",
     header: "Mail",
-    cell: ({ row }) => <span className="text-muted-foreground text-sm">{row.getValue("email")}</span>,
+    cell: ({ row }) => <span className="text-muted-foreground text-sm">{row.getValue("mail")}</span>,
   },
   {
     accessorKey: "address",
@@ -67,14 +67,14 @@ export const getUserColumns = (onViewDetail: (user: User) => void): ColumnDef<Us
     ),
   },
   {
-    accessorKey: "phone",
+    accessorKey: "phoneNumber",
     header: "대표번호",
-    cell: ({ row }) => <span className="text-muted-foreground text-sm">{row.getValue("phone")}</span>,
+    cell: ({ row }) => <span className="text-muted-foreground text-sm">{row.getValue("phoneNumber")}</span>,
   },
   {
-    accessorKey: "lastAccessDate",
+    accessorKey: "lastLoginDate",
     header: "Latest",
-    cell: ({ row }) => <span className="text-muted-foreground text-sm">{row.getValue("lastAccessDate")}</span>,
+    cell: ({ row }) => <span className="text-muted-foreground text-sm">{row.getValue("lastLoginDate")}</span>,
   },
   {
     accessorKey: "joinDate",

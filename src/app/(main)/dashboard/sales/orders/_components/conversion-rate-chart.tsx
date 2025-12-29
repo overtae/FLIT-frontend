@@ -1,25 +1,15 @@
 "use client";
 
+import { useState, useEffect } from "react";
+
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
+
+import { getOrderConversionRate } from "@/service/sales.service";
+import type { OrderPeriod } from "@/types/sales.type";
 
 interface ConversionRateChartProps {
   period: "weekly" | "monthly" | "yearly";
 }
-
-const conversionData = {
-  weekly: {
-    current: 75,
-    last: 72,
-  },
-  monthly: {
-    current: 78,
-    last: 75,
-  },
-  yearly: {
-    current: 82,
-    last: 79,
-  },
-};
 
 const periodLabels = {
   weekly: "week",
@@ -27,14 +17,45 @@ const periodLabels = {
   yearly: "year",
 };
 
+const periodMap: Record<"weekly" | "monthly" | "yearly", OrderPeriod> = {
+  weekly: "WEEKLY",
+  monthly: "MONTHLY",
+  yearly: "YEARLY",
+};
+
 export function ConversionRateChart({ period }: ConversionRateChartProps) {
-  const data = conversionData[period];
+  const [data, setData] = useState<{ current: number; last: number }>({ current: 0, last: 0 });
+  const [isLoading, setIsLoading] = useState(true);
   const periodLabel = periodLabels[period];
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        const response = await getOrderConversionRate({ period: periodMap[period] });
+        setData({ current: response.current, last: response.last });
+      } catch (error) {
+        console.error("Failed to fetch conversion rate:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [period]);
 
   const chartData = [
     { name: "filled", value: data.current },
     { name: "empty", value: 100 - data.current },
   ];
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col items-center justify-center space-y-4">

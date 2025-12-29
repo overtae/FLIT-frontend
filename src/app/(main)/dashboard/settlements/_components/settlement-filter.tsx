@@ -9,12 +9,13 @@ import { Calendar } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { SettlementStatus } from "@/types/settlements-monthly";
+import { SERVICE_CONFIG } from "@/config/service-config";
+import type { SettlementStatus } from "@/types/settlement.type";
 
 const statusLabels: Record<SettlementStatus, string> = {
-  pending: "대기중",
-  completed: "완료",
-  cancelled: "취소",
+  PENDING: "대기중",
+  COMPLETED: "완료",
+  CANCELED: "취소",
 };
 
 interface SettlementFilterProps {
@@ -63,18 +64,18 @@ export function SettlementFilter({
       <PopoverContent className="max-h-[80vh] w-[280px] overflow-y-auto p-4" align="end">
         <div className="space-y-4">
           <div className="space-y-3">
-            {(["pending", "completed", "cancelled"] as SettlementStatus[]).map((status) => (
-              <div key={status} className="flex items-center space-x-2">
+            {Object.entries(SERVICE_CONFIG.settlementStatus).map(([statusKey, statusLabel]) => (
+              <div key={statusKey} className="flex items-center space-x-2">
                 <Checkbox
-                  id={`filter-${status}`}
-                  checked={selectedStatuses.includes(status)}
-                  onCheckedChange={() => toggleStatus(status)}
+                  id={`filter-${statusKey}`}
+                  checked={selectedStatuses.includes(statusKey as SettlementStatus)}
+                  onCheckedChange={() => toggleStatus(statusKey as SettlementStatus)}
                 />
                 <Label
-                  htmlFor={`filter-${status}`}
+                  htmlFor={`filter-${statusKey}`}
                   className="cursor-pointer text-sm leading-none font-normal peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                 >
-                  {statusLabels[status] ?? status}
+                  {statusLabel}
                 </Label>
               </div>
             ))}

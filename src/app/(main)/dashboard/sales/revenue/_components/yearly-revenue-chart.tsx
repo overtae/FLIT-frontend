@@ -18,8 +18,8 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { getYearlyRevenueChartData } from "@/lib/api/dashboard";
 import { DEFAULT_CHART_MARGIN, formatYAxisValueShort } from "@/lib/chart-utils";
+import { getRevenueNetYearly, getRevenueNetQuarter } from "@/service/sales.service";
 
 import { YearlyDetailModal } from "./yearly-detail-modal";
 
@@ -48,16 +48,8 @@ function CustomLineTooltip({ active, payload, label }: CustomTooltipProps) {
   if (active && payload && payload.length > 0) {
     return (
       <div className="bg-card border-border rounded-lg border p-2 shadow-lg">
-        <p className="font-semibold">{label}</p>
-        {payload.map((entry) => (
-          <p
-            key={entry.dataKey}
-            className="text-sm"
-            style={{ color: entry.dataKey === "2023" ? "var(--chart-1)" : undefined }}
-          >
-            {entry.dataKey}: {entry.value?.toLocaleString()}원
-          </p>
-        ))}
+        <p className="font-semibold">{label}년</p>
+        <p className="text-sm">{payload[0].value?.toLocaleString()}원</p>
       </div>
     );
   }
@@ -95,18 +87,33 @@ export function YearlyRevenueChart() {
   const [selectedYearRange, setSelectedYearRange] = useState("2020-2023");
   const [isYearlyModalOpen, setIsYearlyModalOpen] = useState(false);
   const [quarterlyData, setQuarterlyData] = useState<Array<{ quarter: string; amount: number }>>([]);
-  const [yearlyComparisonData, setYearlyComparisonData] = useState<
-    Array<{ month: string; [key: string]: number | string }>
-  >([]);
+  const [yearlyComparisonData, setYearlyComparisonData] = useState<Array<{ year: string; value: number }>>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        const data = await getYearlyRevenueChartData(selectedYear, selectedYearRange);
-        setQuarterlyData(data.quarterlyData);
-        setYearlyComparisonData(data.yearlyComparisonData);
+
+        const [startYear, endYear] = selectedYearRange.split("-");
+        const yearlyData = await getRevenueNetYearly({
+          startYear,
+          endYear,
+        });
+
+        const quarterlyData = await getRevenueNetQuarter({
+          targetYear: selectedYear,
+        });
+
+        const quarterlyDataList = [
+          { quarter: "Q1", amount: quarterlyData.q1 },
+          { quarter: "Q2", amount: quarterlyData.q2 },
+          { quarter: "Q3", amount: quarterlyData.q3 },
+          { quarter: "Q4", amount: quarterlyData.q4 },
+        ];
+        setQuarterlyData(quarterlyDataList);
+
+        setYearlyComparisonData(yearlyData);
       } catch (error) {
         console.error("Failed to fetch yearly revenue chart data:", error);
       } finally {
@@ -184,18 +191,14 @@ export function YearlyRevenueChart() {
         <ResponsiveContainer width="100%" height={400}>
           <LineChart data={yearlyComparisonData} margin={DEFAULT_CHART_MARGIN}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="month" />
+            <XAxis dataKey="year" />
             <YAxis tickFormatter={formatYAxisValueShort} width={60} />
             <Tooltip content={<CustomLineTooltip />} />
-            <Line type="monotone" dataKey="2020" stroke="var(--muted-foreground)" name="2020" strokeWidth={1} />
-            <Line type="monotone" dataKey="2021" stroke="var(--muted-foreground)" name="2021" strokeWidth={1} />
-            <Line type="monotone" dataKey="2022" stroke="var(--muted-foreground)" name="2022" strokeWidth={1} />
             <Line
               type="monotone"
-              dataKey="2023"
+              dataKey="value"
               stroke="var(--chart-1)"
               strokeWidth={3}
-              name="2023"
               dot={{ r: 6, fill: "var(--chart-1)", cursor: "pointer" }}
               activeDot={{
                 r: 8,
@@ -203,9 +206,9 @@ export function YearlyRevenueChart() {
                 cursor: "pointer",
                 onClick: () => setIsYearlyModalOpen(true),
               }}
-              label={(props: { x?: number; y?: number; value?: number }) => {
+              label={(props: { x?: number; y?: number; value?: number; payload?: { year: string; value: number } }) => {
                 const lastData = yearlyComparisonData[yearlyComparisonData.length - 1];
-                if (props.value === lastData["2023"]) {
+                if (props.payload && props.payload.year === lastData.year) {
                   return (
                     <CustomLabel
                       x={props.x}

@@ -2,26 +2,13 @@
 
 import { useState, useEffect } from "react";
 
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  BarChart,
-  Bar,
-} from "recharts";
+import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, Tooltip, XAxis } from "recharts";
 
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Subtitle } from "@/components/ui/subtitle";
-import { getUserOverview } from "@/service/user.service";
+import { getUserStatisticsOverview, getSecederStatisticsOverview } from "@/service/user.service";
+import type { UserType } from "@/types/user.type";
+
+import { UserTotalChart } from "./user-total-chart";
 
 const COLORS = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)"];
 
@@ -29,10 +16,34 @@ interface UserOverviewProps {
   category?: string;
 }
 
+const QUICK_STATS_LABELS: Record<
+  string,
+  { labels: [string, string, string, string]; titles: [string, string, string, string] }
+> = {
+  all: {
+    labels: ["전체 고객 수", "전체 꽃집 수", "전체 플로리스트 수", "탈퇴 회원 수"],
+    titles: ["Customer", "Store", "Florist", "Out"],
+  },
+  customer: {
+    labels: ["전체 고객 수", "신규 회원 수", "탈퇴 회원 수", "상품 구매 갯수"],
+    titles: ["Customer", "New", "Out", "Buying"],
+  },
+  shop: {
+    labels: ["전체 고객 수", "신규 회원 수", "탈퇴 회원 수", "상품 판매 갯수"],
+    titles: ["Customer", "New", "Out", "Buying"],
+  },
+  florist: {
+    labels: ["전체 고객 수", "신규 회원 수", "탈퇴 회원 수", "상품 판매 갯수"],
+    titles: ["Customer", "New", "Out", "Buying"],
+  },
+  seceder: {
+    labels: ["전체 탈퇴 회원 수", "소비자 탈퇴 수", "가게 탈퇴 수", "플로리스트 탈퇴 수"],
+    titles: ["All", "Customer", "Shop", "Florist"],
+  },
+};
+
 export function UserOverview({ category = "all" }: UserOverviewProps) {
-  const [period, setPeriod] = useState("last-month");
-  const [customerType, setCustomerType] = useState("all");
-  const [totalUserData, setTotalUserData] = useState<Array<{ date: string; count: number }>>([]);
+  const [customerType] = useState<"all" | "individual" | "corporate">("all");
   const [genderData, setGenderData] = useState<Array<{ name: string; value: number }>>([]);
   const [ageData, setAgeData] = useState<Array<{ name: string; value: number }>>([]);
   const [quickStats, setQuickStats] = useState({
@@ -47,15 +58,57 @@ export function UserOverview({ category = "all" }: UserOverviewProps) {
     const fetchOverview = async () => {
       try {
         setIsLoading(true);
-        const data = await getUserOverview({
-          category,
-          period,
-          customerType,
-        });
-        setTotalUserData(data.totalUserData);
-        setGenderData(data.genderData);
-        setAgeData(data.ageData);
-        setQuickStats(data.quickStats);
+
+        const typeMap: Record<"all" | "individual" | "corporate", "ALL" | UserType> = {
+          all: "ALL",
+          individual: "CUSTOMER_INDIVIDUAL",
+          corporate: "CUSTOMER_OWNER",
+        };
+
+        const overviewResponse =
+          category === "seceder"
+            ? await getSecederStatisticsOverview()
+            : await getUserStatisticsOverview({
+                type: category === "customer" ? typeMap[customerType] : "ALL",
+              });
+
+        const genderTotal = overviewResponse.gender.male + overviewResponse.gender.female + overviewResponse.gender.etc;
+        setGenderData([
+          { name: "남성", value: genderTotal > 0 ? Math.round((overviewResponse.gender.male / genderTotal) * 100) : 0 },
+          {
+            name: "여성",
+            value: genderTotal > 0 ? Math.round((overviewResponse.gender.female / genderTotal) * 100) : 0,
+          },
+          { name: "기타", value: genderTotal > 0 ? Math.round((overviewResponse.gender.etc / genderTotal) * 100) : 0 },
+        ]);
+
+        setAgeData(overviewResponse.age.map((item) => ({ name: item.label, value: item.value })));
+
+        if (overviewResponse.stats.length >= 4) {
+          const config = QUICK_STATS_LABELS[category] ?? QUICK_STATS_LABELS.all;
+          setQuickStats({
+            customer: {
+              total: overviewResponse.stats[0]?.total ?? 0,
+              change: overviewResponse.stats[0]?.changed ?? 0,
+              label: config.labels[0],
+            },
+            store: {
+              total: overviewResponse.stats[1]?.total ?? 0,
+              change: overviewResponse.stats[1]?.changed ?? 0,
+              label: config.labels[1],
+            },
+            florist: {
+              total: overviewResponse.stats[2]?.total ?? 0,
+              change: overviewResponse.stats[2]?.changed ?? 0,
+              label: config.labels[2],
+            },
+            out: {
+              total: overviewResponse.stats[3]?.total ?? 0,
+              change: overviewResponse.stats[3]?.changed ?? 0,
+              label: config.labels[3],
+            },
+          });
+        }
       } catch (error) {
         console.error("Failed to fetch user overview:", error);
       } finally {
@@ -64,7 +117,7 @@ export function UserOverview({ category = "all" }: UserOverviewProps) {
     };
 
     fetchOverview();
-  }, [category, period, customerType]);
+  }, [category, customerType]);
 
   if (isLoading) {
     return (
@@ -79,92 +132,31 @@ export function UserOverview({ category = "all" }: UserOverviewProps) {
       {/* Top Section: Total User & Quick Stats */}
       <div className="grid space-y-6 space-x-8 md:grid-cols-2">
         {/* 1. Total User Chart */}
-        <section className="flex flex-col gap-3">
-          <div className="flex flex-row items-start justify-end space-y-0">
-            <div className="flex items-center gap-4">
-              {category === "customer" && (
-                <RadioGroup value={customerType} onValueChange={setCustomerType} className="flex items-center gap-2">
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="all" id="r-all" />
-                    <Label htmlFor="r-all">All</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="individual" id="r-ind" />
-                    <Label htmlFor="r-ind">개인</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="corporate" id="r-corp" />
-                    <Label htmlFor="r-corp">기업</Label>
-                  </div>
-                </RadioGroup>
-              )}
-              <Select value={period} onValueChange={setPeriod}>
-                <SelectTrigger>
-                  <SelectValue placeholder="기간 선택" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="last-week">Last Week</SelectItem>
-                  <SelectItem value="last-month">Last Month</SelectItem>
-                  <SelectItem value="last-year">Last Year</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <h3 className="text-xl font-bold">Total User</h3>
-          <div className="min-h-[250px] w-full flex-1">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={totalUserData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "hsl(var(--card))",
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: "0.5rem",
-                  }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="count"
-                  stroke="var(--chart-1)"
-                  strokeWidth={2}
-                  dot={{ r: 4, fill: "var(--chart-1)" }}
-                  activeDot={{ r: 6 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </section>
+        <UserTotalChart category={category} />
 
         {/* 2. Quick Stats */}
         <section className="flex flex-col justify-center gap-3">
           <h3 className="text-xl font-bold">Quick Stats</h3>
           <div className="grid grid-cols-4 gap-4">
-            <div className="flex flex-col justify-center rounded-lg p-4">
-              <p className="text-muted-foreground text-3xl">{quickStats.customer.total.toLocaleString()}</p>
-              <p className="text-muted-foreground mt-1 text-xs">+{quickStats.customer.change}</p>
-              <p className="text-muted-foreground mt-1 text-xs">{quickStats.customer.label}</p>
-              <p className="text-stroke-1 text-muted mt-2 text-lg font-bold tracking-wider">Customer</p>
-            </div>
-            <div className="flex flex-col justify-center rounded-lg p-4">
-              <p className="text-muted-foreground text-3xl">{quickStats.store.total.toLocaleString()}</p>
-              <p className="text-muted-foreground mt-1 text-xs">+{quickStats.store.change}</p>
-              <p className="text-muted-foreground mt-1 text-xs">{quickStats.store.label}</p>
-              <p className="text-stroke-1 text-muted mt-2 text-lg font-bold tracking-wider">Store</p>
-            </div>
-            <div className="flex flex-col justify-center rounded-lg p-4">
-              <p className="text-muted-foreground text-3xl">{quickStats.florist.total.toLocaleString()}</p>
-              <p className="text-muted-foreground mt-1 text-xs">+{quickStats.florist.change}</p>
-              <p className="text-muted-foreground mt-1 text-xs">{quickStats.florist.label}</p>
-              <p className="text-stroke-1 text-muted mt-2 text-lg font-bold tracking-wider">Florist</p>
-            </div>
-            <div className="flex flex-col justify-center rounded-lg p-4">
-              <p className="text-muted-foreground text-3xl">{quickStats.out.total.toLocaleString()}</p>
-              <p className="text-muted-foreground mt-1 text-xs">+{quickStats.out.change}</p>
-              <p className="text-muted-foreground mt-1 text-xs">{quickStats.out.label}</p>
-              <p className="text-stroke-1 text-muted mt-2 text-lg font-bold tracking-wider">Out</p>
-            </div>
+            {(() => {
+              const config = QUICK_STATS_LABELS[category] ?? QUICK_STATS_LABELS.all;
+              const stats = [
+                { key: "customer", data: quickStats.customer },
+                { key: "store", data: quickStats.store },
+                { key: "florist", data: quickStats.florist },
+                { key: "out", data: quickStats.out },
+              ];
+              return stats.map((stat, index) => (
+                <div key={stat.key} className="flex flex-col justify-center rounded-lg p-4">
+                  <p className="text-muted-foreground text-3xl">{stat.data.total.toLocaleString()}</p>
+                  <p className="text-muted-foreground mt-1 text-xs">+{stat.data.change}</p>
+                  <p className="text-muted-foreground mt-1 text-xs">{stat.data.label}</p>
+                  <p className="text-stroke-1 text-muted mt-2 text-lg font-bold tracking-wider">
+                    {config.titles[index]}
+                  </p>
+                </div>
+              ));
+            })()}
           </div>
         </section>
       </div>

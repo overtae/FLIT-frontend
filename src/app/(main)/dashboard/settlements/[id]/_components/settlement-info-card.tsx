@@ -1,32 +1,15 @@
 "use client";
 
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { Calendar } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-
-interface SettlementDetailData {
-  id: string;
-  nickname: string;
-  nicknameId: string;
-  phone: string;
-  email: string;
-  settlementDate: Date;
-  lastUpdated: Date;
-  settlementAmount: number;
-  paymentAmount: number;
-  paymentCount: number;
-  deliveryCount: number;
-  commission: number;
-  refundCancelAmount: number;
-  refundCancelCount: number;
-  deliveryFee: number;
-}
+import type { SettlementDetail } from "@/types/settlement.type";
 
 interface SettlementInfoCardProps {
-  settlement: SettlementDetailData;
+  settlement: SettlementDetail;
   selectedDate: Date | undefined;
   onDateChange: (date: Date | undefined) => void;
   isDatePickerOpen: boolean;
@@ -47,10 +30,10 @@ export function SettlementInfoCard({
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <span className="font-semibold">
-            {settlement.nickname} ({settlement.nicknameId})
+            {settlement.user.nickname} ({settlement.user.loginId})
           </span>
-          <span>{settlement.phone}</span>
-          <span>{settlement.email}</span>
+          <span>{settlement.user.phoneNumber}</span>
+          <span>{settlement.user.mail}</span>
         </div>
 
         <Popover open={isDatePickerOpen} onOpenChange={onDatePickerOpenChange}>
@@ -76,7 +59,7 @@ export function SettlementInfoCard({
       <hr />
 
       <div className="text-sm text-gray-600">
-        최종 업데이트 일시 : {format(settlement.lastUpdated, "yyyy-MM-dd HH:mm")}
+        최종 업데이트 일시 : {format(parseISO(settlement.lastUpdatedAt), "yyyy-MM-dd HH:mm")}
       </div>
 
       <div className="flex items-center justify-between">
@@ -90,7 +73,7 @@ export function SettlementInfoCard({
             <div className="flex items-center justify-between gap-4">
               <span className="text-sm text-gray-600">결제 금액</span>
               <Button variant="link" className="h-auto p-0 font-semibold" onClick={onPaymentBreakdownClick}>
-                {settlement.paymentAmount.toLocaleString()}원
+                {settlement.totalPaymentAmount.toLocaleString()}원
               </Button>
             </div>
             <div className="flex items-center justify-between gap-4">
@@ -118,7 +101,7 @@ export function SettlementInfoCard({
             </div>
             <div className="flex items-center justify-between gap-4">
               <span className="text-sm text-gray-600">배달료</span>
-              <span className="font-semibold">{settlement.deliveryFee.toLocaleString()}원</span>
+              <span className="font-semibold">{settlement.deliveryAmount.toLocaleString()}원</span>
             </div>
             <div className="flex items-center justify-between gap-4">
               <span className="text-sm text-gray-600">정산금액</span>

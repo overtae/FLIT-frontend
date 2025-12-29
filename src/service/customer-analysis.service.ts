@@ -1,3 +1,4 @@
+import { fetchWithAuth } from "@/lib/api/client-fetch";
 import { CustomerAnalysisParams, CustomerAnalysisResponse } from "@/types/customer-analysis";
 
 export async function getCustomerAnalysis(params?: CustomerAnalysisParams): Promise<CustomerAnalysisResponse> {
@@ -9,7 +10,7 @@ export async function getCustomerAnalysis(params?: CustomerAnalysisParams): Prom
     searchParams.append("date", params.date);
   }
 
-  const response = await fetch(`/api/dashboard/customer-analysis?${searchParams.toString()}`);
+  const response = await fetchWithAuth(`/api/dashboard/customer-analysis?${searchParams.toString()}`);
   if (!response.ok) {
     throw new Error("Failed to fetch customer analysis");
   }

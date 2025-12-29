@@ -1,0 +1,105 @@
+export const SERVICE_CONFIG = {
+  userRole: {
+    MASTER: "Master",
+    USER: "User",
+  },
+  userType: {
+    CUSTOMER_INDIVIDUAL: "개인",
+    CUSTOMER_OWNER: "기업",
+    SHOP: "Shop",
+    FLORIST: "Florist",
+  },
+  customerGrade: {
+    GREEN: "Green",
+    YELLOW: "Yellow",
+    ORANGE: "Orange",
+    RED: "Red",
+    SILVER: "Silver",
+    GOLD: "Gold",
+  },
+  grade: {
+    FREE: "Free",
+    FLINNEY: "Flinney",
+    FLITER: "Fliter",
+    PREMIUM: "Premium",
+    VIP: "VIP",
+  },
+  gender: {
+    MALE: "남성",
+    FEMALE: "여성",
+    ETC: "기타",
+  },
+  category: {
+    FLOWER: "꽃",
+    PLANTS: "식물",
+    WREATH: "화환",
+    SCENOGRAPHY: "공간연출",
+    REGULAR_DELIVERY: "정기배송",
+  },
+  categoryType: {
+    GROUP: "그룹",
+    PRODUCT: "상품",
+  },
+  paymentMethod: {
+    CARD: "카드",
+    POS: "현장결제(POS)",
+    BANK_TRANSFER: "계좌이체",
+    FLIT: "플릿결제",
+    CASH: "현금결제",
+    ETC: "기타결제",
+  },
+  transactionType: {
+    BAROGO: "바로고",
+    PICKUP: "픽업",
+    REFUND: "환불",
+    ORDERING: "수발주",
+    ETC: "기타",
+  },
+  deliveryStatus: {
+    PREPARING: "상품 준비중",
+    SHIPPING: "배달중",
+    COMPLETED: "배달완료",
+  },
+  refundStatus: {
+    REFUNDED: "환불처리",
+    PENDING: "환불미처리",
+  },
+  orderStatus: {
+    REGISTER: "접수",
+    PROGRESS: "배송중",
+    COMPLETED: "배송완료",
+    CANCELED: "취소",
+  },
+  settlementStatus: {
+    PENDING: "대기",
+    CANCELED: "취소",
+    COMPLETED: "완료",
+  },
+  settlementPeriod: {
+    ONE_WEEK: "1주",
+    TWO_WEEK: "2주",
+    MONTH: "1개월",
+  },
+  period: {
+    WEEK: "주간",
+    MONTH: "월간",
+    YEAR: "연간",
+  },
+  periodType: {
+    DAILY: "일간",
+    WEEKLY: "주간",
+    MONTHLY: "월간",
+    YEARLY: "연간",
+  },
+  region: {
+    SEOUL: "서울",
+    GYEONGGI: "경기",
+    INCHEON: "인천",
+    ETC: "기타",
+  },
+  snsProvider: {
+    NAVER: "네이버",
+    KAKAO: "카카오",
+    GOOGLE: "구글",
+  },
+};

@@ -22,7 +22,8 @@ import {
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { getCurrentUserProfile, updateUserProfile } from "@/service/user.service";
+import { SERVICE_CONFIG } from "@/config/service-config";
+import { getUserProfile, updateUserProfile, deleteUser } from "@/service/auth.service";
 
 import { AddressSearch } from "./_components/address-search";
 import { ImageUploader } from "./_components/image-uploader";
@@ -41,11 +42,12 @@ const profileFormSchema = z.object({
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
-const levels = ["Master", "Admin", "User", "Guest"];
+const levels = Object.values(SERVICE_CONFIG.userRole);
 
 export default function ProfilePage() {
   const router = useRouter();
   const [profileImage, setProfileImage] = useState<File | null>(null);
+  const [profileImageUrl, setProfileImageUrl] = useState<string | undefined>(undefined);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -69,11 +71,12 @@ export default function ProfilePage() {
     const fetchProfile = async () => {
       try {
         setIsLoading(true);
-        const profileData = await getCurrentUserProfile();
+        const profileData = await getUserProfile();
+        setProfileImageUrl(profileData.profileImageUrl);
         form.reset({
           name: profileData.name,
           nickname: profileData.nickname,
-          phone: profileData.phone,
+          phone: profileData.phoneNumber,
           level: profileData.level,
           code: profileData.code,
           address: profileData.address,
@@ -93,16 +96,18 @@ export default function ProfilePage() {
   const onSubmit = async (data: ProfileFormValues) => {
     try {
       setIsSubmitting(true);
-      await updateUserProfile({
+      const updatedProfile = await updateUserProfile({
         name: data.name,
         nickname: data.nickname,
-        phone: data.phone,
+        phoneNumber: data.phone,
         level: data.level,
         address: data.address,
         detailAddress: data.detailAddress,
         sns: data.sns,
         profileImage: profileImage ?? undefined,
       });
+      setProfileImageUrl(updatedProfile.profileImageUrl);
+      setProfileImage(null);
       toast.success("프로필이 업데이트되었습니다.");
     } catch {
       toast.error("프로필 업데이트에 실패했습니다.");
@@ -111,9 +116,15 @@ export default function ProfilePage() {
     }
   };
 
-  const handleDelete = () => {
-    toast.success("계정이 삭제되었습니다.");
-    setIsDeleteDialogOpen(false);
+  const handleDelete = async () => {
+    try {
+      await deleteUser();
+      toast.success("계정이 삭제되었습니다.");
+      setIsDeleteDialogOpen(false);
+      router.push("/auth/login");
+    } catch {
+      toast.error("계정 삭제에 실패했습니다.");
+    }
   };
 
   const handleCopyCode = () => {
@@ -148,6 +159,7 @@ export default function ProfilePage() {
         <>
           <div className="mb-12 flex justify-center">
             <ImageUploader
+              value={profileImageUrl}
               onChange={(file) => {
                 setProfileImage(file);
               }}
@@ -184,9 +196,9 @@ export default function ProfilePage() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {levels.map((level) => (
-                            <SelectItem key={level} value={level}>
-                              {level}
+                          {Object.entries(SERVICE_CONFIG.userRole).map(([key, value]) => (
+                            <SelectItem key={key} value={key}>
+                              {value}
                             </SelectItem>
                           ))}
                         </SelectContent>

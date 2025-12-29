@@ -54,16 +54,6 @@ export type Transaction = {
   customerRequest?: string;
 };
 
-export type ScheduleEvent = {
-  id: string;
-  date: Date;
-  time: string;
-  endTime?: string;
-  title: string;
-  description?: string;
-  type: "green" | "orange";
-};
-
 export type Settlement = {
   id: string;
   nickname: string;

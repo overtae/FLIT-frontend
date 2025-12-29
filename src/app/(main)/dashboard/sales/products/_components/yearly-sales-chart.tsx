@@ -18,8 +18,8 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { getYearlySalesChartData } from "@/lib/api/dashboard";
 import { DEFAULT_CHART_MARGIN, formatYAxisValueShort } from "@/lib/chart-utils";
+import { getProductNetYearly, getProductNetQuarter } from "@/service/sales.service";
 
 import { QuarterDetailModal } from "./quarter-detail-modal";
 
@@ -36,18 +36,53 @@ export function YearlySalesChart(_props: YearlySalesChartProps) {
   const [quarterlyData, setQuarterlyData] = useState<
     Array<{ quarter: string; card: number; pos: number; transfer: number }>
   >([]);
-  const [yearlyComparisonData, setYearlyComparisonData] = useState<
-    Array<{ month: string; [key: string]: number | string }>
-  >([]);
+  const [yearlyComparisonData, setYearlyComparisonData] = useState<Array<{ year: string; value: number }>>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        const data = await getYearlySalesChartData(selectedYear, selectedYearRange.join("-"));
-        setQuarterlyData(data.quarterlyData);
-        setYearlyComparisonData(data.yearlyComparisonData);
+
+        const [startYear, endYear] = selectedYearRange;
+        const yearlyData = await getProductNetYearly({
+          startYear,
+          endYear,
+        });
+
+        const quarterlyDataResponse = await getProductNetQuarter({
+          targetYear: selectedYear,
+        });
+
+        const quarterlyDataList = [
+          {
+            quarter: "Q1",
+            card: quarterlyDataResponse.reduce((sum, item) => sum + item.q1, 0),
+            pos: 0,
+            transfer: 0,
+          },
+          {
+            quarter: "Q2",
+            card: quarterlyDataResponse.reduce((sum, item) => sum + item.q2, 0),
+            pos: 0,
+            transfer: 0,
+          },
+          {
+            quarter: "Q3",
+            card: quarterlyDataResponse.reduce((sum, item) => sum + item.q3, 0),
+            pos: 0,
+            transfer: 0,
+          },
+          {
+            quarter: "Q4",
+            card: quarterlyDataResponse.reduce((sum, item) => sum + item.q4, 0),
+            pos: 0,
+            transfer: 0,
+          },
+        ];
+        setQuarterlyData(quarterlyDataList);
+
+        setYearlyComparisonData(yearlyData);
       } catch (error) {
         console.error("Failed to fetch yearly sales chart data:", error);
       } finally {
@@ -120,14 +155,16 @@ export function YearlySalesChart(_props: YearlySalesChartProps) {
         <ResponsiveContainer width="100%" height={400}>
           <LineChart data={yearlyComparisonData} margin={DEFAULT_CHART_MARGIN}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="month" />
+            <XAxis dataKey="year" />
             <YAxis tickFormatter={formatYAxisValueShort} width={60} />
             <Tooltip formatter={(value: number) => `${value.toLocaleString()}원`} />
-            <Legend />
-            <Line type="monotone" dataKey="2020" stroke="var(--muted-foreground)" name="2020" strokeWidth={1} />
-            <Line type="monotone" dataKey="2021" stroke="var(--muted-foreground)" name="2021" strokeWidth={1} />
-            <Line type="monotone" dataKey="2022" stroke="var(--muted-foreground)" name="2022" strokeWidth={1} />
-            <Line type="monotone" dataKey="2023" stroke="var(--chart-1)" name="2023" strokeWidth={3} />
+            <Line
+              type="monotone"
+              dataKey="value"
+              stroke="var(--chart-1)"
+              strokeWidth={3}
+              dot={{ r: 6, fill: "var(--chart-1)" }}
+            />
           </LineChart>
         </ResponsiveContainer>
       </div>

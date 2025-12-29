@@ -1,12 +1,11 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { Download } from "lucide-react";
-import z from "zod";
 
-import { productSchema } from "@/app/(main)/dashboard/sales/products/_components/schema";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import type { ProductDetailItem } from "@/types/sales.type";
 
-export const productColumns: ColumnDef<z.infer<typeof productSchema>>[] = [
+export const productColumns: ColumnDef<ProductDetailItem>[] = [
   {
     id: "select",
     header: ({ table }) => {
@@ -51,10 +50,10 @@ export const productColumns: ColumnDef<z.infer<typeof productSchema>>[] = [
   {
     accessorKey: "nickname",
     header: "닉네임(ID)",
-    cell: ({ row }) => `${row.original.nickname} (${row.original.nicknameId})`,
+    cell: ({ row }) => `${row.original.nickname} (${row.original.loginId})`,
   },
   {
-    accessorKey: "phone",
+    accessorKey: "phoneNumber",
     header: "번호",
   },
   {

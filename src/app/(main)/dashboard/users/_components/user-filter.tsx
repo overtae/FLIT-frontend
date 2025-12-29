@@ -2,9 +2,6 @@
 
 import * as React from "react";
 
-import { useRouter, useSearchParams } from "next/navigation";
-
-import { format } from "date-fns";
 import { Settings2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -12,80 +9,43 @@ import { Calendar } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { SERVICE_CONFIG } from "@/config/service-config";
 
-const grades = ["Green", "Yellow", "Orange", "Red", "Silver", "Gold"];
+interface UserFilterProps {
+  category?: string;
+  selectedGrades: string[];
+  onGradesChange: (grades: string[]) => void;
+  selectedDate: Date | undefined;
+  onDateChange: (date: Date | undefined) => void;
+}
 
-export function UserFilter() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+export function UserFilter({
+  category = "all",
+  selectedGrades,
+  onGradesChange,
+  selectedDate,
+  onDateChange,
+}: UserFilterProps) {
+  const [dateEnabled, setDateEnabled] = React.useState(!!selectedDate);
 
-  const [selectedGrades, setSelectedGrades] = React.useState<string[]>(() => {
-    const grades = searchParams.get("grades");
-    return grades ? grades.split(",") : [];
-  });
-  const [dateEnabled, setDateEnabled] = React.useState(() => {
-    return searchParams.get("date") !== null;
-  });
-  const [date, setDate] = React.useState<Date | undefined>(() => {
-    const dateParam = searchParams.get("date");
-    return dateParam ? new Date(dateParam) : undefined;
-  });
-
-  const gradesParam = searchParams.get("grades");
-  const dateParam = searchParams.get("date");
-
-  React.useEffect(() => {
-    if (gradesParam) {
-      const gradesArray = gradesParam.split(",");
-      setSelectedGrades(gradesArray);
-    } else {
-      setSelectedGrades([]);
+  const gradeEntries = React.useMemo(() => {
+    if (category === "customer" || category === "all") {
+      return Object.entries(SERVICE_CONFIG.customerGrade);
     }
+    return Object.entries(SERVICE_CONFIG.grade);
+  }, [category]);
 
-    if (dateParam) {
-      setDateEnabled(true);
-      setDate(new Date(dateParam));
-    } else {
-      setDateEnabled(false);
-      setDate(undefined);
-    }
-  }, [gradesParam, dateParam]);
-
-  const updateURL = React.useCallback(
-    (grades: string[], dateEnabled: boolean, date?: Date) => {
-      const params = new URLSearchParams(searchParams.toString());
-
-      if (grades.length > 0) {
-        params.set("grades", grades.join(","));
-      } else {
-        params.delete("grades");
-      }
-
-      if (dateEnabled && date) {
-        params.set("date", format(date, "yyyy-MM-dd"));
-      } else {
-        params.delete("date");
-      }
-
-      params.delete("page");
-      router.push(`?${params.toString()}`, { scroll: false });
-    },
-    [router, searchParams],
-  );
-
-  const toggleGrade = (grade: string) => {
-    const newGrades = selectedGrades.includes(grade)
-      ? selectedGrades.filter((g) => g !== grade)
-      : [...selectedGrades, grade];
-    setSelectedGrades(newGrades);
-    updateURL(newGrades, dateEnabled, date);
+  const toggleGrade = (gradeKey: string) => {
+    const newGrades = selectedGrades.includes(gradeKey)
+      ? selectedGrades.filter((g) => g !== gradeKey)
+      : [...selectedGrades, gradeKey];
+    onGradesChange(newGrades);
   };
 
   const handleReset = () => {
-    setSelectedGrades([]);
+    onGradesChange([]);
     setDateEnabled(false);
-    setDate(undefined);
-    updateURL([], false);
+    onDateChange(undefined);
   };
 
   return (
@@ -99,18 +59,18 @@ export function UserFilter() {
       <PopoverContent className="max-h-[80vh] w-[280px] overflow-y-auto p-4" align="end">
         <div className="space-y-4">
           <div className="space-y-3">
-            {grades.map((grade) => (
-              <div key={grade} className="flex items-center space-x-2">
+            {gradeEntries.map(([gradeKey, gradeLabel]) => (
+              <div key={gradeKey} className="flex items-center space-x-2">
                 <Checkbox
-                  id={`filter-${grade}`}
-                  checked={selectedGrades.includes(grade)}
-                  onCheckedChange={() => toggleGrade(grade)}
+                  id={`filter-${gradeKey}`}
+                  checked={selectedGrades.includes(gradeKey)}
+                  onCheckedChange={() => toggleGrade(gradeKey)}
                 />
                 <Label
-                  htmlFor={`filter-${grade}`}
+                  htmlFor={`filter-${gradeKey}`}
                   className="cursor-pointer text-sm leading-none font-normal peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                 >
-                  {grade}
+                  {gradeLabel}
                 </Label>
               </div>
             ))}
@@ -122,9 +82,8 @@ export function UserFilter() {
                   const newEnabled = !!checked;
                   setDateEnabled(newEnabled);
                   if (!newEnabled) {
-                    setDate(undefined);
+                    onDateChange(undefined);
                   }
-                  updateURL(selectedGrades, newEnabled, newEnabled ? date : undefined);
                 }}
               />
               <Label htmlFor="filter-date" className="cursor-pointer text-sm font-normal">
@@ -137,10 +96,9 @@ export function UserFilter() {
             <div className="rounded-md border shadow-sm">
               <Calendar
                 mode="single"
-                selected={date}
+                selected={selectedDate}
                 onSelect={(newDate) => {
-                  setDate(newDate);
-                  updateURL(selectedGrades, dateEnabled, newDate);
+                  onDateChange(newDate);
                 }}
                 initialFocus
                 className="p-2"

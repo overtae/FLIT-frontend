@@ -11,8 +11,8 @@ import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { getDailyRevenueChartData } from "@/lib/api/dashboard";
 import { DEFAULT_CHART_MARGIN, formatYAxisValueShort } from "@/lib/chart-utils";
+import { getRevenueNet } from "@/service/sales.service";
 
 interface DailyRevenueChartProps {
   paymentMethod: "total" | "card" | "pos" | "transfer";
@@ -57,8 +57,38 @@ export function DailyRevenueChart({ paymentMethod, onPaymentMethodChange }: Dail
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        const data = await getDailyRevenueChartData({ paymentMethod });
-        setDailyData(data);
+        const today = new Date();
+        const startDate = today.toISOString().split("T")[0];
+        const endDate = today.toISOString().split("T")[0];
+
+        const apiPaymentMethod =
+          paymentMethod === "total"
+            ? "ALL"
+            : paymentMethod === "card"
+              ? "CARD"
+              : paymentMethod === "pos"
+                ? "POS"
+                : "BANK_TRANSFER";
+
+        const response = await getRevenueNet({
+          period: "DAILY",
+          paymentMethod: apiPaymentMethod,
+          startDate,
+          endDate,
+        });
+
+        const transformedData = response.current.map((item, index) => {
+          const date = new Date(item.date);
+          const hour = date.getHours();
+          const lastItem = response.last[index];
+          return {
+            time: hour.toString(),
+            thisDay: item.value,
+            lastDay: lastItem?.value ?? 0,
+          };
+        });
+
+        setDailyData(transformedData);
       } catch (error) {
         console.error("Failed to fetch daily revenue chart data:", error);
       } finally {

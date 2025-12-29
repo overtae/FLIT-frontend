@@ -1,14 +1,16 @@
 "use client";
 
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect } from "react";
 
 import { getSettlementDetail } from "@/service/settlement.service";
-import { SettlementDetail as SettlementDetailType, SettlementDetailTransaction } from "@/types/dashboard";
+import type { SettlementDetail } from "@/types/settlement.type";
+import type { PaymentMethod } from "@/types/transaction.type";
+
+import { TransactionDetailModal } from "../../../transactions/_components/transaction-detail-modal";
 
 import { PaymentMethodBreakdownDialog } from "./payment-method-breakdown-dialog";
 import { SettlementDetailTable } from "./settlement-detail-table";
 import { SettlementInfoCard } from "./settlement-info-card";
-import { TransactionDetailModal } from "./transaction-detail-modal";
 
 interface SettlementDetailProps {
   settlementId: string;
@@ -18,21 +20,24 @@ export function SettlementDetail({ settlementId }: SettlementDetailProps) {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const [isPaymentBreakdownOpen, setIsPaymentBreakdownOpen] = useState(false);
-  const [selectedTransaction, setSelectedTransaction] = useState<SettlementDetailTransaction | null>(null);
+  const [selectedTransaction, setSelectedTransaction] = useState<SettlementDetail["transactions"][0] | null>(null);
   const [isTransactionModalOpen, setIsTransactionModalOpen] = useState(false);
-  const [search, setSearch] = useState("");
-  const [settlementDetail, setSettlementDetail] = useState<SettlementDetailType | null>(null);
-  const [transactions, setTransactions] = useState<SettlementDetailTransaction[]>([]);
+  const [settlementDetail, setSettlementDetail] = useState<SettlementDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [selectedPaymentMethods, setSelectedPaymentMethods] = useState<PaymentMethod[]>([]);
+  const [selectedTransactionDate, setSelectedTransactionDate] = useState<Date | undefined>(undefined);
 
   useEffect(() => {
     const fetchSettlementDetail = async () => {
       try {
         setIsLoading(true);
-        const data = await getSettlementDetail(settlementId);
-        setSettlementDetail(data.detail);
-        setTransactions(data.transactions);
-        setSelectedDate(data.detail.settlementDate);
+        const data = await getSettlementDetail(parseInt(settlementId));
+        setSettlementDetail(data);
+        if (data.transactions.length > 0) {
+          const firstTransactionDate = new Date(data.transactions[0].orderDate);
+          setSelectedDate(firstTransactionDate);
+        }
       } catch (error) {
         console.error("Failed to fetch settlement detail:", error);
       } finally {
@@ -43,30 +48,13 @@ export function SettlementDetail({ settlementId }: SettlementDetailProps) {
     fetchSettlementDetail();
   }, [settlementId]);
 
-  const filteredTransactions = useMemo(() => {
-    let data = transactions;
-
-    if (search) {
-      const searchLower = search.toLowerCase();
-      data = data.filter(
-        (t) =>
-          t.orderNumber.toLowerCase().includes(searchLower) ||
-          t.from.toLowerCase().includes(searchLower) ||
-          t.to.toLowerCase().includes(searchLower) ||
-          t.productName.toLowerCase().includes(searchLower),
-      );
-    }
-
-    return data;
-  }, [transactions, search]);
-
-  const handleDownload = useCallback((transaction: SettlementDetailTransaction) => {
+  const handleDownload = useCallback((transaction: SettlementDetail["transactions"][0]) => {
     const data = [
       ["주문번호", "From", "To", "상품명", "결제금액", "주문접수일", "결제일", "결제방법", "구분"],
       [
-        transaction.orderNumber,
-        transaction.from,
-        transaction.to,
+        transaction.transactionNumber,
+        transaction.fromNickname,
+        transaction.toNickname,
         transaction.productName,
         transaction.paymentAmount.toString(),
         transaction.orderDate,
@@ -81,14 +69,14 @@ export function SettlementDetail({ settlementId }: SettlementDetailProps) {
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
     link.setAttribute("href", url);
-    link.setAttribute("download", `${transaction.orderNumber}.csv`);
+    link.setAttribute("download", `${transaction.transactionNumber}.csv`);
     link.style.visibility = "hidden";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   }, []);
 
-  const handleViewDetail = useCallback((transaction: SettlementDetailTransaction) => {
+  const handleViewDetail = useCallback((transaction: SettlementDetail["transactions"][0]) => {
     setSelectedTransaction(transaction);
     setIsTransactionModalOpen(true);
   }, []);
@@ -114,9 +102,13 @@ export function SettlementDetail({ settlementId }: SettlementDetailProps) {
         />
 
         <SettlementDetailTable
-          transactions={filteredTransactions}
+          transactions={settlementDetail.transactions}
           search={search}
           onSearchChange={setSearch}
+          selectedPaymentMethods={selectedPaymentMethods}
+          onPaymentMethodsChange={setSelectedPaymentMethods}
+          selectedDate={selectedTransactionDate}
+          onDateChange={setSelectedTransactionDate}
           onViewDetail={handleViewDetail}
           onDownload={handleDownload}
         />
@@ -125,7 +117,11 @@ export function SettlementDetail({ settlementId }: SettlementDetailProps) {
       <PaymentMethodBreakdownDialog
         open={isPaymentBreakdownOpen}
         onOpenChange={setIsPaymentBreakdownOpen}
-        breakdown={settlementDetail.paymentMethodBreakdown}
+        breakdown={{
+          card: settlementDetail.cardPaymentAmount,
+          bankTransfer: settlementDetail.bankTransferPaymentAmount,
+          pos: settlementDetail.posPaymentAmount,
+        }}
       />
 
       <TransactionDetailModal

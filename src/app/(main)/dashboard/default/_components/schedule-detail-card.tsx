@@ -1,69 +1,90 @@
 "use client";
 
+import { isPast, isToday, setHours, setMinutes } from "date-fns";
 import { ArrowRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-
-import { ScheduleEvent } from "./schedule-data";
+import type { Schedule } from "@/types/schedule.type";
 
 interface ScheduleDetailCardProps {
   date: Date | undefined;
-  events: ScheduleEvent[];
+  schedules: Schedule[];
   onClose: () => void;
 }
 
-export function ScheduleDetailCard({ date, events, onClose }: ScheduleDetailCardProps) {
+function formatTime(timeStr: string): string {
+  const [hours, minutes] = timeStr.split(":").map(Number);
+  const period = hours >= 12 ? "pm" : "am";
+  const displayHour = hours > 12 ? hours - 12 : hours === 0 ? 12 : hours;
+  return `${displayHour}:${minutes.toString().padStart(2, "0")} ${period}`;
+}
+
+export function ScheduleDetailCard({ date, schedules, onClose }: ScheduleDetailCardProps) {
   if (!date) {
     return null;
   }
 
-  const groupedEvents = events.reduce(
-    (acc, event) => {
-      const timeKey = event.time;
+  const isSchedulePast = (schedule: Schedule) => {
+    const today = new Date();
+    const isSelectedDatePast = !isToday(date) && date < today;
+    if (isSelectedDatePast) return true;
+    if (!isToday(date)) return false;
+
+    const [hours, minutes] = schedule.startTime.split(":").map(Number);
+    const scheduleDateTime = setMinutes(setHours(date, hours), minutes);
+    return isPast(scheduleDateTime);
+  };
+
+  const groupedSchedules = schedules.reduce(
+    (acc, schedule) => {
+      const timeKey = formatTime(schedule.startTime);
       if (!(timeKey in acc)) {
-        const newArray: ScheduleEvent[] = [];
+        const newArray: Schedule[] = [];
         acc[timeKey] = newArray;
       }
-      const timeEvents = acc[timeKey];
-      if (timeEvents) {
-        timeEvents.push(event);
+      const timeSchedules = acc[timeKey];
+      if (timeSchedules) {
+        timeSchedules.push(schedule);
       }
       return acc;
     },
-    {} as Record<string, ScheduleEvent[]>,
+    {} as Record<string, Schedule[]>,
   );
 
   return (
     <Card className="w-full max-w-md border-none shadow-none">
       <CardContent className="space-y-4 px-0">
         <div className="space-y-3">
-          {Object.entries(groupedEvents).map(([time, timeEvents]) => (
+          {Object.entries(groupedSchedules).map(([time, timeSchedules]) => (
             <div key={time} className="space-y-2">
-              {timeEvents.map((event, index) => (
-                <div key={event.id} className="space-y-1">
-                  <div className="flex items-start gap-4">
-                    <div
-                      className={cn(
-                        "mt-1.5 h-2 w-2 shrink-0 rounded-full transition-colors",
-                        event.type === "green" ? "bg-green-400" : "bg-orange-400",
-                      )}
-                    />
-                    <div className="space-y-1">
-                      <p className="text-muted-foreground min-w-[60px] text-sm font-medium">
-                        {event.time}
-                        {event.endTime && ` - ${event.endTime}`}
-                      </p>
-                      <div className="flex-1">
-                        <div className="font-medium">{event.title}</div>
-                        {event.description && <div className="text-muted-foreground text-sm">{event.description}</div>}
+              {timeSchedules.map((schedule, index) => {
+                const past = isSchedulePast(schedule);
+                return (
+                  <div key={schedule.scheduleId} className="space-y-1">
+                    <div className="flex items-start gap-4">
+                      <div
+                        className={cn(
+                          "mt-1.5 h-2 w-2 shrink-0 rounded-full transition-colors",
+                          past ? "bg-gray-300" : "bg-green-400",
+                        )}
+                      />
+                      <div className="space-y-1">
+                        <p className="text-muted-foreground min-w-[60px] text-sm font-medium">
+                          {time}
+                          {schedule.endTime && ` - ${formatTime(schedule.endTime)}`}
+                        </p>
+                        <div className="flex-1">
+                          <div className="font-medium">{schedule.title}</div>
+                          {schedule.content && <div className="text-muted-foreground text-sm">{schedule.content}</div>}
+                        </div>
                       </div>
                     </div>
+                    {index < timeSchedules.length - 1 && <div className="border-border border-b" />}
                   </div>
-                  {index < timeEvents.length - 1 && <div className="border-border border-b" />}
-                </div>
-              ))}
+                );
+              })}
             </div>
           ))}
         </div>

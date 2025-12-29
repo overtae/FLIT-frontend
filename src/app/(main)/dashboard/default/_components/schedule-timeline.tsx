@@ -2,22 +2,22 @@
 
 import { useMemo, useState } from "react";
 
-import { isPast, setHours, setMinutes } from "date-fns";
+import { isPast, isToday, setHours, setMinutes } from "date-fns";
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import type { Schedule } from "@/types/schedule.type";
 
-import { ScheduleEvent } from "./schedule-data";
 import { ScheduleDetailCard } from "./schedule-detail-card";
 
 interface ScheduleTimelineProps {
-  events: ScheduleEvent[];
+  schedules: Schedule[];
   selectedDate?: Date;
 }
 
 interface TimelineItemProps {
-  event: ScheduleEvent;
+  schedule: Schedule;
   isLeft: boolean;
   isOpen: boolean;
   isPastEvent: boolean;
@@ -25,10 +25,17 @@ interface TimelineItemProps {
   selectedDate?: Date;
 }
 
-const getDotColor = (type: "green" | "orange", isPast: boolean, isOpen: boolean) => {
+function formatTime(timeStr: string): string {
+  const [hours, minutes] = timeStr.split(":").map(Number);
+  const period = hours >= 12 ? "pm" : "am";
+  const displayHour = hours > 12 ? hours - 12 : hours === 0 ? 12 : hours;
+  return `${displayHour}:${minutes.toString().padStart(2, "0")} ${period}`;
+}
+
+const getDotColor = (isPast: boolean, isOpen: boolean) => {
   if (isOpen) return "bg-main";
   if (isPast) return "bg-gray-300";
-  return type === "green" ? "bg-green-400" : "bg-orange-400";
+  return "bg-green-400";
 };
 
 const getTextColor = (isPast: boolean, isOpen: boolean) => {
@@ -37,11 +44,8 @@ const getTextColor = (isPast: boolean, isOpen: boolean) => {
   return "text-gray-900";
 };
 
-function TimelineItem({ event, isLeft, isOpen, isPastEvent, onOpenChange, selectedDate }: TimelineItemProps) {
-  const dotColorClass = cn(
-    "mt-1.5 h-2 w-2 shrink-0 rounded-full transition-colors",
-    getDotColor(event.type, isPastEvent, isOpen),
-  );
+function TimelineItem({ schedule, isLeft, isOpen, isPastEvent, onOpenChange, selectedDate }: TimelineItemProps) {
+  const dotColorClass = cn("mt-1.5 h-2 w-2 shrink-0 rounded-full transition-colors", getDotColor(isPastEvent, isOpen));
 
   const textColorClass = cn("text-sm font-medium transition-colors", getTextColor(isPastEvent, isOpen));
 
@@ -56,6 +60,8 @@ function TimelineItem({ event, isLeft, isOpen, isPastEvent, onOpenChange, select
     isLeft ? "mr-4" : "ml-4",
   );
 
+  const displayTime = formatTime(schedule.startTime);
+
   return (
     <div className={containerClass}>
       <Popover open={isOpen} onOpenChange={onOpenChange}>
@@ -63,8 +69,8 @@ function TimelineItem({ event, isLeft, isOpen, isPastEvent, onOpenChange, select
           <button className={buttonClass}>
             <div className={dotColorClass} />
             <div className="flex flex-col">
-              <span className="text-[10px] font-semibold text-gray-500">{event.time}</span>
-              <span className={textColorClass}>{event.title}</span>
+              <span className="text-[10px] font-semibold text-gray-500">{displayTime}</span>
+              <span className={textColorClass}>{schedule.title}</span>
             </div>
           </button>
         </PopoverTrigger>
@@ -75,63 +81,51 @@ function TimelineItem({ event, isLeft, isOpen, isPastEvent, onOpenChange, select
           align={isLeft ? "end" : "center"}
           sideOffset={10}
         >
-          <ScheduleDetailCard date={selectedDate} events={[event]} onClose={() => onOpenChange(false)} />
+          <ScheduleDetailCard date={selectedDate} schedules={[schedule]} onClose={() => onOpenChange(false)} />
         </PopoverContent>
       </Popover>
     </div>
   );
 }
 
-export function ScheduleTimeline({ events, selectedDate }: ScheduleTimelineProps) {
-  const [openPopoverId, setOpenPopoverId] = useState<string | null>(null);
+export function ScheduleTimeline({ schedules, selectedDate }: ScheduleTimelineProps) {
+  const [openPopoverId, setOpenPopoverId] = useState<number | null>(null);
 
-  // 공통 시간 파싱 로직
-  const parseEventHour = (eventTime: string) => {
-    const [timeStr, period] = eventTime.split(" ");
-    const [hStr] = timeStr.split(":");
-    let h = parseInt(hStr);
-
-    // 12시간제/24시간제 혼용 데이터 처리
-    // 이미 12 이상인 경우(13:00 pm 등)는 더하지 않음
-    if (period === "pm" && h < 12) h += 12;
-    if (period === "am" && h === 12) h = 0;
-
-    return h;
-  };
+  // startTime의 hour를 key로 하는 Map 생성
+  const schedulesByHour = useMemo(() => {
+    const map = new Map<number, Schedule[]>();
+    schedules.forEach((schedule) => {
+      const [hours] = schedule.startTime.split(":").map(Number);
+      const existing = map.get(hours) ?? [];
+      map.set(hours, [...existing, schedule]);
+    });
+    return map;
+  }, [schedules]);
 
   // 일정이 있는 시간대만 추출하여 정렬
   const activeHours = useMemo(() => {
-    if (events.length === 0) return [9, 12, 15, 18];
+    if (schedules.length === 0) return [9, 12, 15, 18];
 
-    const hoursSet = new Set<number>();
-    events.forEach((e) => {
-      const h = parseEventHour(e.time);
-      // 유효한 시간(0~23)만 추가
-      if (h >= 0 && h <= 23) {
-        hoursSet.add(h);
-      }
-    });
+    return Array.from(schedulesByHour.keys()).sort((a, b) => a - b);
+  }, [schedulesByHour, schedules.length]);
 
-    return Array.from(hoursSet).sort((a, b) => a - b);
-  }, [events]);
-
-  const getEventsBetween = (startHour: number) => {
-    return events.filter((event) => {
-      const h = parseEventHour(event.time);
-      return h === startHour;
-    });
+  const getSchedulesBetween = (startHour: number) => {
+    return schedulesByHour.get(startHour) ?? [];
   };
 
-  const isEventPast = (eventTime: string) => {
+  const isSchedulePast = (schedule: Schedule) => {
     if (!selectedDate) return false;
 
-    const [timeStr] = eventTime.split(" ");
-    const [, minutesStr] = timeStr.split(":");
-    const eventHour = parseEventHour(eventTime);
-    const minutes = parseInt(minutesStr);
+    const today = new Date();
+    const isSelectedDatePast = !isToday(selectedDate) && selectedDate < today;
 
-    const eventDateTime = setMinutes(setHours(selectedDate, eventHour), minutes);
-    return isPast(eventDateTime);
+    if (isSelectedDatePast) return true;
+
+    if (!isToday(selectedDate)) return false;
+
+    const [hours, minutes] = schedule.startTime.split(":").map(Number);
+    const scheduleDateTime = setMinutes(setHours(selectedDate, hours), minutes);
+    return isPast(scheduleDateTime);
   };
 
   return (
@@ -147,7 +141,7 @@ export function ScheduleTimeline({ events, selectedDate }: ScheduleTimelineProps
 
             {activeHours.length > 0 ? (
               activeHours.map((hour) => {
-                const hourEvents = getEventsBetween(hour);
+                const hourSchedules = getSchedulesBetween(hour);
 
                 return (
                   <div key={hour} className="relative">
@@ -156,19 +150,19 @@ export function ScheduleTimeline({ events, selectedDate }: ScheduleTimelineProps
                     </div>
 
                     <div className="relative min-h-[60px]">
-                      {hourEvents.map((event, idx) => {
+                      {hourSchedules.map((schedule, idx) => {
                         const isLeft = idx % 2 === 0;
-                        const isOpen = openPopoverId === event.id;
-                        const isPastEvent = isEventPast(event.time);
+                        const isOpen = openPopoverId === schedule.scheduleId;
+                        const isPastEvent = isSchedulePast(schedule);
 
                         return (
                           <TimelineItem
-                            key={event.id}
-                            event={event}
+                            key={schedule.scheduleId}
+                            schedule={schedule}
                             isLeft={isLeft}
                             isOpen={isOpen}
                             isPastEvent={isPastEvent}
-                            onOpenChange={(open) => setOpenPopoverId(open ? event.id : null)}
+                            onOpenChange={(open) => setOpenPopoverId(open ? schedule.scheduleId : null)}
                             selectedDate={selectedDate}
                           />
                         );

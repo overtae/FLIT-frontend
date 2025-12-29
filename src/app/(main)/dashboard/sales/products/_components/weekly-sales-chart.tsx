@@ -11,8 +11,8 @@ import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { getWeeklySalesChartData } from "@/lib/api/dashboard";
 import { DEFAULT_CHART_MARGIN, formatYAxisValueShort } from "@/lib/chart-utils";
+import { getProductNet } from "@/service/sales.service";
 
 interface WeeklySalesChartProps {
   selectedCategory: string | null;
@@ -58,11 +58,40 @@ export function WeeklySalesChart({ selectedCategory, paymentMethod, onPaymentMet
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        const data = await getWeeklySalesChartData({
-          paymentMethod,
-          category: selectedCategory ?? undefined,
+        const today = new Date();
+        const startDate = new Date(today);
+        startDate.setDate(today.getDate() - 6);
+        const endDate = today.toISOString().split("T")[0];
+        const startDateStr = startDate.toISOString().split("T")[0];
+
+        const apiPaymentMethod =
+          paymentMethod === "total"
+            ? "ALL"
+            : paymentMethod === "card"
+              ? "CARD"
+              : paymentMethod === "pos"
+                ? "POS"
+                : "BANK_TRANSFER";
+
+        const response = await getProductNet({
+          period: "WEEKLY",
+          paymentMethod: apiPaymentMethod,
+          startDate: startDateStr,
+          endDate,
         });
-        setWeeklyData(data);
+
+        const transformedData = response.current.map((item, index) => {
+          const date = new Date(item.date);
+          const day = date.getDate();
+          const lastItem = response.last[index];
+          return {
+            day: `${day}일`,
+            thisWeek: item.value,
+            lastWeek: lastItem?.value ?? 0,
+          };
+        });
+
+        setWeeklyData(transformedData);
       } catch (error) {
         console.error("Failed to fetch weekly sales chart data:", error);
       } finally {

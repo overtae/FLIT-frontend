@@ -1,39 +1,37 @@
 "use client";
 
-import { useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 
+import {
+  format,
+  startOfWeek,
+  endOfWeek,
+  startOfMonth,
+  endOfMonth,
+  startOfYear,
+  endOfYear,
+  subWeeks,
+  subMonths,
+  subYears,
+  eachDayOfInterval,
+  eachWeekOfInterval,
+  eachMonthOfInterval,
+} from "date-fns";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+
+import { getOrderCvr } from "@/service/sales.service";
+import type { OrderPeriod } from "@/types/sales.type";
 
 interface CvrChartProps {
   period: "weekly" | "monthly" | "yearly";
   selectedDate?: Date;
 }
 
-const weeklyData = [
-  { day: "Sun", thisWeek: 3.2, lastWeek: 2.8 },
-  { day: "Mon", thisWeek: 3.5, lastWeek: 3.1 },
-  { day: "Tue", thisWeek: 3.8, lastWeek: 3.3 },
-  { day: "Wed", thisWeek: 3.6, lastWeek: 3.2 },
-  { day: "Thu", thisWeek: 3.9, lastWeek: 3.5 },
-  { day: "Fri", thisWeek: 4.1, lastWeek: 3.7 },
-  { day: "Sat", thisWeek: 3.7, lastWeek: 3.4 },
-];
-
-const monthlyData = [
-  { week: "1주", thisMonth: 3.5, lastMonth: 3.2 },
-  { week: "2주", thisMonth: 3.8, lastMonth: 3.4 },
-  { week: "3주", thisMonth: 3.9, lastMonth: 3.6 },
-  { week: "4주", thisMonth: 4.1, lastMonth: 3.8 },
-];
-
-const yearlyData = [
-  { month: "1월", thisYear: 3.2, lastYear: 2.9 },
-  { month: "2월", thisYear: 3.5, lastYear: 3.1 },
-  { month: "3월", thisYear: 3.8, lastYear: 3.4 },
-  { month: "4월", thisYear: 3.9, lastYear: 3.6 },
-  { month: "5월", thisYear: 4.1, lastYear: 3.8 },
-  { month: "6월", thisYear: 4.2, lastYear: 3.9 },
-];
+const periodMap: Record<"weekly" | "monthly" | "yearly", OrderPeriod> = {
+  weekly: "WEEKLY",
+  monthly: "MONTHLY",
+  yearly: "YEARLY",
+};
 
 interface CustomTooltipProps {
   active?: boolean;
@@ -90,19 +88,86 @@ function CustomTooltip({
   return null;
 }
 
-export function CvrChart({ period }: CvrChartProps) {
-  const getData = () => {
-    switch (period) {
-      case "weekly":
-        return weeklyData;
-      case "monthly":
-        return monthlyData;
-      case "yearly":
-        return yearlyData;
-      default:
-        return weeklyData;
-    }
-  };
+export function CvrChart({ period, selectedDate }: CvrChartProps) {
+  const [data, setData] = useState<Array<Record<string, string | number>>>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (!selectedDate) return;
+
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        let startDate: Date;
+        let endDate: Date;
+
+        switch (period) {
+          case "weekly": {
+            endDate = endOfWeek(selectedDate);
+            startDate = startOfWeek(selectedDate);
+            break;
+          }
+          case "monthly": {
+            endDate = endOfMonth(selectedDate);
+            startDate = startOfMonth(selectedDate);
+            break;
+          }
+          case "yearly": {
+            endDate = endOfYear(selectedDate);
+            startDate = startOfYear(selectedDate);
+            break;
+          }
+        }
+
+        const response = await getOrderCvr({
+          period: periodMap[period],
+          startDate: format(startDate, "yyyy-MM-dd"),
+          endDate: format(endDate, "yyyy-MM-dd"),
+        });
+
+        let chartData: Array<Record<string, string | number>> = [];
+
+        switch (period) {
+          case "weekly": {
+            const days = eachDayOfInterval({ start: startDate, end: endDate });
+            const dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+            chartData = days.map((day, index) => ({
+              day: dayLabels[day.getDay()],
+              thisWeek: response[index]?.current ?? 0,
+              lastWeek: response[index]?.last ?? 0,
+            }));
+            break;
+          }
+          case "monthly": {
+            const weeks = eachWeekOfInterval({ start: startDate, end: endDate });
+            chartData = weeks.map((week, index) => ({
+              week: `${index + 1}주`,
+              thisMonth: response[index]?.current ?? 0,
+              lastMonth: response[index]?.last ?? 0,
+            }));
+            break;
+          }
+          case "yearly": {
+            const months = eachMonthOfInterval({ start: startDate, end: endDate });
+            chartData = months.map((month, index) => ({
+              month: `${month.getMonth() + 1}월`,
+              thisYear: response[index]?.current ?? 0,
+              lastYear: response[index]?.last ?? 0,
+            }));
+            break;
+          }
+        }
+
+        setData(chartData);
+      } catch (error) {
+        console.error("Failed to fetch CVR data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [period, selectedDate]);
 
   const getXAxisKey = () => {
     switch (period) {
@@ -117,10 +182,17 @@ export function CvrChart({ period }: CvrChartProps) {
     }
   };
 
-  const data = getData();
   const xAxisKey = getXAxisKey();
 
   const tooltipContent = useMemo(() => <CustomTooltip xAxisKey={xAxisKey} period={period} />, [xAxisKey, period]);
+
+  if (isLoading || !selectedDate) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <ResponsiveContainer width="100%" height="100%">

@@ -1,7 +1,5 @@
 "use client";
 
-import { useState } from "react";
-
 import {
   addMonths,
   eachDayOfInterval,
@@ -22,12 +20,19 @@ interface ScheduleCalendarProps {
   selectedDate: Date | undefined;
   onDateSelect: (date: Date) => void;
   datesWithEvents: Date[];
+  currentMonth: Date;
+  onMonthChange: (date: Date) => void;
   className?: string;
 }
 
-export function ScheduleCalendar({ selectedDate, onDateSelect, datesWithEvents, className }: ScheduleCalendarProps) {
-  const [currentMonth, setCurrentMonth] = useState(new Date());
-
+export function ScheduleCalendar({
+  selectedDate,
+  onDateSelect,
+  datesWithEvents,
+  currentMonth,
+  onMonthChange,
+  className,
+}: ScheduleCalendarProps) {
   const daysInMonth = eachDayOfInterval({
     start: startOfWeek(startOfMonth(currentMonth)),
     end: endOfWeek(endOfMonth(currentMonth)),
@@ -35,8 +40,8 @@ export function ScheduleCalendar({ selectedDate, onDateSelect, datesWithEvents, 
 
   const weekDays = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
 
-  const prevMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
-  const nextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
+  const prevMonth = () => onMonthChange(subMonths(currentMonth, 1));
+  const nextMonth = () => onMonthChange(addMonths(currentMonth, 1));
 
   const isDateWithEvent = (date: Date) => {
     return datesWithEvents.some((eventDate) => isSameDay(eventDate, date));

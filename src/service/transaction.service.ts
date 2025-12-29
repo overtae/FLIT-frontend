@@ -1,60 +1,84 @@
-import { PaginatedResponse, Transaction } from "@/types/dashboard";
+import { fetchWithAuth } from "@/lib/api/client-fetch";
+import type {
+  TransactionOrderParams,
+  Transaction,
+  TransactionOrderingParams,
+  TransactionCanceledParams,
+  CanceledTransaction,
+  TransactionDetail,
+} from "@/types/transaction.type";
 
-const appendIfExists = (searchParams: URLSearchParams, key: string, value: string | number | undefined) => {
-  if (value !== undefined && value !== null) {
-    searchParams.append(key, value.toString());
-  }
-};
-
-const buildSearchParams = (params?: {
-  type?: string;
-  paymentMethod?: string;
-  refundStatus?: string;
-  subCategory?: string;
-  page?: number;
-  pageSize?: number;
-  search?: string;
-  types?: string;
-  paymentMethods?: string;
-  refundStatuses?: string;
-  date?: string;
-}): URLSearchParams => {
+export async function getTransactionOrders(params?: TransactionOrderParams): Promise<Transaction[]> {
   const searchParams = new URLSearchParams();
-  if (!params) return searchParams;
+  if (params?.page) searchParams.append("page", params.page.toString());
+  if (params?.size) searchParams.append("size", params.size.toString());
+  if (params?.type) searchParams.append("type", params.type);
+  if (params?.paymentDate) searchParams.append("paymentDate", params.paymentDate);
+  if (params?.paymentMethod) searchParams.append("paymentMethod", params.paymentMethod);
 
-  appendIfExists(searchParams, "type", params.type);
-  appendIfExists(searchParams, "paymentMethod", params.paymentMethod);
-  appendIfExists(searchParams, "refundStatus", params.refundStatus);
-  appendIfExists(searchParams, "subCategory", params.subCategory);
-  appendIfExists(searchParams, "page", params.page);
-  appendIfExists(searchParams, "pageSize", params.pageSize);
-  appendIfExists(searchParams, "search", params.search);
-  appendIfExists(searchParams, "types", params.types);
-  appendIfExists(searchParams, "paymentMethods", params.paymentMethods);
-  appendIfExists(searchParams, "refundStatuses", params.refundStatuses);
-  appendIfExists(searchParams, "date", params.date);
+  const queryString = searchParams.toString();
+  const endpoint = queryString ? `/api/v1/transaction/order?${queryString}` : "/api/v1/transaction/order";
 
-  return searchParams;
-};
-
-export async function getTransactions(params?: {
-  type?: string;
-  paymentMethod?: string;
-  refundStatus?: string;
-  subCategory?: string;
-  page?: number;
-  pageSize?: number;
-  search?: string;
-  types?: string;
-  paymentMethods?: string;
-  refundStatuses?: string;
-  date?: string;
-}): Promise<PaginatedResponse<Transaction>> {
-  const searchParams = buildSearchParams(params);
-  const response = await fetch(`/api/dashboard/transactions?${searchParams.toString()}`);
+  const response = await fetchWithAuth(endpoint);
   if (!response.ok) {
-    throw new Error("Failed to fetch transactions");
+    throw new Error("Failed to fetch transaction orders");
   }
 
   return response.json();
+}
+
+export async function getTransactionOrdering(params?: TransactionOrderingParams): Promise<Transaction[]> {
+  const searchParams = new URLSearchParams();
+  if (params?.page) searchParams.append("page", params.page.toString());
+  if (params?.size) searchParams.append("size", params.size.toString());
+  if (params?.paymentDate) searchParams.append("paymentDate", params.paymentDate);
+  if (params?.paymentMethod) searchParams.append("paymentMethod", params.paymentMethod);
+
+  const queryString = searchParams.toString();
+  const endpoint = queryString ? `/api/v1/transaction/ordering?${queryString}` : "/api/v1/transaction/ordering";
+
+  const response = await fetchWithAuth(endpoint);
+  if (!response.ok) {
+    throw new Error("Failed to fetch transaction ordering");
+  }
+
+  return response.json();
+}
+
+export async function getCanceledTransactions(params?: TransactionCanceledParams): Promise<CanceledTransaction[]> {
+  const searchParams = new URLSearchParams();
+  if (params?.page) searchParams.append("page", params.page.toString());
+  if (params?.size) searchParams.append("size", params.size.toString());
+  if (params?.type) searchParams.append("type", params.type);
+  if (params?.status) searchParams.append("status", params.status);
+  if (params?.orderDate) searchParams.append("orderDate", params.orderDate);
+
+  const queryString = searchParams.toString();
+  const endpoint = queryString ? `/api/v1/transaction/canceled?${queryString}` : "/api/v1/transaction/canceled";
+
+  const response = await fetchWithAuth(endpoint);
+  if (!response.ok) {
+    throw new Error("Failed to fetch canceled transactions");
+  }
+
+  return response.json();
+}
+
+export async function getTransaction(transactionId: number): Promise<TransactionDetail> {
+  const response = await fetch(`/api/v1/transaction/${transactionId}`);
+  if (!response.ok) {
+    throw new Error("Failed to fetch transaction");
+  }
+
+  return response.json();
+}
+
+export async function deleteTransaction(transactionId: number): Promise<void> {
+  const response = await fetchWithAuth(`/api/v1/transaction/${transactionId}`, {
+    method: "DELETE",
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to delete transaction");
+  }
 }

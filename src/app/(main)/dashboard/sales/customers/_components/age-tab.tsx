@@ -7,11 +7,33 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { getCustomerAnalysis } from "@/service/customer-analysis.service";
-import { AgeData, ItemRanking, StackedBarData } from "@/types/customer-analysis";
+import { getCustomerAge } from "@/service/sales.service";
+import type { CustomerAgeResponse } from "@/types/sales.type";
 
 interface AgeTabProps {
   selectedDate?: Date;
+}
+
+interface AgeData {
+  age: string;
+  count: number;
+}
+
+interface ItemRanking {
+  rank: number;
+  name: string;
+  count: number;
+}
+
+interface StackedBarData {
+  item: string;
+  "10대": number;
+  "20대": number;
+  "30대": number;
+  "40대": number;
+  "50대": number;
+  "60대": number;
+  "70대+": number;
 }
 
 export function AgeTab({ selectedDate }: AgeTabProps) {
@@ -26,17 +48,44 @@ export function AgeTab({ selectedDate }: AgeTabProps) {
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        const params = {
-          period: "last-month" as const,
-          date: selectedDate ? selectedDate.toISOString().split("T")[0] : undefined,
-        };
-        const response = await getCustomerAnalysis(params);
-        setAgeData(response.ageData);
-        setTopItems(response.topItems);
-        setAllItems(response.allItems);
-        setStackedBarData(response.stackedBarData);
+        const targetDate = selectedDate
+          ? selectedDate.toISOString().split("T")[0]
+          : new Date().toISOString().split("T")[0];
+        const response: CustomerAgeResponse = await getCustomerAge({ targetDate });
+
+        const ageDataList: AgeData[] = response.age.map((item) => ({
+          age: item.label,
+          count: item.value,
+        }));
+        setAgeData(ageDataList);
+
+        const topItemsList: ItemRanking[] = response.productsRanking.slice(0, 5).map((item) => ({
+          rank: item.rank,
+          name: item.productName,
+          count: item.count,
+        }));
+        setTopItems(topItemsList);
+
+        const allItemsList: ItemRanking[] = response.productsRanking.map((item) => ({
+          rank: item.rank,
+          name: item.productName,
+          count: item.count,
+        }));
+        setAllItems(allItemsList);
+
+        const stackedBarDataList: StackedBarData[] = response.products.map((product) => ({
+          item: product.productName,
+          "10대": product.ageGroups["10s"],
+          "20대": product.ageGroups["20s"],
+          "30대": product.ageGroups["30s"],
+          "40대": product.ageGroups["40s"],
+          "50대": product.ageGroups["50s"],
+          "60대": product.ageGroups["60s"],
+          "70대+": product.ageGroups["70sPlus"],
+        }));
+        setStackedBarData(stackedBarDataList);
       } catch (error) {
-        console.error("Failed to fetch customer analysis:", error);
+        console.error("Failed to fetch customer age:", error);
       } finally {
         setIsLoading(false);
       }

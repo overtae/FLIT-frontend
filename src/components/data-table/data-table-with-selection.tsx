@@ -9,15 +9,22 @@ interface DataTableWithSelectionProps<TData> {
   table: TanStackTable<TData>;
   rowSelection: RowSelectionState;
   onRowClick?: (row: TData) => void;
+  filterKey?: string;
 }
 
-export function DataTableWithSelection<TData>({ table, rowSelection, onRowClick }: DataTableWithSelectionProps<TData>) {
+export function DataTableWithSelection<TData>({
+  table,
+  rowSelection,
+  onRowClick,
+  filterKey,
+}: DataTableWithSelectionProps<TData>) {
   const rowSelectionKey = JSON.stringify(rowSelection);
   const rows = table.getRowModel().rows;
   const columns = table.getAllColumns();
+  const tableKey = filterKey ? `${rowSelectionKey}-${filterKey}` : rowSelectionKey;
 
   return (
-    <Table key={rowSelectionKey}>
+    <Table key={tableKey}>
       <TableHeader className="bg-muted sticky top-0 z-10">
         {table.getHeaderGroups().map((headerGroup) => (
           <TableRow key={headerGroup.id} className="cursor-default">
