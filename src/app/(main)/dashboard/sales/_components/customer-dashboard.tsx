@@ -17,7 +17,7 @@ import {
 } from "recharts";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { getCustomerDashboardData } from "@/lib/api/dashboard";
+import { getCustomerGender, getCustomerAge } from "@/service/sales.service";
 
 const COLORS = ["#0088FE", "#00C49F"];
 
@@ -31,10 +31,33 @@ export function CustomerDashboard() {
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        const data = await getCustomerDashboardData();
-        setGenderData(data.genderData);
-        setAgeData(data.ageData);
-        setRankingData(data.rankingData);
+        const targetDate = new Date().toISOString().split("T")[0];
+
+        const [genderResponse, ageResponse] = await Promise.all([
+          getCustomerGender({ targetDate }),
+          getCustomerAge({ targetDate }),
+        ]);
+
+        const genderDataList: Array<{ name: string; value: number }> = [
+          { name: "여성", value: genderResponse.ratio.female },
+          { name: "남성", value: genderResponse.ratio.male },
+          { name: "기타", value: genderResponse.ratio.etc },
+        ];
+        setGenderData(genderDataList);
+
+        const ageDataList: Array<{ age: string; value: number }> = ageResponse.age.map((item) => ({
+          age: item.label,
+          value: item.value,
+        }));
+        setAgeData(ageDataList);
+
+        const rankingDataList: Array<{ rank: number; name: string; amount: number }> =
+          genderResponse.productsRanking.map((item) => ({
+            rank: item.rank,
+            name: item.productName,
+            amount: item.count,
+          }));
+        setRankingData(rankingDataList);
       } catch (error) {
         console.error("Failed to fetch customer dashboard data:", error);
       } finally {

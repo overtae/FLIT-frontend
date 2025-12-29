@@ -1,4 +1,4 @@
-import type { Transaction, CanceledTransaction, TransactionDetail } from "@/types/transaction.type";
+import type { Transaction, TransactionDetail } from "@/types/transaction.type";
 
 const customerNames = ["고객A", "고객B", "고객C", "고객D", "고객E", "고객F", "고객G", "고객H"];
 const shopNames = ["상점A", "상점B", "상점C", "상점D", "상점E"];
@@ -39,7 +39,7 @@ export const mockTransactions: Transaction[] = Array.from({ length: 150 }, (_, i
   };
 });
 
-export const mockCanceledTransactions: CanceledTransaction[] = Array.from({ length: 120 }, (_, i) => {
+export const mockCanceledTransactions: Transaction[] = Array.from({ length: 120 }, (_, i) => {
   const date = new Date();
   date.setDate(date.getDate() - (i % 60));
   const isShop = i % 2 === 0;
@@ -95,9 +95,9 @@ export const mockTransactionDetails: Record<number, TransactionDetail> = Object.
         customerRequest: i % 3 === 0 ? "오후 3시 이후 배송 부탁드립니다" : "",
         orderDate: transaction.orderDate,
         paymentDate: transaction.paymentDate,
-        paymentMethod: transaction.paymentMethod,
+        paymentMethod: transaction.paymentMethod ?? "CARD",
         deliveryStatus: i % 3 === 0 ? "PREPARING" : i % 3 === 1 ? "SHIPPING" : "COMPLETED",
-        type: transaction.type,
+        type: transaction.type ?? "BAROGO",
         ...(transaction.type === "BAROGO" && {
           deliveryInformation: {
             deliveryDate: date.toISOString(),

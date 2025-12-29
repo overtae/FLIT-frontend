@@ -14,13 +14,7 @@ import { Input } from "@/components/ui/input";
 import { useDataTableInstance } from "@/hooks/use-data-table-instance";
 import { useFilteredPagination } from "@/hooks/use-filtered-pagination";
 import { getTransactionOrders, getTransactionOrdering, getCanceledTransactions } from "@/service/transaction.service";
-import type {
-  Transaction,
-  CanceledTransaction,
-  TransactionType,
-  PaymentMethod,
-  RefundStatus,
-} from "@/types/transaction.type";
+import type { Transaction, TransactionType, PaymentMethod, RefundStatus } from "@/types/transaction.type";
 
 import { createTransactionColumns } from "./transaction-columns";
 import { TransactionDetailModal } from "./transaction-detail-modal";
@@ -47,16 +41,16 @@ export function TransactionList({ category, subCategory }: TransactionListProps)
   const [selectedPaymentMethods, setSelectedPaymentMethods] = useState<PaymentMethod[]>([]);
   const [selectedRefundStatuses, setSelectedRefundStatuses] = useState<RefundStatus[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
-  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | CanceledTransaction | null>(null);
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [allTransactions, setAllTransactions] = useState<(Transaction | CanceledTransaction)[]>([]);
+  const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
         setIsLoading(true);
-        let data: (Transaction | CanceledTransaction)[] = [];
+        let data: Transaction[] = [];
 
         if (category === "order") {
           const type = subCategory === "shop" ? "SHOP" : subCategory === "florist" ? "FLORIST" : "ALL";
@@ -87,7 +81,7 @@ export function TransactionList({ category, subCategory }: TransactionListProps)
   }, [category, subCategory]);
 
   const filterFn = useMemo(
-    () => (transaction: Transaction | CanceledTransaction) => {
+    () => (transaction: Transaction) => {
       if (search.trim()) {
         const searchLower = search.toLowerCase();
         const matchesSearch =
@@ -99,7 +93,7 @@ export function TransactionList({ category, subCategory }: TransactionListProps)
       }
 
       if (selectedTypes.length > 0 && category === "order") {
-        if (!("type" in transaction)) return false;
+        if (!transaction.type) return false;
         const transactionTypeUpper = String(transaction.type).toUpperCase();
         if (!selectedTypes.includes(transactionTypeUpper as TransactionType)) {
           return false;
@@ -107,7 +101,7 @@ export function TransactionList({ category, subCategory }: TransactionListProps)
       }
 
       if (selectedPaymentMethods.length > 0 && category !== "canceled") {
-        if (!("paymentMethod" in transaction)) return false;
+        if (!transaction.paymentMethod) return false;
         const paymentMethodUpper = String(transaction.paymentMethod).toUpperCase();
         if (!selectedPaymentMethods.includes(paymentMethodUpper as PaymentMethod)) {
           return false;
@@ -115,7 +109,7 @@ export function TransactionList({ category, subCategory }: TransactionListProps)
       }
 
       if (selectedRefundStatuses.length > 0 && category === "canceled") {
-        if (!("status" in transaction)) return false;
+        if (!transaction.status) return false;
         const statusUpper = String(transaction.status).toUpperCase();
         if (!selectedRefundStatuses.includes(statusUpper as RefundStatus)) {
           return false;
@@ -194,12 +188,12 @@ export function TransactionList({ category, subCategory }: TransactionListProps)
     [resetPagination],
   );
 
-  const handleViewDetail = (transaction: Transaction | CanceledTransaction) => {
+  const handleViewDetail = (transaction: Transaction) => {
     setSelectedTransaction(transaction);
     setIsModalOpen(true);
   };
 
-  const handleDownload = (transaction: Transaction | CanceledTransaction) => {
+  const handleDownload = (transaction: Transaction) => {
     const data = [
       {
         주문번호: transaction.transactionNumber,
@@ -209,8 +203,8 @@ export function TransactionList({ category, subCategory }: TransactionListProps)
         결제금액: transaction.paymentAmount,
         주문접수일: transaction.orderDate,
         결제일: transaction.paymentDate,
-        결제방법: "paymentMethod" in transaction ? transaction.paymentMethod : "",
-        구분: "type" in transaction ? transaction.type : "status" in transaction ? transaction.status : "",
+        결제방법: transaction.paymentMethod ?? "",
+        구분: transaction.type ?? transaction.status ?? "",
       },
     ];
 
@@ -232,7 +226,7 @@ export function TransactionList({ category, subCategory }: TransactionListProps)
   );
 
   const { table, rowSelection } = useDataTableInstance({
-    data: paginatedData as Transaction[],
+    data: paginatedData,
     columns: columns as any,
     getRowId: (row) => row.transactionId.toString(),
     manualPagination: true,
@@ -249,7 +243,7 @@ export function TransactionList({ category, subCategory }: TransactionListProps)
     const selectedRows = table.getFilteredSelectedRowModel().rows;
     if (selectedRows.length === 0) return;
 
-    const transactionsToDownload = selectedRows.map((row) => row.original) as (Transaction | CanceledTransaction)[];
+    const transactionsToDownload = selectedRows.map((row) => row.original);
 
     const data = transactionsToDownload.map((t) => ({
       주문번호: t.transactionNumber,
@@ -259,8 +253,8 @@ export function TransactionList({ category, subCategory }: TransactionListProps)
       결제금액: t.paymentAmount,
       주문접수일: t.orderDate,
       결제일: t.paymentDate,
-      결제방법: "paymentMethod" in t ? t.paymentMethod : "",
-      구분: "type" in t ? t.type : "status" in t ? t.status : "",
+      결제방법: t.paymentMethod ?? "",
+      구분: t.type ?? t.status ?? "",
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(data);

@@ -20,7 +20,7 @@ export function TransactionDetailPurchaseInfo({ transaction, category }: Transac
     if (methodLabel === "계좌이체") return "계좌이체";
     return "POS 결제";
   };
-  const selectedPaymentMethod = getPaymentMethodValue(transaction.paymentMethod);
+  const selectedPaymentMethod = getPaymentMethodValue(transaction.paymentMethod ?? "CARD");
 
   return (
     <div>

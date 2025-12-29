@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { getNotifications, markNotificationAsRead } from "@/service/notification.service";
-import { Notification } from "@/types/notifications";
+import type { Notification } from "@/types/auth.type";
 
 export function Notifications() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -20,7 +20,7 @@ export function Notifications() {
       try {
         setIsLoading(true);
         const response = await getNotifications();
-        setNotifications(response.data);
+        setNotifications(response);
       } catch (error) {
         console.error("Failed to fetch notifications:", error);
       } finally {
@@ -34,8 +34,10 @@ export function Notifications() {
   const handleNotificationClick = async (notification: Notification) => {
     if (!notification.isRead) {
       try {
-        await markNotificationAsRead({ id: notification.id });
-        setNotifications((prev) => prev.map((n) => (n.id === notification.id ? { ...n, isRead: true } : n)));
+        await markNotificationAsRead(notification.notificationId, { isRead: true });
+        setNotifications((prev) =>
+          prev.map((n) => (n.notificationId === notification.notificationId ? { ...n, isRead: true } : n)),
+        );
       } catch (error) {
         console.error("Failed to mark notification as read:", error);
       }
@@ -70,7 +72,7 @@ export function Notifications() {
             ) : (
               notifications.map((notification) => (
                 <div
-                  key={notification.id}
+                  key={notification.notificationId}
                   className={`cursor-pointer rounded-lg border p-3 transition-colors ${
                     notification.isRead ? "bg-muted/50" : "bg-background"
                   }`}
@@ -82,8 +84,8 @@ export function Notifications() {
                         <h4 className="font-semibold">{notification.title}</h4>
                         {!notification.isRead && <div className="bg-primary size-2 rounded-full" />}
                       </div>
-                      <p className="text-muted-foreground text-sm">{notification.message}</p>
-                      <p className="text-muted-foreground mt-1 text-xs">{notification.time}</p>
+                      <p className="text-muted-foreground text-sm">{notification.content}</p>
+                      <p className="text-muted-foreground mt-1 text-xs">{notification.createdAt}</p>
                     </div>
                   </div>
                 </div>

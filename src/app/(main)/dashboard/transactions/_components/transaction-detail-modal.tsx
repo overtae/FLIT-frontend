@@ -5,7 +5,8 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { getTransaction, deleteTransaction } from "@/service/transaction.service";
-import type { Transaction, CanceledTransaction, TransactionDetail } from "@/types/transaction.type";
+import type { SettlementDetail } from "@/types/settlement.type";
+import type { Transaction, TransactionDetail } from "@/types/transaction.type";
 
 import { TransactionDetailCustomerInfo } from "./transaction-detail-customer-info";
 import { TransactionDetailDeliveryInfo } from "./transaction-detail-delivery-info";
@@ -16,7 +17,7 @@ import { TransactionDetailPurchaseInfo } from "./transaction-detail-purchase-inf
 interface TransactionDetailModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  transaction: Transaction | CanceledTransaction | null;
+  transaction: Transaction | SettlementDetail["transactions"][0] | null;
   category?: "order" | "order-request" | "canceled";
 }
 

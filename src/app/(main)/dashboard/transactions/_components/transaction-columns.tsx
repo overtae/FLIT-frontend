@@ -6,11 +6,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { SERVICE_CONFIG } from "@/config/service-config";
-import type { Transaction, CanceledTransaction } from "@/types/transaction.type";
+import type { Transaction } from "@/types/transaction.type";
 
 interface CreateColumnsProps {
-  onViewDetail: (transaction: Transaction | CanceledTransaction) => void;
-  onDownload: (transaction: Transaction | CanceledTransaction) => void;
+  onViewDetail: (transaction: Transaction) => void;
+  onDownload: (transaction: Transaction) => void;
   category?: "order" | "order-request" | "canceled";
 }
 
@@ -18,8 +18,8 @@ export function createTransactionColumns({
   onViewDetail,
   onDownload,
   category = "order",
-}: CreateColumnsProps): ColumnDef<Transaction | CanceledTransaction>[] {
-  const baseColumns: ColumnDef<Transaction | CanceledTransaction>[] = [
+}: CreateColumnsProps): ColumnDef<Transaction>[] {
+  const baseColumns: ColumnDef<Transaction>[] = [
     {
       id: "select",
       header: ({ table }) => {
@@ -110,7 +110,7 @@ export function createTransactionColumns({
         accessorKey: "paymentMethod",
         header: "결제방법",
         cell: ({ row }) => {
-          if ("paymentMethod" in row.original) {
+          if (row.original.paymentMethod) {
             const methodKey = row.original.paymentMethod as keyof typeof SERVICE_CONFIG.paymentMethod;
             const methodLabel = SERVICE_CONFIG.paymentMethod[methodKey];
             return <Badge variant="outline">{methodLabel}</Badge>;
@@ -124,7 +124,7 @@ export function createTransactionColumns({
         accessorKey: "type",
         header: "구분",
         cell: ({ row }) => {
-          if ("type" in row.original) {
+          if (row.original.type) {
             const typeKey = row.original.type as keyof typeof SERVICE_CONFIG.transactionType;
             const typeLabel = SERVICE_CONFIG.transactionType[typeKey];
             return <Badge variant="secondary">{typeLabel}</Badge>;

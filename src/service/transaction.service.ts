@@ -4,7 +4,6 @@ import type {
   Transaction,
   TransactionOrderingParams,
   TransactionCanceledParams,
-  CanceledTransaction,
   TransactionDetail,
 } from "@/types/transaction.type";
 
@@ -45,7 +44,7 @@ export async function getTransactionOrdering(params?: TransactionOrderingParams)
   return response.json();
 }
 
-export async function getCanceledTransactions(params?: TransactionCanceledParams): Promise<CanceledTransaction[]> {
+export async function getCanceledTransactions(params?: TransactionCanceledParams): Promise<Transaction[]> {
   const searchParams = new URLSearchParams();
   if (params?.page) searchParams.append("page", params.page.toString());
   if (params?.size) searchParams.append("size", params.size.toString());

@@ -2,10 +2,10 @@
 
 import { Badge } from "@/components/ui/badge";
 import { SERVICE_CONFIG } from "@/config/service-config";
-import type { Transaction, CanceledTransaction } from "@/types/transaction.type";
+import type { Transaction } from "@/types/transaction.type";
 
 interface TransactionDetailModalHeaderProps {
-  transaction: Transaction | CanceledTransaction;
+  transaction: Transaction;
   category: "order" | "order-request" | "canceled";
 }
 
@@ -24,19 +24,19 @@ export function TransactionDetailModalHeader({ transaction, category }: Transact
           <span>{transaction.paymentAmount.toLocaleString()}원</span>
           <span>{transaction.orderDate}</span>
           <span>{transaction.paymentDate}</span>
-          {category !== "canceled" && (
+          {category !== "canceled" && transaction.paymentMethod && (
             <Badge variant="outline">
               {SERVICE_CONFIG.paymentMethod[transaction.paymentMethod as keyof typeof SERVICE_CONFIG.paymentMethod] ??
                 transaction.paymentMethod}
             </Badge>
           )}
-          {category === "order" && (
+          {category === "order" && transaction.type && (
             <Badge variant="secondary">
               {SERVICE_CONFIG.transactionType[transaction.type as keyof typeof SERVICE_CONFIG.transactionType] ??
                 transaction.type}
             </Badge>
           )}
-          {category === "canceled" && "status" in transaction && (
+          {category === "canceled" && transaction.status && (
             <Badge variant="outline">
               {SERVICE_CONFIG.refundStatus[transaction.status as keyof typeof SERVICE_CONFIG.refundStatus] ??
                 transaction.status}

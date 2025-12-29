@@ -24,8 +24,9 @@ export interface Transaction {
   paymentAmount: number;
   orderDate: string;
   paymentDate: string;
-  paymentMethod: string;
-  type: string;
+  paymentMethod?: string;
+  type?: string;
+  status?: string;
 }
 
 export interface TransactionOrderingParams {
@@ -43,20 +44,7 @@ export interface TransactionCanceledParams {
   orderDate?: string;
 }
 
-export interface CanceledTransaction {
-  transactionId: number;
-  transactionNumber: string;
-  fromNickname: string;
-  fromLoginId: string;
-  toNickname: string;
-  toLoginId: string;
-  productName: string;
-  productImageUrl: string;
-  paymentAmount: number;
-  orderDate: string;
-  paymentDate: string;
-  status: string;
-}
+export type CanceledTransaction = Transaction;
 
 export interface TransactionDetail {
   transactionId: number;
@@ -82,9 +70,9 @@ export interface TransactionDetail {
   customerRequest: string;
   orderDate: string;
   paymentDate: string;
-  paymentMethod: string;
+  paymentMethod?: string;
   deliveryStatus: string;
-  type: string;
+  type?: string;
   deliveryInformation?: {
     deliveryDate: string;
     deliveryDistance: number;

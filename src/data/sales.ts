@@ -162,7 +162,7 @@ export function generateProductNetQuarter(targetYear: string): ProductNetQuarter
 export function generateProductNetQuarterDetail(): ProductNetQuarterDetailResponse[] {
   return [
     {
-      category: "꽃",
+      category: "FLOWER",
       lastUpdatedAt: new Date().toISOString(),
       totalSales: 55000000,
       paymentAmount: { card: 33000000, bankTransfer: 16500000, pos: 5500000 },
@@ -171,13 +171,40 @@ export function generateProductNetQuarterDetail(): ProductNetQuarterDetailRespon
       refundCancelCount: { card: 11, bankTransfer: 5, pos: 2 },
     },
     {
-      category: "식물",
+      category: "PLANTS",
       lastUpdatedAt: new Date().toISOString(),
       totalSales: 38000000,
       paymentAmount: { card: 22800000, bankTransfer: 11400000, pos: 3800000 },
       paymentCount: { card: 228, bankTransfer: 114, pos: 38 },
       refundCancelAmount: { card: 760000, bankTransfer: 380000, pos: 152000 },
       refundCancelCount: { card: 7, bankTransfer: 3, pos: 1 },
+    },
+    {
+      category: "WREATH",
+      lastUpdatedAt: new Date().toISOString(),
+      totalSales: 22000000,
+      paymentAmount: { card: 13200000, bankTransfer: 6600000, pos: 2200000 },
+      paymentCount: { card: 132, bankTransfer: 66, pos: 22 },
+      refundCancelAmount: { card: 440000, bankTransfer: 220000, pos: 88000 },
+      refundCancelCount: { card: 4, bankTransfer: 2, pos: 1 },
+    },
+    {
+      category: "SCENOGRAPHY",
+      lastUpdatedAt: new Date().toISOString(),
+      totalSales: 11000000,
+      paymentAmount: { card: 6600000, bankTransfer: 3300000, pos: 1100000 },
+      paymentCount: { card: 66, bankTransfer: 33, pos: 11 },
+      refundCancelAmount: { card: 220000, bankTransfer: 110000, pos: 44000 },
+      refundCancelCount: { card: 2, bankTransfer: 1, pos: 0 },
+    },
+    {
+      category: "REGULAR_DELIVERY",
+      lastUpdatedAt: new Date().toISOString(),
+      totalSales: 5500000,
+      paymentAmount: { card: 3300000, bankTransfer: 1650000, pos: 550000 },
+      paymentCount: { card: 33, bankTransfer: 16, pos: 5 },
+      refundCancelAmount: { card: 110000, bankTransfer: 55000, pos: 22000 },
+      refundCancelCount: { card: 11, bankTransfer: 5, pos: 2 },
     },
   ];
 }

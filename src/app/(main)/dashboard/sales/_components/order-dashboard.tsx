@@ -6,9 +6,10 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getOrderDashboardData } from "@/lib/api/dashboard";
+import { getOrderCvr, getOrderKeywordTrend } from "@/service/sales.service";
 
 export function OrderDashboard() {
+  const [selectedPeriod, setSelectedPeriod] = useState<"WEEKLY" | "MONTHLY" | "YEARLY">("WEEKLY");
   const [cvrData, setCvrData] = useState<Array<{ period: string; cvr: number }>>([]);
   const [searchTrendData, setSearchTrendData] = useState<
     Array<{ keyword: string; search: number; bounceRate: number }>
@@ -19,9 +20,48 @@ export function OrderDashboard() {
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        const data = await getOrderDashboardData();
-        setCvrData(data.cvrData);
-        setSearchTrendData(data.searchTrendData);
+        const today = new Date();
+        let startDate: string;
+        const endDate = today.toISOString().split("T")[0];
+
+        if (selectedPeriod === "WEEKLY") {
+          const start = new Date(today);
+          start.setDate(today.getDate() - 6);
+          startDate = start.toISOString().split("T")[0];
+        } else if (selectedPeriod === "MONTHLY") {
+          const start = new Date(today.getFullYear(), today.getMonth(), 1);
+          startDate = start.toISOString().split("T")[0];
+        } else {
+          const start = new Date(today.getFullYear(), 0, 1);
+          startDate = start.toISOString().split("T")[0];
+        }
+
+        const [cvrResponse, keywordTrendResponse] = await Promise.all([
+          getOrderCvr({
+            period: selectedPeriod,
+            startDate,
+            endDate,
+          }),
+          getOrderKeywordTrend({
+            period: selectedPeriod,
+            startDate,
+            endDate,
+          }),
+        ]);
+
+        const cvrDataList: Array<{ period: string; cvr: number }> = cvrResponse.map((item, index) => ({
+          period: `Day ${index + 1}`,
+          cvr: item.current,
+        }));
+        setCvrData(cvrDataList);
+
+        const searchTrendDataList: Array<{ keyword: string; search: number; bounceRate: number }> =
+          keywordTrendResponse.map((item) => ({
+            keyword: item.keyword,
+            search: item.searchCount,
+            bounceRate: item.bounceRate,
+          }));
+        setSearchTrendData(searchTrendDataList);
       } catch (error) {
         console.error("Failed to fetch order dashboard data:", error);
       } finally {
@@ -30,7 +70,7 @@ export function OrderDashboard() {
     };
 
     fetchData();
-  }, []);
+  }, [selectedPeriod]);
 
   if (isLoading) {
     return (
@@ -45,11 +85,14 @@ export function OrderDashboard() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>기간 선택</CardTitle>
-            <Tabs defaultValue="week">
+            <Tabs
+              value={selectedPeriod.toLowerCase()}
+              onValueChange={(value) => setSelectedPeriod(value.toUpperCase() as typeof selectedPeriod)}
+            >
               <TabsList>
-                <TabsTrigger value="week">주간</TabsTrigger>
-                <TabsTrigger value="month">월간</TabsTrigger>
-                <TabsTrigger value="year">연간</TabsTrigger>
+                <TabsTrigger value="weekly">주간</TabsTrigger>
+                <TabsTrigger value="monthly">월간</TabsTrigger>
+                <TabsTrigger value="yearly">연간</TabsTrigger>
               </TabsList>
             </Tabs>
           </div>

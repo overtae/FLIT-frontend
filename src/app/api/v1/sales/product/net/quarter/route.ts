@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
       const { searchParams } = new URL(request.url);
       const targetYear = searchParams.get("targetYear") ?? new Date().getFullYear().toString();
 
-      return NextResponse.json(generateProductNetQuarter({ targetYear }));
+      return NextResponse.json(generateProductNetQuarter(targetYear));
     }
 
     const { searchParams } = new URL(request.url);

@@ -116,14 +116,14 @@ export function TransactionDetailDeliveryInfo({
           }
         />
 
-        {category === "order" ? (
+        {category === "order" && transaction.type ? (
           <div className="space-y-2">
             <DeliveryTypeInput type={transaction.type} totalAgencyFee={totalAgencyFee} />
             {transaction.type === "BAROGO" && transaction.deliveryInformation && (
               <DeliveryCostDetail deliveryInfo={transaction.deliveryInformation} />
             )}
           </div>
-        ) : category !== "canceled" ? (
+        ) : category !== "canceled" && transaction.type ? (
           <DeliveryStatusRow
             label="구분"
             value={

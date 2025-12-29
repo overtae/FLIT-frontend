@@ -27,7 +27,7 @@ const categoryLabels: Record<string, string> = {
 };
 
 export function QuarterDetailModal({ open, onOpenChange, year }: QuarterDetailModalProps) {
-  const [data, setData] = useState<ProductNetQuarterDetailResponse[]>([]);
+  const [dataMap, setDataMap] = useState<Map<string, ProductNetQuarterDetailResponse>>(new Map());
   const [isLoading, setIsLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState("FLOWER");
 
@@ -38,7 +38,14 @@ export function QuarterDetailModal({ open, onOpenChange, year }: QuarterDetailMo
       try {
         setIsLoading(true);
         const result = await getProductNetQuarterDetail();
-        setData(result);
+        const map = new Map<string, ProductNetQuarterDetailResponse>();
+        result.forEach((item) => {
+          map.set(item.category, item);
+        });
+        setDataMap(map);
+        if (result.length > 0) {
+          setSelectedCategory((prev) => (map.has(prev) ? prev : result[0].category));
+        }
       } catch (error) {
         console.error("Failed to fetch quarter product detail data:", error);
       } finally {
@@ -47,16 +54,27 @@ export function QuarterDetailModal({ open, onOpenChange, year }: QuarterDetailMo
     };
 
     fetchData();
-  }, [open, year]);
+  }, [open]);
 
-  const selectedData = data.find((item) => item.category === selectedCategory);
+  const selectedData = dataMap.get(selectedCategory);
 
-  if (isLoading || !selectedData) {
+  if (isLoading) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-h-[90vh] max-w-[90vw] min-w-4xl">
           <DialogTitle className="text-foreground text-lg font-bold">{year} 상품 총 매출</DialogTitle>
           <div>Loading...</div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  if (!selectedData) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-h-[90vh] max-w-[90vw] min-w-4xl">
+          <DialogTitle className="text-foreground text-lg font-bold">{year} 상품 총 매출</DialogTitle>
+          <div>데이터가 없습니다.</div>
         </DialogContent>
       </Dialog>
     );

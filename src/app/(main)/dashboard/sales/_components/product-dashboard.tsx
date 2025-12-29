@@ -18,25 +18,34 @@ import {
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { getProductCategoryData, getProductDailyRevenue, getProductYearlyData } from "@/service/chart.service";
-import { CategoryChartData, RevenueChartData } from "@/types/dashboard";
+import { getProductCategory, getProductNet, getProductNetYearly } from "@/service/sales.service";
+import type { ProductCategoryResponse, ProductNetResponse, ProductNetYearlyResponse } from "@/types/sales.type";
 
 export function ProductDashboard() {
-  const [categoryData, setCategoryData] = useState<CategoryChartData[]>([]);
-  const [dailyRevenue, setDailyRevenue] = useState<RevenueChartData[]>([]);
-  const [yearlyData, setYearlyData] = useState<RevenueChartData[]>([]);
+  const [categoryData, setCategoryData] = useState<ProductCategoryResponse[]>([]);
+  const [dailyRevenue, setDailyRevenue] = useState<ProductNetResponse["current"]>([]);
+  const [yearlyData, setYearlyData] = useState<ProductNetYearlyResponse[]>([]);
 
   useEffect(() => {
     const fetchChartData = async () => {
       try {
-        const [category, daily, yearly] = await Promise.all([
-          getProductCategoryData(),
-          getProductDailyRevenue(),
-          getProductYearlyData(),
+        const today = new Date();
+        const todayStr = today.toISOString().split("T")[0];
+        const startDate = new Date(today);
+        startDate.setDate(startDate.getDate() - 30);
+        const startDateStr = startDate.toISOString().split("T")[0];
+        const startYear = (today.getFullYear() - 4).toString();
+        const endYear = today.getFullYear().toString();
+
+        const [categoryResponse, dailyResponse, yearlyResponse] = await Promise.all([
+          getProductCategory({ targetDate: todayStr, category: "PRODUCT" }),
+          getProductNet({ period: "DAILY", startDate: startDateStr, endDate: todayStr }),
+          getProductNetYearly({ startYear, endYear }),
         ]);
-        setCategoryData(category);
-        setDailyRevenue(daily);
-        setYearlyData(yearly);
+
+        setCategoryData(categoryResponse);
+        setDailyRevenue(dailyResponse.current);
+        setYearlyData(yearlyResponse);
       } catch (error) {
         console.error("Failed to fetch chart data:", error);
       }
@@ -59,11 +68,11 @@ export function ProductDashboard() {
           <ResponsiveContainer width="100%" height={400}>
             <BarChart data={categoryData}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="category" />
+              <XAxis dataKey="label" />
               <YAxis />
               <Tooltip />
               <Legend />
-              <Bar dataKey="revenue" fill="#8884d8" name="매출" />
+              <Bar dataKey="value" fill="#8884d8" name="매출" />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>
@@ -98,7 +107,7 @@ export function ProductDashboard() {
               <YAxis />
               <Tooltip />
               <Legend />
-              <Line type="monotone" dataKey="revenue" stroke="#8884d8" name="순매출" />
+              <Line type="monotone" dataKey="value" stroke="#8884d8" name="순매출" />
             </LineChart>
           </ResponsiveContainer>
         </CardContent>
@@ -117,8 +126,8 @@ export function ProductDashboard() {
               <YAxis />
               <Tooltip />
               <Legend />
-              <Bar dataKey="revenue" fill="#8884d8" name="순매출" />
-              <Line type="monotone" dataKey="revenue" stroke="#ff7300" name="순매출 추이" />
+              <Bar dataKey="value" fill="#8884d8" name="순매출" />
+              <Line type="monotone" dataKey="value" stroke="#ff7300" name="순매출 추이" />
             </ComposedChart>
           </ResponsiveContainer>
         </CardContent>
