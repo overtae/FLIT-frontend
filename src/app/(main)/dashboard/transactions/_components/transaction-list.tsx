@@ -5,12 +5,11 @@ import { useMemo, useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 
 import * as XLSX from "@e965/xlsx";
-import { Search } from "lucide-react";
 
 import { DataTablePagination } from "@/components/data-table/data-table-pagination";
 import { DataTableWithSelection } from "@/components/data-table/data-table-with-selection";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { useDataTableInstance } from "@/hooks/use-data-table-instance";
 import { useFilteredPagination } from "@/hooks/use-filtered-pagination";
 import { getTransactionOrders, getTransactionOrdering, getCanceledTransactions } from "@/service/transaction.service";
@@ -277,18 +276,7 @@ export function TransactionList({ category, subCategory }: TransactionListProps)
       <div className="flex min-h-full flex-col space-y-4">
         <div className="flex items-center justify-end">
           <div className="flex items-center gap-2">
-            <div className="relative w-[300px]">
-              <Input
-                placeholder=""
-                value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value);
-                  resetPagination();
-                }}
-                className="h-9 rounded-full pr-10 pl-4"
-              />
-              <Search className="text-muted-foreground absolute top-2.5 right-3 h-4 w-4" />
-            </div>
+            <SearchInput value={search} onChange={setSearch} resetPagination={resetPagination} />
             <TransactionFilter
               type={category}
               selectedTypes={selectedTypes}

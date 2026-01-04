@@ -3,6 +3,7 @@ import { Download } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { SERVICE_CONFIG } from "@/config/service-config";
 import type { ProductDetailItem } from "@/types/sales.type";
 
 export const productColumns: ColumnDef<ProductDetailItem>[] = [
@@ -72,6 +73,10 @@ export const productColumns: ColumnDef<ProductDetailItem>[] = [
   {
     accessorKey: "paymentMethod",
     header: "결제방법",
+    cell: ({ row }) => {
+      const paymentMethod = row.original.paymentMethod as keyof typeof SERVICE_CONFIG.paymentMethod;
+      return SERVICE_CONFIG.paymentMethod[paymentMethod] ?? paymentMethod;
+    },
   },
   {
     id: "download",

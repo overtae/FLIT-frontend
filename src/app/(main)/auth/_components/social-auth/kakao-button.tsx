@@ -1,18 +1,31 @@
-import { siKakaotalk } from "simple-icons";
+"use client";
 
-import { SimpleIcon } from "@/components/simple-icon";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import Image from "next/image";
 
-export function KakaoButton({ className, ...props }: React.ComponentProps<typeof Button>) {
+import { SOCIAL_LOGIN } from "@/lib/api/config";
+
+export function KakaoButton() {
+  const handleKakaoLogin = () => {
+    const clientId = SOCIAL_LOGIN.kakao.clientId;
+    const redirectUri = encodeURIComponent(SOCIAL_LOGIN.kakao.redirectUri);
+    const kakaoAuthUrl = `https://kauth.kakao.com/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code`;
+
+    window.location.href = kakaoAuthUrl;
+  };
+
   return (
-    <Button
-      variant="outline"
-      size="icon"
-      className={cn("h-12 w-12 rounded-full border-0 bg-[#FEE500] hover:bg-[#e5ce00]", className)}
-      {...props}
+    <button
+      type="button"
+      onClick={handleKakaoLogin}
+      className="h-12 w-12 rounded-full border-0 bg-[#FEE500] p-3.25 transition-opacity hover:opacity-80"
     >
-      <SimpleIcon icon={siKakaotalk} className="size-6 text-[#000000]" />
-    </Button>
+      <Image
+        src="/assets/logo-kakao.svg"
+        alt="카카오 로그인"
+        width={48}
+        height={48}
+        className="aspect-square object-contain"
+      />
+    </button>
   );
 }

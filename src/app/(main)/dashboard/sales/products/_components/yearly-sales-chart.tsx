@@ -30,8 +30,9 @@ interface YearlySalesChartProps {
 export function YearlySalesChart(_props: YearlySalesChartProps) {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const _ = _props;
-  const [selectedYear, setSelectedYear] = useState("2024");
-  const [selectedYearRange, setSelectedYearRange] = useState(["2020", "2023"]);
+  const currentYear = new Date().getFullYear();
+  const [selectedYear, setSelectedYear] = useState(String(currentYear));
+  const [selectedYearRange, setSelectedYearRange] = useState([String(currentYear - 1), String(currentYear)]);
   const [isQuarterModalOpen, setIsQuarterModalOpen] = useState(false);
   const [quarterlyData, setQuarterlyData] = useState<
     Array<{ quarter: string; card: number; pos: number; transfer: number }>
@@ -112,11 +113,11 @@ export function YearlySalesChart(_props: YearlySalesChartProps) {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="2020">2020</SelectItem>
-                <SelectItem value="2021">2021</SelectItem>
-                <SelectItem value="2022">2022</SelectItem>
-                <SelectItem value="2023">2023</SelectItem>
-                <SelectItem value="2024">2024</SelectItem>
+                {Array.from({ length: 4 }, (_, i) => currentYear - 3 + i).map((year) => (
+                  <SelectItem key={year} value={String(year)}>
+                    {year}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -141,16 +142,39 @@ export function YearlySalesChart(_props: YearlySalesChartProps) {
       <div className="col-span-3">
         <div className="mb-4 flex items-center justify-between">
           <span className="font-semibold">연도별 추이 비교</span>
-          <Select value={selectedYearRange.join("-")} onValueChange={(value) => setSelectedYearRange(value.split("-"))}>
-            <SelectTrigger className="w-[150px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="2020-2023">2020 ~ 2023</SelectItem>
-              <SelectItem value="2021-2024">2021 ~ 2024</SelectItem>
-              <SelectItem value="2022-2024">2022 ~ 2024</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex items-center gap-2">
+            <Select
+              value={selectedYearRange[0]}
+              onValueChange={(value) => setSelectedYearRange([value, selectedYearRange[1]])}
+            >
+              <SelectTrigger className="w-[100px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Array.from({ length: 4 }, (_, i) => currentYear - 4 + i).map((year) => (
+                  <SelectItem key={year} value={String(year)}>
+                    {year}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <span className="text-muted-foreground">~</span>
+            <Select
+              value={selectedYearRange[1]}
+              onValueChange={(value) => setSelectedYearRange([selectedYearRange[0], value])}
+            >
+              <SelectTrigger className="w-[100px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Array.from({ length: 4 }, (_, i) => currentYear - 3 + i).map((year) => (
+                  <SelectItem key={year} value={String(year)}>
+                    {year}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
         <ResponsiveContainer width="100%" height={400}>
           <LineChart data={yearlyComparisonData} margin={DEFAULT_CHART_MARGIN}>

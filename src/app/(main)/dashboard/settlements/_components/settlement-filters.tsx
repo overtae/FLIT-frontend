@@ -1,9 +1,7 @@
 "use client";
 
-import { Search } from "lucide-react";
-
 import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { SettlementPeriod, SettlementStatus } from "@/types/settlement.type";
 
@@ -64,20 +62,14 @@ export function SettlementFilters({
       <div className="flex-1" />
 
       <div className="flex items-center gap-2">
-        <div className="relative max-w-sm flex-1">
-          <Search className="text-muted-foreground absolute top-2.5 left-2 h-4 w-4" />
-          <Input
-            placeholder="닉네임 검색..."
+        <div className="max-w-sm flex-1">
+          <SearchInput
             value={search}
-            onChange={(e) => {
-              onSearchChange(e.target.value);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                onSearchEnter(e.currentTarget.value);
-              }
-            }}
-            className="pl-8"
+            onChange={onSearchChange}
+            onEnter={onSearchEnter}
+            placeholder="검색"
+            iconPosition="right"
+            className="w-full"
           />
         </div>
         <SettlementFilter

@@ -9,7 +9,11 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     if (USE_MOCK_DATA) {
       await new Promise((resolve) => setTimeout(resolve, 300));
       const { settlementId } = await params;
-      const settlement = mockSettlementDetails[parseInt(settlementId)];
+      const id = parseInt(settlementId, 10);
+      if (isNaN(id)) {
+        return NextResponse.json({ error: "Invalid settlement ID" }, { status: 400 });
+      }
+      const settlement = mockSettlementDetails[id];
       if (!settlement) {
         return NextResponse.json({ error: "Settlement not found" }, { status: 404 });
       }

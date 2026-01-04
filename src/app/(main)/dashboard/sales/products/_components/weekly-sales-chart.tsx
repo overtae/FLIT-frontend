@@ -2,15 +2,13 @@
 
 import { useState, useEffect } from "react";
 
-import { ChevronDown } from "lucide-react";
+import { endOfWeek, format, startOfWeek, subWeeks } from "date-fns";
 import { DateRange } from "react-day-picker";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
-import { Button } from "@/components/ui/button";
-import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Label } from "@/components/ui/label";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { WeeklyCalendar } from "@/components/ui/weekly-calendar";
 import { DEFAULT_CHART_MARGIN, formatYAxisValueShort } from "@/lib/chart-utils";
 import { getProductNet } from "@/service/sales.service";
 
@@ -49,20 +47,28 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
 }
 
 export function WeeklySalesChart({ selectedCategory, paymentMethod, onPaymentMethodChange }: WeeklySalesChartProps) {
-  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
-  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const today = new Date();
+  const previousWeek = subWeeks(today, 1);
+  const previousWeekStart = startOfWeek(previousWeek, { weekStartsOn: 0 });
+  const previousWeekEnd = endOfWeek(previousWeek, { weekStartsOn: 0 });
+  const [dateRange, setDateRange] = useState<DateRange>({
+    from: previousWeekStart,
+    to: previousWeekEnd,
+  });
   const [weeklyData, setWeeklyData] = useState<Array<{ day: string; thisWeek: number; lastWeek: number }>>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  const startDateTimestamp = dateRange.from?.getTime();
+  const endDateTimestamp = dateRange.to?.getTime();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        const today = new Date();
-        const startDate = new Date(today);
-        startDate.setDate(today.getDate() - 6);
-        const endDate = today.toISOString().split("T")[0];
-        const startDateStr = startDate.toISOString().split("T")[0];
+        const startDateStr = dateRange.from ? format(dateRange.from, "yyyy-MM-dd") : "";
+        const endDate = dateRange.to ? format(dateRange.to, "yyyy-MM-dd") : "";
+
+        if (!startDateStr || !endDate) return;
 
         const apiPaymentMethod =
           paymentMethod === "total"
@@ -100,7 +106,7 @@ export function WeeklySalesChart({ selectedCategory, paymentMethod, onPaymentMet
     };
 
     fetchData();
-  }, [paymentMethod, selectedCategory]);
+  }, [paymentMethod, selectedCategory, startDateTimestamp, endDateTimestamp, dateRange.from, dateRange.to]);
 
   if (isLoading) {
     return (
@@ -145,24 +151,7 @@ export function WeeklySalesChart({ selectedCategory, paymentMethod, onPaymentMet
           {selectedCategory && <span className="text-sm font-medium">{selectedCategory}</span>}
           <span className="text-sm">This Week</span>
           <div className="text-2xl font-bold">{totalAmount.toLocaleString()} 원</div>
-          <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
-            <PopoverTrigger asChild>
-              <Button variant="outline" size="sm" className="w-[150px] justify-start text-left font-normal">
-                Last Week
-                <ChevronDown className="ml-auto h-4 w-4 opacity-50" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="end">
-              <CalendarComponent
-                mode="range"
-                selected={dateRange}
-                onSelect={(range) => {
-                  setDateRange(range);
-                  setIsDatePickerOpen(false);
-                }}
-              />
-            </PopoverContent>
-          </Popover>
+          <WeeklyCalendar selectedWeekRange={dateRange} onWeekSelect={setDateRange} />
         </div>
       </div>
 

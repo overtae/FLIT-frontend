@@ -15,7 +15,14 @@ export default function Login() {
         <div className="mx-auto flex w-full max-w-md flex-col items-center justify-center space-y-8 px-6">
           {/* 로고 */}
           <div className="pb-4">
-            <Image src={"/assets/logo-flit.svg"} alt={"logo"} width={100} height={100} />
+            <Image
+              loading="eager"
+              src={"/assets/logo-flit.svg"}
+              alt={"logo"}
+              width={100}
+              height={100}
+              className="h-auto w-auto"
+            />
           </div>
 
           {/* 로그인 폼 */}
@@ -47,7 +54,7 @@ export default function Login() {
         <div className="flex w-full max-w-4xl items-center justify-center gap-8 px-6">
           {/* 로고 */}
           <div className="pb-4">
-            <Image src={"/assets/logo-filter.svg"} alt={"logo"} width={150} height={100} />
+            <Image src={"/assets/logo-filter.svg"} alt={"logo"} width={150} height={100} className="h-auto w-auto" />
           </div>
 
           {/* 버튼 */}

@@ -2,14 +2,12 @@
 
 import { useState, useEffect } from "react";
 
-import { ChevronDown } from "lucide-react";
+import { endOfMonth, startOfMonth, subMonths } from "date-fns";
 import { DateRange } from "react-day-picker";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
-import { Button } from "@/components/ui/button";
-import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Label } from "@/components/ui/label";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { MonthlyCalendar } from "@/components/ui/monthly-calendar";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { DEFAULT_CHART_MARGIN, formatYAxisValueShort } from "@/lib/chart-utils";
 import { getProductNet } from "@/service/sales.service";
@@ -49,19 +47,26 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
 }
 
 export function MonthlySalesChart({ selectedCategory, paymentMethod, onPaymentMethodChange }: MonthlySalesChartProps) {
-  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
-  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const today = new Date();
+  const previousMonth = subMonths(today, 1);
+  const previousMonthStart = startOfMonth(previousMonth);
+  const previousMonthEnd = endOfMonth(previousMonth);
+  const [dateRange, setDateRange] = useState<DateRange>({
+    from: previousMonthStart,
+    to: previousMonthEnd,
+  });
   const [monthlyData, setMonthlyData] = useState<Array<{ month: string; thisMonth: number; lastMonth: number }>>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  const startDateTimestamp = dateRange.from?.getTime();
+  const endDateTimestamp = dateRange.to?.getTime();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        const today = new Date();
-        const startDate = new Date(today.getFullYear(), today.getMonth(), 1);
-        const endDate = today.toISOString().split("T")[0];
-        const startDateStr = startDate.toISOString().split("T")[0];
+        const startDateStr = dateRange.from?.toISOString().split("T")[0];
+        const endDate = dateRange.to?.toISOString().split("T")[0] ?? new Date().toISOString().split("T")[0];
 
         const apiPaymentMethod =
           paymentMethod === "total"
@@ -71,6 +76,8 @@ export function MonthlySalesChart({ selectedCategory, paymentMethod, onPaymentMe
               : paymentMethod === "pos"
                 ? "POS"
                 : "BANK_TRANSFER";
+
+        if (!startDateStr) return;
 
         const response = await getProductNet({
           period: "MONTHLY",
@@ -99,7 +106,7 @@ export function MonthlySalesChart({ selectedCategory, paymentMethod, onPaymentMe
     };
 
     fetchData();
-  }, [paymentMethod, selectedCategory]);
+  }, [paymentMethod, selectedCategory, startDateTimestamp, endDateTimestamp, dateRange.from, dateRange.to]);
 
   if (isLoading) {
     return (
@@ -144,24 +151,14 @@ export function MonthlySalesChart({ selectedCategory, paymentMethod, onPaymentMe
           {selectedCategory && <span className="text-sm font-medium">{selectedCategory}</span>}
           <span className="text-sm">This Month</span>
           <div className="text-2xl font-bold">{totalAmount.toLocaleString()} 원</div>
-          <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
-            <PopoverTrigger asChild>
-              <Button variant="outline" size="sm" className="w-[150px] justify-start text-left font-normal">
-                Last Month
-                <ChevronDown className="ml-auto h-4 w-4 opacity-50" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="end">
-              <CalendarComponent
-                mode="range"
-                selected={dateRange}
-                onSelect={(range) => {
-                  setDateRange(range);
-                  setIsDatePickerOpen(false);
-                }}
-              />
-            </PopoverContent>
-          </Popover>
+          <MonthlyCalendar
+            selectedMonth={dateRange}
+            onMonthSelect={(range) => {
+              setDateRange(range);
+            }}
+            placeholder="월 선택"
+            buttonClassName="w-[150px]"
+          />
         </div>
       </div>
 

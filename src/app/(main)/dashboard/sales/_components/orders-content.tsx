@@ -14,13 +14,14 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { ConversionRateChart } from "../orders/_components/conversion-rate-chart";
 import { CvrChart } from "../orders/_components/cvr-chart";
+import { SearchTrendTable } from "../orders/_components/search-trend-table";
+
 import {
   Tabs as OTabs,
   TabsContent as OTabsContent,
   TabsList as OTabsList,
   TabsTrigger as OTabsTrigger,
-} from "../orders/_components/orders-tabs";
-import { SearchTrendTable } from "../orders/_components/search-trend-table";
+} from "./sales-tabs";
 
 interface OrdersContentProps {
   initialVerified: boolean;

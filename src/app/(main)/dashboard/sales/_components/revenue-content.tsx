@@ -5,7 +5,7 @@ import { useState } from "react";
 
 import { useRouter, useSearchParams } from "next/navigation";
 
-import { Search, Settings2 } from "lucide-react";
+import { Settings2 } from "lucide-react";
 
 import { DailyRevenueChart } from "@/app/(main)/dashboard/sales/revenue/_components/daily-revenue-chart";
 import { FilterPanel } from "@/app/(main)/dashboard/sales/revenue/_components/filter-panel";
@@ -16,7 +16,7 @@ import { WeeklyRevenueChart } from "@/app/(main)/dashboard/sales/revenue/_compon
 import { YearlyRevenueChart } from "@/app/(main)/dashboard/sales/revenue/_components/yearly-revenue-chart";
 import { PasswordVerification } from "@/components/password-verification";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import {
@@ -94,26 +94,21 @@ export function RevenueContent({ initialVerified }: RevenueContentProps) {
             </TabsList>
           </Tabs>
           <div className="flex items-center gap-2">
-            <div className="relative">
-              <Input
-                placeholder="검색..."
-                className="w-[200px] rounded-full pl-8"
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    const params = new URLSearchParams(searchParams.toString());
-                    if (searchInput.trim()) {
-                      params.set("search", searchInput.trim());
-                    } else {
-                      params.delete("search");
-                    }
-                    router.push(`?${params.toString()}`, { scroll: false });
-                  }
-                }}
-              />
-              <Search className="text-muted-foreground absolute top-2.5 left-2 h-4 w-4" />
-            </div>
+            <SearchInput
+              value={searchInput}
+              onChange={setSearchInput}
+              onEnter={(value) => {
+                const params = new URLSearchParams(searchParams.toString());
+                if (value.trim()) {
+                  params.set("search", value.trim());
+                } else {
+                  params.delete("search");
+                }
+                router.push(`?${params.toString()}`, { scroll: false });
+              }}
+              placeholder="검색"
+              iconPosition="right"
+            />
             <Button
               variant="ghost"
               size="icon"

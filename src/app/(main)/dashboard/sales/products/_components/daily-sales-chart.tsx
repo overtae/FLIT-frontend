@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 
+import { format, subDays } from "date-fns";
 import { ChevronDown } from "lucide-react";
-import { DateRange } from "react-day-picker";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 import { Button } from "@/components/ui/button";
@@ -49,7 +49,7 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
 }
 
 export function DailySalesChart({ selectedCategory, paymentMethod, onPaymentMethodChange }: DailySalesChartProps) {
-  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  const [selectedDate, setSelectedDate] = useState<Date>(() => subDays(new Date(), 1));
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const [dailyData, setDailyData] = useState<Array<{ date: string; thisWeek: number; lastWeek: number }>>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -58,9 +58,8 @@ export function DailySalesChart({ selectedCategory, paymentMethod, onPaymentMeth
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        const today = new Date();
-        const startDate = today.toISOString().split("T")[0];
-        const endDate = today.toISOString().split("T")[0];
+        const startDate = format(selectedDate, "yyyy-MM-dd");
+        const endDate = format(selectedDate, "yyyy-MM-dd");
 
         const apiPaymentMethod =
           paymentMethod === "total"
@@ -98,7 +97,7 @@ export function DailySalesChart({ selectedCategory, paymentMethod, onPaymentMeth
     };
 
     fetchData();
-  }, [paymentMethod, selectedCategory]);
+  }, [paymentMethod, selectedCategory, selectedDate]);
 
   if (isLoading) {
     return (
@@ -145,18 +144,20 @@ export function DailySalesChart({ selectedCategory, paymentMethod, onPaymentMeth
           <div className="text-2xl font-bold">{totalAmount.toLocaleString()} 원</div>
           <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
             <PopoverTrigger asChild>
-              <Button variant="outline" size="sm" className="w-[150px] justify-start text-left font-normal">
-                Last Day
+              <Button variant="outline" size="sm" className="w-[200px] justify-start text-left font-normal">
+                {format(selectedDate, "yyyy-MM-dd")}
                 <ChevronDown className="ml-auto h-4 w-4 opacity-50" />
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="end">
               <CalendarComponent
-                mode="range"
-                selected={dateRange}
-                onSelect={(range) => {
-                  setDateRange(range);
-                  setIsDatePickerOpen(false);
+                mode="single"
+                selected={selectedDate}
+                onSelect={(date) => {
+                  if (date) {
+                    setSelectedDate(date);
+                    setIsDatePickerOpen(false);
+                  }
                 }}
               />
             </PopoverContent>

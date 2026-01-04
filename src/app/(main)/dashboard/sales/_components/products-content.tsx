@@ -7,16 +7,16 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 import { format } from "date-fns";
 import { ko } from "date-fns/locale";
-import { Calendar, ChevronDown, Search, Settings2 } from "lucide-react";
+import { Calendar, ChevronDown, Settings2 } from "lucide-react";
 
 import { PasswordVerification } from "@/components/password-verification";
 import { Button } from "@/components/ui/button";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SearchInput } from "@/components/ui/search-input";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { CategorySalesChart } from "../products/_components/category-sales-chart";
 import { DailySalesChart } from "../products/_components/daily-sales-chart";
@@ -25,6 +25,13 @@ import { MonthlySalesChart } from "../products/_components/monthly-sales-chart";
 import { SalesDetailTable } from "../products/_components/sales-detail-table";
 import { WeeklySalesChart } from "../products/_components/weekly-sales-chart";
 import { YearlySalesChart } from "../products/_components/yearly-sales-chart";
+
+import {
+  Tabs as SalesTabs,
+  TabsContent as SalesTabsContent,
+  TabsList as SalesTabsList,
+  TabsTrigger as SalesTabsTrigger,
+} from "./sales-tabs";
 
 interface ProductsContentProps {
   initialVerified: boolean;
@@ -97,38 +104,41 @@ export function ProductsContent({ initialVerified }: ProductsContentProps) {
       </div>
 
       <div className="space-y-4">
-        <Tabs value={activePeriodTab} onValueChange={(value) => setActivePeriodTab(value as typeof activePeriodTab)}>
-          <TabsList>
-            <TabsTrigger value="daily">일별 순매출</TabsTrigger>
-            <TabsTrigger value="weekly">주별 순매출</TabsTrigger>
-            <TabsTrigger value="monthly">월별 순매출</TabsTrigger>
-            <TabsTrigger value="yearly">연별 순매출</TabsTrigger>
-          </TabsList>
-          <TabsContent value="daily" className="mt-4">
+        <SalesTabs
+          value={activePeriodTab}
+          onValueChange={(value) => setActivePeriodTab(value as typeof activePeriodTab)}
+        >
+          <SalesTabsList>
+            <SalesTabsTrigger value="daily">일별 순매출</SalesTabsTrigger>
+            <SalesTabsTrigger value="weekly">주별 순매출</SalesTabsTrigger>
+            <SalesTabsTrigger value="monthly">월별 순매출</SalesTabsTrigger>
+            <SalesTabsTrigger value="yearly">연별 순매출</SalesTabsTrigger>
+          </SalesTabsList>
+          <SalesTabsContent value="daily" className="p-4">
             <DailySalesChart
               selectedCategory={selectedCategory}
               paymentMethod={paymentMethod}
               onPaymentMethodChange={setPaymentMethod}
             />
-          </TabsContent>
-          <TabsContent value="weekly" className="mt-4">
+          </SalesTabsContent>
+          <SalesTabsContent value="weekly" className="p-4">
             <WeeklySalesChart
               selectedCategory={selectedCategory}
               paymentMethod={paymentMethod}
               onPaymentMethodChange={setPaymentMethod}
             />
-          </TabsContent>
-          <TabsContent value="monthly" className="mt-4">
+          </SalesTabsContent>
+          <SalesTabsContent value="monthly" className="p-4">
             <MonthlySalesChart
               selectedCategory={selectedCategory}
               paymentMethod={paymentMethod}
               onPaymentMethodChange={setPaymentMethod}
             />
-          </TabsContent>
-          <TabsContent value="yearly" className="mt-4">
+          </SalesTabsContent>
+          <SalesTabsContent value="yearly" className="p-4">
             <YearlySalesChart selectedCategory={selectedCategory} />
-          </TabsContent>
-        </Tabs>
+          </SalesTabsContent>
+        </SalesTabs>
       </div>
 
       <div className="space-y-4">
@@ -144,26 +154,21 @@ export function ProductsContent({ initialVerified }: ProductsContentProps) {
             </TabsList>
           </Tabs>
           <div className="flex items-center gap-2">
-            <div className="relative">
-              <Input
-                placeholder="검색..."
-                className="w-[200px] pl-8"
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    const params = new URLSearchParams(searchParams.toString());
-                    if (searchInput.trim()) {
-                      params.set("search", searchInput.trim());
-                    } else {
-                      params.delete("search");
-                    }
-                    router.push(`?${params.toString()}`, { scroll: false });
-                  }
-                }}
-              />
-              <Search className="text-muted-foreground absolute top-2.5 left-2 h-4 w-4" />
-            </div>
+            <SearchInput
+              value={searchInput}
+              onChange={setSearchInput}
+              onEnter={(value) => {
+                const params = new URLSearchParams(searchParams.toString());
+                if (value.trim()) {
+                  params.set("search", value.trim());
+                } else {
+                  params.delete("search");
+                }
+                router.push(`?${params.toString()}`, { scroll: false });
+              }}
+              placeholder="검색"
+              iconPosition="right"
+            />
             <Button
               variant="ghost"
               size="icon"

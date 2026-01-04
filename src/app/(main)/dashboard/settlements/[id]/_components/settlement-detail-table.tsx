@@ -4,12 +4,12 @@ import { useMemo, useCallback } from "react";
 
 import * as XLSX from "@e965/xlsx";
 import { format } from "date-fns";
-import { Download, Search } from "lucide-react";
+import { Download } from "lucide-react";
 
 import { DataTablePagination } from "@/components/data-table/data-table-pagination";
 import { DataTableWithSelection } from "@/components/data-table/data-table-with-selection";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { useDataTableInstance } from "@/hooks/use-data-table-instance";
 import type { SettlementDetail } from "@/types/settlement.type";
 import type { PaymentMethod } from "@/types/transaction.type";
@@ -78,13 +78,13 @@ export function SettlementDetailTable({
   return (
     <section className="w-full space-y-4">
       <div className="flex items-center justify-end gap-2">
-        <div className="relative max-w-sm flex-1">
-          <Search className="text-muted-foreground absolute top-2.5 left-2 h-4 w-4" />
-          <Input
-            placeholder="검색..."
+        <div className="max-w-sm flex-1">
+          <SearchInput
             value={search}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="pl-8"
+            onChange={onSearchChange}
+            placeholder="검색..."
+            iconPosition="left"
+            className="w-full"
           />
         </div>
         <SettlementDetailFilter

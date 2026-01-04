@@ -28,7 +28,7 @@ export const mockSettlements: Settlement[] = Array.from({ length: 150 }, (_, i) 
 });
 
 export const mockSettlementDetails: Record<number, SettlementDetail> = Object.fromEntries(
-  mockSettlements.slice(0, 50).map((settlement, i) => {
+  mockSettlements.map((settlement, i) => {
     const transactionCount = Math.floor(Math.random() * 20) + 5;
 
     return [

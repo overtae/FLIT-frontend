@@ -56,7 +56,7 @@ export function getSchedulesByMonth(year?: string, month?: string): Schedule[] {
     const scheduleDate = new Date(schedule.targetDate);
     return (
       scheduleDate.getFullYear().toString() === year &&
-      (scheduleDate.getMonth() + 1).toString().padStart(2, "0") === month
+      (scheduleDate.getMonth() + 1).toString().padStart(2, "0") === month.toString().padStart(2, "0")
     );
   });
 }
