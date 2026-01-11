@@ -113,9 +113,20 @@ export function DataTablePagination<TData>({
   const canGoToNextSection = currentSection < totalSections - 1;
 
   return (
-    <div className={cn("relative flex items-center justify-center", className)}>
-      {leftSlot && <div className="absolute top-1/2 left-0 flex -translate-y-1/2 items-center">{leftSlot}</div>}
-      <div className="flex flex-1 items-center justify-center gap-2">
+    <div className={cn("relative flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-center", className)}>
+      {/* eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing */}
+      {(leftSlot || rightSlot) && (
+        <div className="flex w-full items-center justify-between sm:hidden">
+          {leftSlot && <div className="flex items-center">{leftSlot}</div>}
+          {rightSlot && <div className="flex items-center">{rightSlot}</div>}
+        </div>
+      )}
+      {leftSlot && (
+        <div className="hidden sm:absolute sm:top-1/2 sm:left-0 sm:flex sm:-translate-y-1/2 sm:items-center">
+          {leftSlot}
+        </div>
+      )}
+      <div className="flex flex-1 items-center justify-center gap-1 sm:gap-2">
         <Button
           variant="outline"
           size="icon"
@@ -171,7 +182,11 @@ export function DataTablePagination<TData>({
           <ChevronsRight className="h-4 w-4" />
         </Button>
       </div>
-      {rightSlot && <div className="absolute top-1/2 right-0 flex -translate-y-1/2 items-center">{rightSlot}</div>}
+      {rightSlot && (
+        <div className="hidden sm:absolute sm:top-1/2 sm:right-0 sm:flex sm:-translate-y-1/2 sm:items-center">
+          {rightSlot}
+        </div>
+      )}
     </div>
   );
 }

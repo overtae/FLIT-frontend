@@ -143,12 +143,12 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <div className="flex items-center gap-2">
         <Button variant="ghost" onClick={() => router.back()} className="rounded-full" aria-label="Back">
           <ChevronLeft width={24} height={24} />
         </Button>
-        <h1 className="text-xl font-bold">정보수정</h1>
+        <h1 className="text-base font-bold sm:text-lg md:text-xl">정보수정</h1>
       </div>
 
       {isLoading ? (
@@ -157,26 +157,35 @@ export default function ProfilePage() {
         </div>
       ) : (
         <>
-          <div className="mb-12 flex justify-center">
+          <div className="mb-6 flex justify-center sm:mb-8 md:mb-12">
             <ImageUploader
               value={profileImageUrl}
               onChange={(file) => {
                 setProfileImage(file);
               }}
+              size={120}
+              className="sm:[&>div]:!h-[160px] sm:[&>div]:!w-[160px] md:[&>div]:!h-[200px] md:[&>div]:!w-[200px]"
             />
           </div>
 
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 px-24">
-              <div className="grid grid-cols-1 gap-x-12 gap-y-6 md:grid-cols-2">
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="space-y-4 px-2 sm:space-y-6 sm:px-4 md:px-8 lg:px-16 xl:px-24"
+            >
+              <div className="grid grid-cols-1 gap-x-4 gap-y-3 sm:gap-x-6 sm:gap-y-4 md:grid-cols-2 md:gap-x-8 md:gap-y-6 lg:gap-x-12">
                 <FormField
                   control={form.control}
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Name</FormLabel>
+                      <FormLabel className="text-sm sm:text-base">Name</FormLabel>
                       <FormControl>
-                        <Input {...field} readOnly className="border-0 border-b bg-transparent p-0 shadow-none" />
+                        <Input
+                          {...field}
+                          readOnly
+                          className="border-0 border-b bg-transparent p-0 text-sm shadow-none sm:text-base"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -188,16 +197,16 @@ export default function ProfilePage() {
                   name="level"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Level</FormLabel>
+                      <FormLabel className="text-sm sm:text-base">Level</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger className="border-0 border-b bg-transparent p-0 shadow-none">
+                          <SelectTrigger className="border-0 border-b bg-transparent p-0 text-sm shadow-none sm:text-base">
                             <SelectValue />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
                           {Object.entries(SERVICE_CONFIG.userRole).map(([key, value]) => (
-                            <SelectItem key={key} value={key}>
+                            <SelectItem key={key} value={key} className="text-sm sm:text-base">
                               {value}
                             </SelectItem>
                           ))}
@@ -213,9 +222,12 @@ export default function ProfilePage() {
                   name="nickname"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Nickname</FormLabel>
+                      <FormLabel className="text-sm sm:text-base">Nickname</FormLabel>
                       <FormControl>
-                        <Input {...field} className="border-0 border-b bg-transparent p-0 shadow-none" />
+                        <Input
+                          {...field}
+                          className="border-0 border-b bg-transparent p-0 text-sm shadow-none sm:text-base"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -227,18 +239,22 @@ export default function ProfilePage() {
                   name="code"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Code</FormLabel>
+                      <FormLabel className="text-sm sm:text-base">Code</FormLabel>
                       <FormControl>
-                        <div className="flex items-center gap-2">
-                          <Input {...field} readOnly className="border-0 border-b bg-transparent p-0 shadow-none" />
+                        <div className="flex items-center gap-1.5 sm:gap-2">
+                          <Input
+                            {...field}
+                            readOnly
+                            className="border-0 border-b bg-transparent p-0 text-sm shadow-none sm:text-base"
+                          />
                           <Button
                             type="button"
                             variant="ghost"
                             size="icon"
                             onClick={handleCopyCode}
-                            className="h-6 w-6"
+                            className="h-5 w-5 sm:h-6 sm:w-6"
                           >
-                            <Copy className="h-4 w-4" />
+                            <Copy className="h-3 w-3 sm:h-4 sm:w-4" />
                           </Button>
                         </div>
                       </FormControl>
@@ -252,7 +268,7 @@ export default function ProfilePage() {
                   name="phone"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Phone</FormLabel>
+                      <FormLabel className="text-sm sm:text-base">Phone</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
@@ -260,7 +276,7 @@ export default function ProfilePage() {
                             const formatted = formatPhone(e.target.value);
                             field.onChange(formatted);
                           }}
-                          className="border-0 border-b bg-transparent p-0 shadow-none"
+                          className="border-0 border-b bg-transparent p-0 text-sm shadow-none sm:text-base"
                         />
                       </FormControl>
                       <FormMessage />
@@ -273,7 +289,7 @@ export default function ProfilePage() {
                   name="address"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Address</FormLabel>
+                      <FormLabel className="text-sm sm:text-base">Address</FormLabel>
                       <FormControl>
                         <AddressSearch
                           value={field.value ?? ""}
@@ -293,9 +309,12 @@ export default function ProfilePage() {
                   name="sns"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>SNS</FormLabel>
+                      <FormLabel className="text-sm sm:text-base">SNS</FormLabel>
                       <FormControl>
-                        <Input {...field} className="border-0 border-b bg-transparent p-0 shadow-none" />
+                        <Input
+                          {...field}
+                          className="border-0 border-b bg-transparent p-0 text-sm shadow-none sm:text-base"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -307,12 +326,12 @@ export default function ProfilePage() {
                   name="detailAddress"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Detail</FormLabel>
+                      <FormLabel className="text-sm sm:text-base">Detail</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
                           ref={detailAddressRef}
-                          className="border-0 border-b bg-transparent p-0 shadow-none"
+                          className="border-0 border-b bg-transparent p-0 text-sm shadow-none sm:text-base"
                         />
                       </FormControl>
                       <FormMessage />
@@ -321,16 +340,20 @@ export default function ProfilePage() {
                 />
               </div>
 
-              <div className="flex justify-end gap-4">
+              <div className="flex flex-col-reverse justify-end gap-2 sm:flex-row sm:gap-3 md:gap-4">
                 <Button
                   type="button"
                   variant="outline"
-                  className="border-primary text-primary hover:text-primary rounded-full"
+                  className="border-primary text-primary hover:text-primary w-full rounded-full text-sm sm:w-auto sm:text-base"
                   onClick={() => setIsDeleteDialogOpen(true)}
                 >
                   Delete
                 </Button>
-                <Button type="submit" className="rounded-full" disabled={isSubmitting}>
+                <Button
+                  type="submit"
+                  className="w-full rounded-full text-sm sm:w-auto sm:text-base"
+                  disabled={isSubmitting}
+                >
                   {isSubmitting ? "저장 중..." : "Save"}
                 </Button>
               </div>

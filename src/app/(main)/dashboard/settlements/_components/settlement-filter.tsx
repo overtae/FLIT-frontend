@@ -61,19 +61,20 @@ export function SettlementFilter({
           <span className="sr-only">필터 설정</span>
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="max-h-[80vh] w-[280px] overflow-y-auto p-4" align="end">
-        <div className="space-y-4">
-          <div className="space-y-3">
+      <PopoverContent className="max-h-[80vh] w-[calc(100vw-2rem)] overflow-y-auto p-3 sm:w-[280px] sm:p-4" align="end">
+        <div className="space-y-3 sm:space-y-4">
+          <div className="space-y-2 sm:space-y-3">
             {Object.entries(SERVICE_CONFIG.settlementStatus).map(([statusKey, statusLabel]) => (
               <div key={statusKey} className="flex items-center space-x-2">
                 <Checkbox
                   id={`filter-${statusKey}`}
                   checked={selectedStatuses.includes(statusKey as SettlementStatus)}
                   onCheckedChange={() => toggleStatus(statusKey as SettlementStatus)}
+                  className="h-4 w-4 sm:h-5 sm:w-5"
                 />
                 <Label
                   htmlFor={`filter-${statusKey}`}
-                  className="cursor-pointer text-sm leading-none font-normal peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  className="cursor-pointer text-xs leading-none font-normal peer-disabled:cursor-not-allowed peer-disabled:opacity-70 sm:text-sm"
                 >
                   {statusLabel}
                 </Label>
@@ -91,8 +92,9 @@ export function SettlementFilter({
                     onDateChange(null);
                   }
                 }}
+                className="h-4 w-4 sm:h-5 sm:w-5"
               />
-              <Label htmlFor="filter-date" className="cursor-pointer text-sm font-normal">
+              <Label htmlFor="filter-date" className="cursor-pointer text-xs font-normal sm:text-sm">
                 날짜선택
               </Label>
             </div>
@@ -110,7 +112,7 @@ export function SettlementFilter({
                   }
                 }}
                 initialFocus
-                className="p-2"
+                className="p-1 sm:p-2"
               />
             </div>
           )}
@@ -118,7 +120,7 @@ export function SettlementFilter({
           <div className="flex flex-col gap-2 pt-2">
             <Button
               onClick={handleReset}
-              className="h-8 w-full rounded-full bg-gray-600 text-xs text-white hover:bg-gray-700"
+              className="h-7 w-full rounded-full bg-gray-600 text-xs text-white hover:bg-gray-700 sm:h-8"
             >
               Reset
             </Button>

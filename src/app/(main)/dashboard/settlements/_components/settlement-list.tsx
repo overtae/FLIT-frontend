@@ -251,8 +251,8 @@ export function SettlementList() {
   }
 
   return (
-    <div className="w-full space-y-6">
-      <div className="grid grid-cols-2 gap-3">
+    <div className="w-full space-y-4 sm:space-y-6">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-3">
         <SettlementFilters
           selectedPeriod={selectedPeriod}
           onPeriodChange={handlePeriodChange}
@@ -271,7 +271,7 @@ export function SettlementList() {
           onDateChange={handleDateChange}
         />
 
-        <div className="h-full">
+        <div className="h-full min-h-[300px] sm:min-h-0">
           <SettlementCalendar
             selectedDate={selectedDate}
             onDateSelect={handleDateChange}
@@ -287,8 +287,8 @@ export function SettlementList() {
         </div>
       </div>
 
-      <div className="w-full space-y-4">
-        <div className="overflow-hidden rounded-md border">
+      <div className="w-full space-y-3 sm:space-y-4">
+        <div className="overflow-x-auto rounded-md border">
           <DataTableWithSelection
             table={table}
             rowSelection={rowSelection}
@@ -300,9 +300,15 @@ export function SettlementList() {
           table={table}
           forceUpdateKey={`${pageIndex}-${pageCount}`}
           leftSlot={
-            <Button variant="outline" onClick={handleDownloadAll} disabled={Object.keys(rowSelection).length === 0}>
-              <Download className="mr-2 h-4 w-4" />
-              전체 다운로드
+            <Button
+              variant="outline"
+              onClick={handleDownloadAll}
+              disabled={Object.keys(rowSelection).length === 0}
+              className="text-xs sm:text-sm"
+            >
+              <Download className="mr-1.5 h-3.5 w-3.5 sm:mr-2 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">전체 다운로드</span>
+              <span className="sm:hidden">다운로드</span>
             </Button>
           }
         />

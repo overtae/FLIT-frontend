@@ -143,10 +143,10 @@ export function GenderTab({ selectedDate }: GenderTabProps) {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-5 gap-6">
-        <div className="col-span-3">
-          <ResponsiveContainer width="100%" height={300}>
+    <div className="space-y-4 sm:space-y-6">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-5 sm:gap-6">
+        <div className="col-span-1 sm:col-span-3">
+          <ResponsiveContainer width="100%" height={250} className="sm:h-[300px]">
             <PieChart>
               <Pie
                 data={genderData}
@@ -154,30 +154,31 @@ export function GenderTab({ selectedDate }: GenderTabProps) {
                 cy="50%"
                 labelLine={false}
                 label={renderCustomLabel}
-                outerRadius={100}
-                innerRadius={50}
+                outerRadius={80}
+                innerRadius={40}
                 fill="#8884d8"
                 dataKey="value"
+                className="sm:outerRadius-[100px] sm:innerRadius-[50px]"
               >
                 {genderData.map((entry) => (
                   <Cell key={`cell-${entry.name}`} fill={GENDER_COLORS[entry.name as keyof typeof GENDER_COLORS]} />
                 ))}
               </Pie>
-              <Tooltip />
+              <Tooltip contentStyle={{ fontSize: "12px" }} />
             </PieChart>
           </ResponsiveContainer>
         </div>
 
-        <div className="col-span-1 flex flex-col justify-center gap-3">
-          <div className="flex flex-col gap-3">
+        <div className="col-span-1 flex flex-col justify-center gap-2 sm:gap-3">
+          <div className="flex flex-col gap-2 sm:gap-3">
             {genderData.map((entry) => (
               <div key={entry.name} className="flex items-center gap-2">
                 <div
-                  className="h-4 w-4 rounded"
+                  className="h-3 w-3 rounded sm:h-4 sm:w-4"
                   style={{ backgroundColor: GENDER_COLORS[entry.name as keyof typeof GENDER_COLORS] }}
                 />
-                <span className="text-sm">{entry.name}</span>
-                <span className="text-muted-foreground text-sm">{entry.value}%</span>
+                <span className="text-xs sm:text-sm">{entry.name}</span>
+                <span className="text-muted-foreground text-xs sm:text-sm">{entry.value}%</span>
               </div>
             ))}
           </div>
@@ -185,32 +186,32 @@ export function GenderTab({ selectedDate }: GenderTabProps) {
 
         <div className="col-span-1 h-full gap-0">
           <div className="flex flex-col items-center space-y-0">
-            <h4 className="text-sm font-medium">순위</h4>
+            <h4 className="text-xs font-medium sm:text-sm">순위</h4>
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild className="place-self-end">
                 <Button variant="ghost" size="sm" className="px-0 text-xs">
                   전체보기
                 </Button>
               </DialogTrigger>
-              <DialogContent className="min-w-4xl">
-                <DialogHeader className="relative mb-4">
-                  <DialogTitle className="text-center">전체 순위</DialogTitle>
+              <DialogContent className="max-h-[90vh] w-[95vw] max-w-4xl p-4 sm:p-6">
+                <DialogHeader className="relative mb-3 sm:mb-4">
+                  <DialogTitle className="text-center text-sm sm:text-base">전체 순위</DialogTitle>
                   <Button
                     size="icon"
                     onClick={() => setIsDialogOpen(false)}
-                    className="bg-muted text-foreground hover:bg-muted-hover absolute -top-2 right-0 rounded-full"
+                    className="bg-muted text-foreground hover:bg-muted-hover absolute -top-2 right-0 h-6 w-6 rounded-full sm:h-8 sm:w-8"
                   >
-                    <X />
+                    <X className="h-3 w-3 sm:h-4 sm:w-4" />
                   </Button>
                 </DialogHeader>
-                <div className="max-h-[500px] overflow-y-auto">
-                  <div className="grid w-full grid-flow-col grid-cols-2 grid-rows-6 gap-6">
+                <div className="max-h-[400px] overflow-y-auto sm:max-h-[500px]">
+                  <div className="grid w-full grid-cols-1 gap-3 sm:grid-flow-col sm:grid-cols-2 sm:grid-rows-6 sm:gap-6">
                     {allItems.map((item) => (
-                      <div key={item.rank} className="flex items-center gap-4">
-                        <div className="w-16 text-center">{item.rank}</div>
-                        <div className="border-border flex flex-1 items-center justify-between gap-2 rounded-lg border p-3">
-                          <div>{item.name}</div>
-                          <div>{item.count.toLocaleString()}건</div>
+                      <div key={item.rank} className="flex items-center gap-2 sm:gap-4">
+                        <div className="w-12 text-center text-xs sm:w-16 sm:text-sm">{item.rank}</div>
+                        <div className="border-border flex flex-1 items-center justify-between gap-2 rounded-lg border p-2 text-xs sm:p-3 sm:text-sm">
+                          <div className="truncate">{item.name}</div>
+                          <div className="shrink-0">{item.count.toLocaleString()}건</div>
                         </div>
                       </div>
                     ))}
@@ -218,15 +219,15 @@ export function GenderTab({ selectedDate }: GenderTabProps) {
                 </div>
               </DialogContent>
             </Dialog>
-            <div className="space-y-2">
+            <div className="w-full space-y-2">
               {topItems.map((item) => (
-                <div key={item.rank} className="min-w-60">
-                  <div className="flex items-center gap-4">
-                    <div className="text-sm font-semibold">{item.rank}위</div>
+                <div key={item.rank} className="w-full">
+                  <div className="flex items-center gap-2 sm:gap-4">
+                    <div className="text-xs font-semibold sm:text-sm">{item.rank}위</div>
 
-                    <div className="border-border flex flex-1 items-center justify-between gap-2 rounded-lg border p-3">
-                      <span className="text-sm">{item.name}</span>
-                      <span className="text-sm font-semibold">{item.count.toLocaleString()}건</span>
+                    <div className="border-border flex flex-1 items-center justify-between gap-2 rounded-lg border p-2 sm:p-3">
+                      <span className="truncate text-xs sm:text-sm">{item.name}</span>
+                      <span className="shrink-0 text-xs font-semibold sm:text-sm">{item.count.toLocaleString()}건</span>
                     </div>
                   </div>
                 </div>
@@ -236,10 +237,17 @@ export function GenderTab({ selectedDate }: GenderTabProps) {
         </div>
       </div>
 
-      <ResponsiveContainer width="100%" height={400}>
-        <BarChart data={stackedBarData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+      <ResponsiveContainer width="100%" height={300} className="sm:h-[400px]">
+        <BarChart data={stackedBarData} margin={{ top: 10, right: 10, left: 10, bottom: 60 }}>
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="item" angle={-45} textAnchor="end" height={100} />
+          <XAxis
+            dataKey="item"
+            angle={-45}
+            textAnchor="end"
+            height={80}
+            tick={{ fontSize: 10 }}
+            className="sm:h-[100px] sm:text-xs"
+          />
           <YAxis hide />
           <Tooltip
             formatter={(value: number) => `${value}건`}
@@ -247,9 +255,10 @@ export function GenderTab({ selectedDate }: GenderTabProps) {
               backgroundColor: "hsl(var(--card))",
               border: "1px solid hsl(var(--border))",
               borderRadius: "0.5rem",
+              fontSize: "12px",
             }}
           />
-          <Legend />
+          <Legend wrapperStyle={{ fontSize: "12px" }} />
           <Bar dataKey="여성" stackId="a" fill={GENDER_COLORS.여성} className="aspect-square" />
           <Bar dataKey="남성" stackId="a" fill={GENDER_COLORS.남성} />
           <Bar dataKey="기타" stackId="a" fill={GENDER_COLORS.기타} fillOpacity={0.5} />

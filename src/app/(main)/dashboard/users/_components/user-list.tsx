@@ -152,11 +152,16 @@ export function UserList({ category = "all" }: UserListProps) {
 
   return (
     <>
-      <div className="flex min-h-screen flex-col space-y-4">
-        <div className="flex items-center justify-between pt-16">
-          <Subtitle>User List</Subtitle>
-          <div className="flex items-center gap-2">
-            <SearchInput value={search} onChange={setSearch} resetPagination={resetPagination} />
+      <div className="flex min-h-screen flex-col space-y-3 sm:space-y-4">
+        <div className="flex flex-col gap-3 pt-4 sm:flex-row sm:items-center sm:justify-between sm:pt-8 md:pt-16">
+          <Subtitle className="text-sm sm:text-base">User List</Subtitle>
+          <div className="flex w-full flex-row items-center gap-2 sm:w-auto">
+            <SearchInput
+              value={search}
+              onChange={setSearch}
+              resetPagination={resetPagination}
+              className="w-full sm:w-[200px]"
+            />
             <UserFilter
               category={category}
               selectedGrades={selectedGrades}
@@ -172,7 +177,7 @@ export function UserList({ category = "all" }: UserListProps) {
             />
           </div>
         </div>
-        <div className="flex-1 rounded-md">
+        <div className="flex-1 overflow-x-auto rounded-md">
           <DataTable table={table} columns={columns} />
         </div>
         <div className="flex justify-center py-4">

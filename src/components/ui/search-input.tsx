@@ -36,7 +36,7 @@ export function SearchInput({
   };
 
   return (
-    <div className={cn("relative", !className?.includes("w-") && iconPosition === "left" ? "w-[200px]" : !className?.includes("w-") && "w-[300px]")}>
+    <div className={cn("relative w-full", !className?.includes("w-") && iconPosition === "left" ? "w-[200px]" : !className?.includes("w-") && "w-[300px]")}>
       <Input
         placeholder={placeholder}
         value={value}

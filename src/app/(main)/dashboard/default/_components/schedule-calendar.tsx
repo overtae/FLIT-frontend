@@ -53,7 +53,7 @@ export function ScheduleCalendar({
     const isCurrentMonth = isSameMonth(date, currentMonth);
 
     return cn(
-      "group relative flex aspect-square w-full flex-col items-center justify-center rounded-2xl text-lg transition-all",
+      "group relative flex aspect-square w-full flex-col items-center justify-center rounded-lg sm:rounded-2xl text-sm sm:text-base md:text-lg transition-all",
       "bg-white shadow-[2px_2px_10px_rgba(0,0,0,0.03)] hover:-translate-y-0.5 hover:shadow-md",
       !isCurrentMonth && "text-gray-200",
       isCurrentMonth && "text-gray-500",
@@ -68,7 +68,7 @@ export function ScheduleCalendar({
     const isCurrentMonth = isSameMonth(date, currentMonth);
 
     return cn(
-      "absolute top-2 right-2 h-1.5 w-1.5 rounded-full bg-red-400 opacity-80",
+      "absolute top-1 right-1 h-1 w-1 rounded-full bg-red-400 opacity-80 sm:top-2 sm:right-2 sm:h-1.5 sm:w-1.5",
       isSelected && "bg-red-500",
       !isCurrentMonth && "opacity-30",
     );
@@ -87,20 +87,20 @@ export function ScheduleCalendar({
   };
 
   return (
-    <div className={cn("flex w-full flex-col gap-8 p-4", className)}>
-      <div className="flex items-center justify-center gap-8">
+    <div className={cn("flex w-full flex-col gap-3 p-2 sm:gap-6 sm:p-4", className)}>
+      <div className="flex items-center justify-center gap-3 sm:gap-8">
         <button onClick={prevMonth} className="text-gray-400 transition-colors hover:text-gray-900">
-          <ChevronLeft className="h-6 w-6" />
+          <ChevronLeft className="h-5 w-5 sm:h-6 sm:w-6" />
         </button>
-        <span className="text-xl font-medium text-gray-700">{format(currentMonth, "M월")}</span>
+        <span className="text-base font-medium text-gray-700 sm:text-lg md:text-xl">{format(currentMonth, "M월")}</span>
         <button onClick={nextMonth} className="text-gray-400 transition-colors hover:text-gray-900">
-          <ChevronRight className="h-6 w-6" />
+          <ChevronRight className="h-5 w-5 sm:h-6 sm:w-6" />
         </button>
       </div>
 
-      <div className="grid w-full grid-cols-7 gap-3 sm:gap-4">
+      <div className="grid w-full grid-cols-7 gap-1.5 sm:gap-2 md:gap-3 lg:gap-4">
         {weekDays.map((day) => (
-          <div key={day} className="text-center text-xs font-medium text-gray-400">
+          <div key={day} className="text-center text-[10px] font-medium text-gray-400 sm:text-xs">
             {day}
           </div>
         ))}

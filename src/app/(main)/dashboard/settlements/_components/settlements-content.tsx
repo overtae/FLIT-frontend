@@ -11,7 +11,7 @@ interface SettlementsContentProps {
 export function SettlementsContent({ initialVerified }: SettlementsContentProps) {
   return (
     <PasswordVerificationProvider initialVerified={initialVerified}>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         <SettlementList />
       </div>
     </PasswordVerificationProvider>

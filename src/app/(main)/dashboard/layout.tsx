@@ -5,7 +5,7 @@ import { ReactNode, useEffect, useState } from "react";
 import { AccountDropdown } from "@/app/(main)/dashboard/_components/sidebar/account-dropdown";
 import { AppSidebar } from "@/app/(main)/dashboard/_components/sidebar/app-sidebar";
 import { NotificationPopover } from "@/app/(main)/dashboard/_components/sidebar/notification-popover";
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import { getUserMe } from "@/service/auth.service";
 import type { UserMeResponse } from "@/types/auth.type";
@@ -46,15 +46,18 @@ export default function Layout({ children }: Readonly<{ children: ReactNode }>) 
           "group-has-data-[collapsible=icon]/sidebar-wrapper:h-12",
         )}
       >
-        <div className="flex w-full items-center justify-end px-4 lg:px-6">
-          <div className="flex items-center gap-2">
+        <div className="flex w-full items-center justify-between px-3 sm:px-4 lg:px-6">
+          <div className="flex items-center">
+            <SidebarTrigger className="md:hidden" />
+          </div>
+          <div className="flex items-center gap-1 sm:gap-2">
             <AccountDropdown user={user} />
             <NotificationPopover />
           </div>
         </div>
       </header>
       <SidebarInset data-content-layout={contentLayout} className={cn("mt-12")}>
-        <div className="bg-background h-full p-4 md:p-8">{children}</div>
+        <div className="bg-background h-full px-4 py-3 sm:p-4 md:p-6 lg:p-8">{children}</div>
       </SidebarInset>
     </SidebarProvider>
   );

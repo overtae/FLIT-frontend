@@ -103,35 +103,48 @@ export function YearlySalesChart(_props: YearlySalesChartProps) {
   }
 
   return (
-    <div className="grid grid-cols-5 gap-6">
-      <div className="col-span-2">
-        <div className="mb-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="font-semibold">{selectedYear} 분기별 총매출</span>
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-5 sm:gap-6">
+      <div className="col-span-1 sm:col-span-2">
+        <div className="mb-3 flex flex-col gap-2 sm:mb-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className="text-sm font-semibold sm:text-base">{selectedYear} 분기별 총매출</span>
             <Select value={selectedYear} onValueChange={setSelectedYear}>
-              <SelectTrigger className="w-[100px]">
+              <SelectTrigger className="w-[90px] text-xs sm:w-[100px] sm:text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 {Array.from({ length: 4 }, (_, i) => currentYear - 3 + i).map((year) => (
-                  <SelectItem key={year} value={String(year)}>
+                  <SelectItem key={year} value={String(year)} className="text-xs sm:text-sm">
                     {year}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
-          <Button variant="ghost" size="sm" onClick={() => setIsQuarterModalOpen(true)}>
-            더보기 <ChevronRight className="ml-1 h-4 w-4" />
+          <Button
+            variant="ghost"
+            size="sm"
+            className="self-end text-xs sm:text-sm"
+            onClick={() => setIsQuarterModalOpen(true)}
+          >
+            더보기 <ChevronRight className="ml-1 h-3.5 w-3.5 sm:h-4 sm:w-4" />
           </Button>
         </div>
-        <ResponsiveContainer width="100%" height={400}>
-          <BarChart data={quarterlyData} margin={{ ...DEFAULT_CHART_MARGIN, top: 20 }}>
+        <ResponsiveContainer width="100%" height={300} className="sm:h-[400px]">
+          <BarChart data={quarterlyData} margin={{ ...DEFAULT_CHART_MARGIN, top: 10, right: 5, left: 5, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="quarter" />
-            <YAxis tickFormatter={formatNumberShort} width={60} />
-            <Tooltip formatter={(value: number) => `${formatNumberShort(value)}원`} />
-            <Legend />
+            <XAxis dataKey="quarter" tick={{ fontSize: 10 }} className="sm:text-xs" />
+            <YAxis
+              tickFormatter={formatNumberShort}
+              width={50}
+              tick={{ fontSize: 10 }}
+              className="sm:w-[60px] sm:text-xs"
+            />
+            <Tooltip
+              formatter={(value: number) => `${formatNumberShort(value)}원`}
+              contentStyle={{ fontSize: "12px" }}
+            />
+            <Legend wrapperStyle={{ fontSize: "12px" }} />
             <Bar dataKey="card" stackId="a" fill="var(--chart-1)" name="카드" />
             <Bar dataKey="pos" stackId="a" fill="var(--chart-2)" name="현장결제" />
             <Bar dataKey="transfer" stackId="a" fill="var(--chart-3)" name="계좌이체" />
@@ -139,36 +152,36 @@ export function YearlySalesChart(_props: YearlySalesChartProps) {
         </ResponsiveContainer>
       </div>
 
-      <div className="col-span-3">
-        <div className="mb-4 flex items-center justify-between">
-          <span className="font-semibold">연도별 추이 비교</span>
+      <div className="col-span-1 sm:col-span-3">
+        <div className="mb-3 flex flex-col gap-2 sm:mb-4 sm:flex-row sm:items-center sm:justify-between">
+          <span className="text-sm font-semibold sm:text-base">연도별 추이 비교</span>
           <div className="flex items-center gap-2">
             <Select
               value={selectedYearRange[0]}
               onValueChange={(value) => setSelectedYearRange([value, selectedYearRange[1]])}
             >
-              <SelectTrigger className="w-[100px]">
+              <SelectTrigger className="w-full text-xs sm:w-[100px] sm:text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 {Array.from({ length: 4 }, (_, i) => currentYear - 4 + i).map((year) => (
-                  <SelectItem key={year} value={String(year)}>
+                  <SelectItem key={year} value={String(year)} className="text-xs sm:text-sm">
                     {year}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            <span className="text-muted-foreground">~</span>
+            <span className="text-muted-foreground text-xs sm:text-sm">~</span>
             <Select
               value={selectedYearRange[1]}
               onValueChange={(value) => setSelectedYearRange([selectedYearRange[0], value])}
             >
-              <SelectTrigger className="w-[100px]">
+              <SelectTrigger className="w-full text-xs sm:w-[100px] sm:text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 {Array.from({ length: 4 }, (_, i) => currentYear - 3 + i).map((year) => (
-                  <SelectItem key={year} value={String(year)}>
+                  <SelectItem key={year} value={String(year)} className="text-xs sm:text-sm">
                     {year}
                   </SelectItem>
                 ))}
@@ -176,18 +189,30 @@ export function YearlySalesChart(_props: YearlySalesChartProps) {
             </Select>
           </div>
         </div>
-        <ResponsiveContainer width="100%" height={400}>
-          <LineChart data={yearlyComparisonData} margin={DEFAULT_CHART_MARGIN}>
+        <ResponsiveContainer width="100%" height={300} className="sm:h-[400px]">
+          <LineChart
+            data={yearlyComparisonData}
+            margin={{ ...DEFAULT_CHART_MARGIN, top: 5, right: 5, left: 5, bottom: 5 }}
+          >
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="year" />
-            <YAxis tickFormatter={formatNumberShort} width={60} />
-            <Tooltip formatter={(value: number) => `${formatNumberShort(value)}원`} />
+            <XAxis dataKey="year" tick={{ fontSize: 10 }} className="sm:text-xs" />
+            <YAxis
+              tickFormatter={formatNumberShort}
+              width={50}
+              tick={{ fontSize: 10 }}
+              className="sm:w-[60px] sm:text-xs"
+            />
+            <Tooltip
+              formatter={(value: number) => `${formatNumberShort(value)}원`}
+              contentStyle={{ fontSize: "12px" }}
+            />
             <Line
               type="monotone"
               dataKey="value"
               stroke="var(--chart-1)"
-              strokeWidth={3}
-              dot={{ r: 6, fill: "var(--chart-1)" }}
+              strokeWidth={2}
+              dot={{ r: 4, fill: "var(--chart-1)" }}
+              className="sm:dot:r-[6px] sm:stroke-[3px]"
             />
           </LineChart>
         </ResponsiveContainer>

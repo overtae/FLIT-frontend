@@ -31,7 +31,7 @@ function TabsList({
     <TabsPrimitive.List
       data-slot="tabs-list"
       className={cn(
-        "inline-flex h-auto w-fit items-center justify-center",
+        "inline-flex h-auto w-fit items-center",
         tabStyles.list,
         className
       )}

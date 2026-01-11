@@ -274,10 +274,15 @@ export function TransactionList({ category, subCategory }: TransactionListProps)
 
   return (
     <>
-      <div className="flex min-h-full flex-col space-y-4">
-        <div className="flex items-center justify-end">
-          <div className="flex items-center gap-2">
-            <SearchInput value={search} onChange={setSearch} resetPagination={resetPagination} />
+      <div className="flex min-h-full flex-col space-y-3 sm:space-y-4">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
+          <div className="flex w-full flex-row items-center gap-2 sm:w-auto">
+            <SearchInput
+              value={search}
+              onChange={setSearch}
+              resetPagination={resetPagination}
+              className="flex-1 sm:w-[200px]"
+            />
             <TransactionFilter
               type={category}
               selectedTypes={selectedTypes}
@@ -291,10 +296,10 @@ export function TransactionList({ category, subCategory }: TransactionListProps)
             />
           </div>
         </div>
-        <div className="flex-1 rounded-md">
+        <div className="flex-1 overflow-x-auto rounded-md">
           <DataTableWithSelection table={table} rowSelection={rowSelection} filterKey={filterKey} />
         </div>
-        <div className="border-t px-4 py-4">
+        <div className="border-t px-2 py-3 sm:px-4 sm:py-4">
           <DataTablePagination
             table={table}
             pageCount={pageCount}
@@ -305,8 +310,10 @@ export function TransactionList({ category, subCategory }: TransactionListProps)
                 size="sm"
                 onClick={handleDownloadAll}
                 disabled={Object.keys(rowSelection).length === 0}
+                className="text-xs sm:text-sm"
               >
-                전체 다운로드
+                <span className="hidden sm:inline">전체 다운로드</span>
+                <span className="sm:hidden">다운로드</span>
               </Button>
             }
           />

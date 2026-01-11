@@ -60,7 +60,7 @@ export function UserDetailModal({ open, onOpenChange, user }: UserDetailModalPro
 
   const userTypeLabel = useMemo(() => {
     if (!userDetail) return "";
-    return SERVICE_CONFIG.userType[userDetail.type] || userDetail.type;
+    return SERVICE_CONFIG.userType[userDetail.type] ?? userDetail.type;
   }, [userDetail]);
 
   const gradeLabelMap = useMemo(() => {
@@ -98,7 +98,7 @@ export function UserDetailModal({ open, onOpenChange, user }: UserDetailModalPro
 
       secondColumnFields = [
         { label: "가입일자", value: userDetail.joinDate },
-        { label: "최근 접속일", value: userDetail.lastLoginDate || "-" },
+        { label: "최근 접속일", value: userDetail.lastLoginDate ?? "-" },
         { label: "최근 구매일", value: userDetail.lastPurchaseDate ?? "-" },
       ];
     } else if (userType === "CUSTOMER_OWNER") {
@@ -115,7 +115,7 @@ export function UserDetailModal({ open, onOpenChange, user }: UserDetailModalPro
       secondColumnFields = [
         { label: "사업자번호", value: userDetail.businessNumber ?? "-" },
         { label: "가입일자", value: userDetail.joinDate },
-        { label: "최근 접속일", value: userDetail.lastLoginDate || "-" },
+        { label: "최근 접속일", value: userDetail.lastLoginDate ?? "-" },
         { label: "최근 구매일", value: userDetail.lastPurchaseDate ?? "-" },
       ];
     } else {
@@ -141,7 +141,7 @@ export function UserDetailModal({ open, onOpenChange, user }: UserDetailModalPro
           hasDownload: !!userDetail.businessLicenseUrl,
           fileName: businessLicenseFileName,
         },
-        { label: "최근 접속일", value: userDetail.lastLoginDate || "-" },
+        { label: "최근 접속일", value: userDetail.lastLoginDate ?? "-" },
         { label: "최근 등록일", value: userDetail.joinDate },
       ];
     }
@@ -198,39 +198,42 @@ export function UserDetailModal({ open, onOpenChange, user }: UserDetailModalPro
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent showCloseButton={false} className="w-full max-w-5xl gap-0 overflow-hidden p-0 sm:max-w-5xl">
+      <DialogContent showCloseButton={false} className="max-h-[90vh] w-[95vw] max-w-5xl gap-0 overflow-hidden p-0">
         <DialogHeader className="sr-only">
           <DialogTitle>유저 상세 정보</DialogTitle>
         </DialogHeader>
 
-        <div className="flex max-h-[80vh] flex-col sm:flex-row">
-          <div className="flex w-full flex-col items-center justify-center gap-4 bg-white p-4 sm:w-[250px] sm:p-6">
-            <Avatar className="h-24 w-24 sm:h-32 sm:w-32">
+        <div className="flex max-h-[90vh] flex-col overflow-hidden sm:max-h-[80vh] sm:flex-row">
+          <div className="flex w-full flex-col items-center justify-center gap-3 bg-white p-3 sm:w-[250px] sm:gap-4 sm:p-6">
+            <Avatar className="h-20 w-20 sm:h-24 sm:w-24 md:h-32 md:w-32">
               <AvatarImage src={userDetail.profileImageUrl} />
-              <AvatarFallback className="bg-gray-200 text-xl text-gray-400 sm:text-2xl">
+              <AvatarFallback className="bg-gray-200 text-lg text-gray-400 sm:text-xl md:text-2xl">
                 {getInitials(userDetail.name)}
               </AvatarFallback>
             </Avatar>
 
             <div className="flex items-center gap-2 text-center">
-              <p className="text-base font-medium">{selectedGradeLabel}</p>
+              <p className="text-sm font-medium sm:text-base">{selectedGradeLabel}</p>
               <Popover>
                 <PopoverTrigger asChild>
                   <Badge
                     variant="outline"
-                    className="hover:bg-accent border-main bg-background text-main cursor-pointer rounded-md px-2 py-0.5 text-xs transition-colors"
+                    className="hover:bg-accent border-main bg-background text-main cursor-pointer rounded-md px-2 py-0.5 text-[10px] transition-colors sm:text-xs"
                   >
                     수정
                   </Badge>
                 </PopoverTrigger>
-                <PopoverContent className="w-44 p-0 px-4" align="start">
-                  <div className="flex flex-col items-center space-y-4 p-4">
-                    <h4 className="text-sm leading-none font-medium">등급수정</h4>
+                <PopoverContent className="w-[calc(100vw-2rem)] p-0 px-4 sm:w-44" align="start">
+                  <div className="flex flex-col items-center space-y-3 p-3 sm:space-y-4 sm:p-4">
+                    <h4 className="text-xs leading-none font-medium sm:text-sm">등급수정</h4>
                     <RadioGroup value={selectedGrade} onValueChange={setSelectedGrade} className="grid gap-2">
                       {gradeEntries.map(([gradeKey, gradeLabel]) => (
                         <div key={gradeKey} className="flex items-center space-x-2">
-                          <RadioGroupItem value={gradeKey} id={`grade-${gradeKey}`} />
-                          <Label htmlFor={`grade-${gradeKey}`} className="cursor-pointer text-sm font-normal">
+                          <RadioGroupItem value={gradeKey} id={`grade-${gradeKey}`} className="h-4 w-4 sm:h-5 sm:w-5" />
+                          <Label
+                            htmlFor={`grade-${gradeKey}`}
+                            className="cursor-pointer text-xs font-normal sm:text-sm"
+                          >
                             {gradeLabel}
                           </Label>
                         </div>
@@ -240,7 +243,7 @@ export function UserDetailModal({ open, onOpenChange, user }: UserDetailModalPro
                       <Button
                         variant="outline"
                         size="sm"
-                        className="h-8 w-full rounded-full border-0 bg-gray-100 text-gray-600 hover:bg-gray-200"
+                        className="h-7 w-full rounded-full border-0 bg-gray-100 text-xs text-gray-600 hover:bg-gray-200 sm:h-8 sm:text-sm"
                         onClick={() => setSelectedGrade(userDetail.grade.toUpperCase())}
                         disabled={isUpdating}
                       >
@@ -248,7 +251,7 @@ export function UserDetailModal({ open, onOpenChange, user }: UserDetailModalPro
                       </Button>
                       <Button
                         size="sm"
-                        className="h-8 w-full rounded-full border border-gray-200 bg-white text-gray-900 shadow-sm hover:bg-gray-50"
+                        className="h-7 w-full rounded-full border border-gray-200 bg-white text-xs text-gray-900 shadow-sm hover:bg-gray-50 sm:h-8 sm:text-sm"
                         onClick={handleGradeUpdate}
                         disabled={isUpdating}
                       >
@@ -261,48 +264,52 @@ export function UserDetailModal({ open, onOpenChange, user }: UserDetailModalPro
             </div>
           </div>
 
-          <div className="custom-scrollbar flex-1 overflow-y-auto bg-white px-4 py-6 sm:px-8 sm:py-8">
+          <div className="custom-scrollbar flex-1 overflow-y-auto bg-white px-3 py-4 sm:px-8 sm:py-8">
             {isLoading ? (
               <div className="flex items-center justify-center py-12">
                 <div className="text-muted-foreground">Loading...</div>
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-x-8 gap-y-4 md:grid-cols-2">
-                <div className="space-y-4">
+              <div className="grid grid-cols-1 gap-x-8 gap-y-3 sm:gap-y-4 md:grid-cols-2">
+                <div className="space-y-3 sm:space-y-4">
                   {firstColumnFields.map((field) => (
-                    <div key={field.label} className="flex items-center gap-4">
-                      <Label className="text-muted-foreground w-24 shrink-0 text-xs font-normal">{field.label}</Label>
+                    <div key={field.label} className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+                      <Label className="text-muted-foreground w-20 shrink-0 text-xs font-normal sm:w-24">
+                        {field.label}
+                      </Label>
                       {field.isTextarea ? (
                         <Textarea
                           value={field.value}
                           readOnly
                           rows={2}
-                          className="pointer-events-none h-auto resize-none border-gray-200 bg-gray-50 text-center text-sm"
+                          className="pointer-events-none h-auto resize-none border-gray-200 bg-gray-50 text-left text-xs sm:text-center sm:text-sm"
                         />
                       ) : (
                         <Input
                           value={field.value}
                           readOnly
-                          className="pointer-events-none h-9 border-gray-200 bg-gray-50 text-center text-sm"
+                          className="pointer-events-none h-8 border-gray-200 bg-gray-50 text-left text-xs sm:h-9 sm:text-center sm:text-sm"
                         />
                       )}
                     </div>
                   ))}
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                   {secondColumnFields.map((field) => (
-                    <div key={field.label} className="flex items-center gap-4">
-                      <Label className="text-muted-foreground w-24 shrink-0 text-xs font-normal">{field.label}</Label>
+                    <div key={field.label} className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+                      <Label className="text-muted-foreground w-20 shrink-0 text-xs font-normal sm:w-24">
+                        {field.label}
+                      </Label>
                       {field.hasDownload ? (
                         <div className="relative w-full grow">
                           <Input
                             value={field.value}
                             readOnly
-                            className="pointer-events-none h-9 flex-1 border-gray-200 bg-gray-50 pr-8 text-center text-sm"
+                            className="pointer-events-none h-8 flex-1 border-gray-200 bg-gray-50 pr-8 text-left text-xs sm:h-9 sm:text-center sm:text-sm"
                           />
                           <Download
-                            className="text-muted-foreground absolute top-2.5 right-2 h-4 w-4 cursor-pointer"
+                            className="text-muted-foreground absolute top-2 right-2 h-3.5 w-3.5 cursor-pointer sm:top-2.5 sm:h-4 sm:w-4"
                             onClick={() => {
                               if (userDetail.businessLicenseUrl) {
                                 window.open(userDetail.businessLicenseUrl, "_blank");
@@ -314,7 +321,7 @@ export function UserDetailModal({ open, onOpenChange, user }: UserDetailModalPro
                         <Input
                           value={field.value}
                           readOnly
-                          className="pointer-events-none h-9 border-gray-200 bg-gray-50 text-center text-sm"
+                          className="pointer-events-none h-8 border-gray-200 bg-gray-50 text-left text-xs sm:h-9 sm:text-center sm:text-sm"
                         />
                       )}
                     </div>
@@ -323,10 +330,10 @@ export function UserDetailModal({ open, onOpenChange, user }: UserDetailModalPro
               </div>
             )}
 
-            <div className="mt-6 flex justify-end gap-2">
+            <div className="mt-4 flex flex-col gap-2 sm:mt-6 sm:flex-row sm:justify-end">
               <Button
                 variant="secondary"
-                className="rounded-md bg-gray-300 px-6 text-white hover:bg-gray-400"
+                className="w-full rounded-md bg-gray-300 px-4 text-xs text-white hover:bg-gray-400 sm:w-auto sm:px-6 sm:text-sm"
                 onClick={handleDelete}
                 disabled={isDeleting}
               >
@@ -334,7 +341,7 @@ export function UserDetailModal({ open, onOpenChange, user }: UserDetailModalPro
               </Button>
               <Button
                 variant="outline"
-                className="rounded-md border-gray-300 bg-white px-6 text-gray-900 hover:bg-gray-50"
+                className="w-full rounded-md border-gray-300 bg-white px-4 text-xs text-gray-900 hover:bg-gray-50 sm:w-auto sm:px-6 sm:text-sm"
                 onClick={() => onOpenChange(false)}
               >
                 닫기

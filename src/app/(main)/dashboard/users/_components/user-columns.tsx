@@ -33,12 +33,14 @@ export const getUserColumns = (onViewDetail: (user: User) => void, category?: st
     cell: ({ row }) => {
       const user = row.original;
       return (
-        <div className="flex items-center gap-2">
-          <Avatar className="h-8 w-8">
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <Avatar className="h-6 w-6 sm:h-8 sm:w-8">
             <AvatarImage src={user.profileImageUrl} />
-            <AvatarFallback className="bg-gray-100 text-[10px] text-gray-500">{getInitials(user.name)}</AvatarFallback>
+            <AvatarFallback className="bg-gray-100 text-[8px] text-gray-500 sm:text-[10px]">
+              {getInitials(user.name)}
+            </AvatarFallback>
           </Avatar>
-          <span className="text-sm font-medium">{user.name}</span>
+          <span className="text-xs font-medium sm:text-sm">{user.name}</span>
         </div>
       );
     },
@@ -46,18 +48,25 @@ export const getUserColumns = (onViewDetail: (user: User) => void, category?: st
   {
     accessorKey: "nickname",
     header: "닉네임(ID)",
-    cell: ({ row }) => <span className="text-muted-foreground text-sm">{row.getValue("nickname")}</span>,
+    cell: ({ row }) => (
+      <span className="text-muted-foreground text-xs break-words sm:text-sm">{row.getValue("nickname")}</span>
+    ),
   },
   {
     accessorKey: "mail",
     header: "Mail",
-    cell: ({ row }) => <span className="text-muted-foreground text-sm">{row.getValue("mail")}</span>,
+    cell: ({ row }) => (
+      <span className="text-muted-foreground text-xs break-words sm:text-sm">{row.getValue("mail")}</span>
+    ),
   },
   {
     accessorKey: "address",
     header: "주소",
     cell: ({ row }) => (
-      <div className="text-muted-foreground max-w-[200px] truncate text-sm" title={row.getValue("address")}>
+      <div
+        className="text-muted-foreground max-w-[150px] truncate text-xs sm:max-w-[200px] sm:text-sm"
+        title={row.getValue("address")}
+      >
         {row.getValue("address")}
       </div>
     ),
@@ -65,12 +74,14 @@ export const getUserColumns = (onViewDetail: (user: User) => void, category?: st
   {
     accessorKey: "phoneNumber",
     header: "대표번호",
-    cell: ({ row }) => <span className="text-muted-foreground text-sm">{row.getValue("phoneNumber")}</span>,
+    cell: ({ row }) => <span className="text-muted-foreground text-xs sm:text-sm">{row.getValue("phoneNumber")}</span>,
   },
   {
     accessorKey: "lastLoginDate",
     header: "Latest",
-    cell: ({ row }) => <span className="text-muted-foreground text-sm">{row.getValue("lastLoginDate") ?? "-"}</span>,
+    cell: ({ row }) => (
+      <span className="text-muted-foreground text-xs sm:text-sm">{row.getValue("lastLoginDate") ?? "-"}</span>
+    ),
   },
   {
     id: "date",
@@ -78,7 +89,9 @@ export const getUserColumns = (onViewDetail: (user: User) => void, category?: st
     cell: ({ row }) => {
       const user = row.original;
       const isSeceder = !!user.secedeDate;
-      return <span className="text-muted-foreground text-sm">{isSeceder ? user.secedeDate : user.joinDate}</span>;
+      return (
+        <span className="text-muted-foreground text-xs sm:text-sm">{isSeceder ? user.secedeDate : user.joinDate}</span>
+      );
     },
   },
   {
@@ -87,11 +100,11 @@ export const getUserColumns = (onViewDetail: (user: User) => void, category?: st
       const user = row.original;
 
       return (
-        <div className="flex items-center justify-end gap-2">
+        <div className="flex items-center justify-end gap-1.5 sm:gap-2">
           <Button
             variant="outline"
             size="sm"
-            className="h-7 rounded-full border-gray-200 px-3 text-xs text-gray-500 hover:bg-gray-50"
+            className="h-6 rounded-full border-gray-200 px-2 text-[10px] text-gray-500 hover:bg-gray-50 sm:h-7 sm:px-3 sm:text-xs"
             onClick={() => onViewDetail(user)}
           >
             Detail

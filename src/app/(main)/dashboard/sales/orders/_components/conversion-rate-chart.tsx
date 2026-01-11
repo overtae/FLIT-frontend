@@ -59,8 +59,8 @@ export function ConversionRateChart({ period, className }: ConversionRateChartPr
   }
 
   return (
-    <div className="flex flex-col items-center justify-center space-y-4">
-      <div className={className ?? "relative h-64 w-64"}>
+    <div className="flex flex-col items-center justify-center space-y-3 sm:space-y-4">
+      <div className={className ?? "relative h-48 w-48 sm:h-64 sm:w-64"}>
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
@@ -79,19 +79,19 @@ export function ConversionRateChart({ period, className }: ConversionRateChartPr
           </PieChart>
         </ResponsiveContainer>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <div className="text-4xl font-bold">{data.current}%</div>
+          <div className="text-2xl font-bold sm:text-4xl">{data.current}%</div>
           <div className="text-muted-foreground text-xs">{periodLabel}</div>
         </div>
       </div>
 
-      <div className="flex w-full items-center justify-center gap-6">
+      <div className="flex w-full items-center justify-center gap-4 sm:gap-6">
         <div className="text-center">
-          <div className="text-muted-foreground text-sm">Last {periodLabel}</div>
-          <div className="text-lg font-bold">{data.last}%</div>
+          <div className="text-muted-foreground text-xs sm:text-sm">Last {periodLabel}</div>
+          <div className="text-base font-bold sm:text-lg">{data.last}%</div>
         </div>
         <div className="text-center">
-          <div className="text-muted-foreground text-sm">This {periodLabel}</div>
-          <div className="text-lg font-bold">{data.current}%</div>
+          <div className="text-muted-foreground text-xs sm:text-sm">This {periodLabel}</div>
+          <div className="text-base font-bold sm:text-lg">{data.current}%</div>
         </div>
       </div>
     </div>

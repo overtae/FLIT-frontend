@@ -62,10 +62,10 @@ export default function Page() {
   }, [selectedDate, schedulesByDate]);
 
   return (
-    <div className="flex h-[calc(100vh-9rem)] flex-col gap-6">
-      <h1 className="text-2xl font-semibold">일정관리</h1>
-      <div className="grid h-full flex-1 grid-cols-1 gap-6 lg:grid-cols-2">
-        <div className="flex h-full flex-col overflow-hidden">
+    <div className="flex min-h-0 flex-col gap-4 sm:gap-6">
+      <h1 className="text-xl font-semibold sm:text-2xl">일정관리</h1>
+      <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2">
+        <div className="flex min-h-0 flex-col overflow-hidden">
           <ScheduleCalendar
             selectedDate={selectedDate}
             onDateSelect={setSelectedDate}
@@ -74,7 +74,7 @@ export default function Page() {
             onMonthChange={setCurrentMonth}
           />
         </div>
-        <div className="flex h-full flex-col overflow-hidden pb-16">
+        <div className="flex min-h-0 flex-col overflow-hidden pb-8 sm:pb-16">
           <ScheduleTimeline schedules={selectedDateSchedules} selectedDate={selectedDate} />
         </div>
       </div>

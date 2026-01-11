@@ -15,9 +15,13 @@ interface TransactionDetailDeliveryInfoProps {
 
 function DeliveryStatusRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center gap-4">
-      <Label className="text-muted-foreground w-24 shrink-0 text-xs font-normal">{label}</Label>
-      <Input value={value} readOnly className="pointer-events-none h-9 border-gray-200 bg-gray-50 text-left text-sm" />
+    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+      <Label className="text-muted-foreground w-20 shrink-0 text-xs font-normal sm:w-24">{label}</Label>
+      <Input
+        value={value}
+        readOnly
+        className="pointer-events-none h-8 border-gray-200 bg-gray-50 text-left text-xs sm:h-9 sm:text-sm"
+      />
     </div>
   );
 }
@@ -25,16 +29,16 @@ function DeliveryStatusRow({ label, value }: { label: string; value: string }) {
 function DeliveryTypeInput({ type, totalAgencyFee }: { type: string; totalAgencyFee?: number }) {
   const typeLabel = SERVICE_CONFIG.transactionType[type as keyof typeof SERVICE_CONFIG.transactionType] ?? type;
   return (
-    <div className="flex items-center gap-4">
-      <Label className="text-muted-foreground w-24 shrink-0 text-xs font-normal">구분</Label>
+    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+      <Label className="text-muted-foreground w-20 shrink-0 text-xs font-normal sm:w-24">구분</Label>
       <div className="relative flex-1">
         <Input
           value={typeLabel}
           readOnly
-          className="pointer-events-none h-9 border-gray-200 bg-gray-50 pr-32 text-left text-sm"
+          className="pointer-events-none h-8 border-gray-200 bg-gray-50 pr-24 text-left text-xs sm:h-9 sm:pr-32 sm:text-sm"
         />
         {type === "BAROGO" && totalAgencyFee && (
-          <span className="absolute top-1/2 right-3 -translate-y-1/2 text-xs text-gray-600">
+          <span className="absolute top-1/2 right-2 -translate-y-1/2 text-[10px] text-gray-600 sm:right-3 sm:text-xs">
             대행료 합계 {totalAgencyFee.toLocaleString()}원
           </span>
         )}
@@ -68,28 +72,28 @@ function DeliveryCostDetail({ deliveryInfo }: { deliveryInfo: NonNullable<Transa
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="ml-28 space-y-2 rounded-md border border-gray-200 bg-gray-50 p-3">
+      <div className="ml-0 space-y-2 rounded-md border border-gray-200 bg-gray-50 p-2 sm:ml-28 sm:p-3">
         {deliveryInfo.deliveryDistance && deliveryInfo.distanceDeliveryAmount && (
-          <div className="flex items-center justify-between text-sm">
+          <div className="flex flex-col gap-1 text-xs sm:flex-row sm:items-center sm:justify-between sm:text-sm">
             <span className="text-gray-600">거리 비례 대행료 (거리{deliveryInfo.deliveryDistance}km)</span>
             <span className="font-medium">{deliveryInfo.distanceDeliveryAmount.toLocaleString()}원</span>
           </div>
         )}
         {deliveryInfo.rainSurcharge && (
-          <div className="flex items-center justify-between text-sm">
+          <div className="flex flex-col gap-1 text-xs sm:flex-row sm:items-center sm:justify-between sm:text-sm">
             <span className="text-gray-600">우천 할증</span>
             <span className="font-medium">{deliveryInfo.rainSurcharge.toLocaleString()}원</span>
           </div>
         )}
         {deliveryInfo.vat && (
-          <div className="flex items-center justify-between text-sm">
+          <div className="flex flex-col gap-1 text-xs sm:flex-row sm:items-center sm:justify-between sm:text-sm">
             <span className="text-gray-600">부가세</span>
             <span className="font-medium">{deliveryInfo.vat.toLocaleString()}원</span>
           </div>
         )}
       </div>
       {estimatedTime && (
-        <div className="text-right text-sm">
+        <div className="text-right text-xs sm:text-sm">
           <span className="font-medium text-blue-600">{estimatedTime}</span>
           배달 예상
         </div>
@@ -105,8 +109,8 @@ export function TransactionDetailDeliveryInfo({
 }: TransactionDetailDeliveryInfoProps) {
   return (
     <div>
-      <h3 className="mb-4 text-sm font-semibold">배달정보</h3>
-      <div className="space-y-4">
+      <h3 className="mb-3 text-xs font-semibold sm:mb-4 sm:text-sm">배달정보</h3>
+      <div className="space-y-3 sm:space-y-4">
         <DeliveryStatusRow
           label="상태"
           value={

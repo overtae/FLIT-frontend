@@ -79,58 +79,60 @@ export function SearchTrendTable({ period, selectedDate }: SearchTrendTableProps
   const bottom5 = searchTrendData.slice(5, 10);
 
   return (
-    <div className="grid w-full grid-cols-2 gap-4">
-      <div>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-12"></TableHead>
-              <TableHead className="align-top">Keyword</TableHead>
-              <TableHead className="text-right align-top">Search</TableHead>
-              <TableHead className="text-center">
-                Bounce rate
-                <br />
-                <span className="text-xs">이탈률</span>
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {top5.map((item) => (
-              <TableRow key={item.rank}>
-                <TableCell className="w-12 text-center text-sm">{item.rank}</TableCell>
-                <TableCell className="text-sm">{item.keyword}</TableCell>
-                <TableCell className="text-right text-sm">{item.searchCount.toLocaleString()}</TableCell>
-                <TableCell className="text-center text-sm">{item.bounceRate}%</TableCell>
+    <div className="w-full overflow-x-auto">
+      <div className="grid min-w-max grid-cols-1 gap-4 sm:grid-cols-2">
+        <div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-10 text-xs sm:w-12 sm:text-sm"></TableHead>
+                <TableHead className="align-top text-xs sm:text-sm">Keyword</TableHead>
+                <TableHead className="text-right align-top text-xs sm:text-sm">Search</TableHead>
+                <TableHead className="text-center text-xs sm:text-sm">
+                  Bounce rate
+                  <br />
+                  <span className="text-xs">이탈률</span>
+                </TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-      <div>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-12"></TableHead>
-              <TableHead className="align-top">Keyword</TableHead>
-              <TableHead className="text-right align-top">Search</TableHead>
-              <TableHead className="text-center">
-                Bounce rate
-                <br />
-                <span className="text-xs">이탈률</span>
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {bottom5.map((item) => (
-              <TableRow key={item.rank}>
-                <TableCell className="w-12 text-center text-sm">{item.rank}</TableCell>
-                <TableCell className="text-sm">{item.keyword}</TableCell>
-                <TableCell className="text-right text-sm">{item.searchCount.toLocaleString()}</TableCell>
-                <TableCell className="text-center text-sm">{item.bounceRate}%</TableCell>
+            </TableHeader>
+            <TableBody>
+              {top5.map((item) => (
+                <TableRow key={item.rank}>
+                  <TableCell className="w-10 text-center text-xs sm:w-12 sm:text-sm">{item.rank}</TableCell>
+                  <TableCell className="text-xs sm:text-sm">{item.keyword}</TableCell>
+                  <TableCell className="text-right text-xs sm:text-sm">{item.searchCount.toLocaleString()}</TableCell>
+                  <TableCell className="text-center text-xs sm:text-sm">{item.bounceRate}%</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+        <div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-10 text-xs sm:w-12 sm:text-sm"></TableHead>
+                <TableHead className="align-top text-xs sm:text-sm">Keyword</TableHead>
+                <TableHead className="text-right align-top text-xs sm:text-sm">Search</TableHead>
+                <TableHead className="text-center text-xs sm:text-sm">
+                  Bounce rate
+                  <br />
+                  <span className="text-xs">이탈률</span>
+                </TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {bottom5.map((item) => (
+                <TableRow key={item.rank}>
+                  <TableCell className="w-10 text-center text-xs sm:w-12 sm:text-sm">{item.rank}</TableCell>
+                  <TableCell className="text-xs sm:text-sm">{item.keyword}</TableCell>
+                  <TableCell className="text-right text-xs sm:text-sm">{item.searchCount.toLocaleString()}</TableCell>
+                  <TableCell className="text-center text-xs sm:text-sm">{item.bounceRate}%</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </div>
     </div>
   );

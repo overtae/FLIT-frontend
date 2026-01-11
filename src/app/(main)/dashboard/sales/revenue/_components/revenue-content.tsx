@@ -24,7 +24,7 @@ import {
   TabsContent as SalesTabsContent,
   TabsList as SalesTabsList,
   TabsTrigger as SalesTabsTrigger,
-} from "./sales-tab";
+} from "../../_components/sales-tab";
 
 interface RevenueContentProps {
   initialVerified: boolean;
@@ -83,15 +83,25 @@ export function RevenueContent({ initialVerified }: RevenueContentProps) {
         </SalesTabs>
       </div>
 
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
+      <div className="space-y-3 sm:space-y-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <Tabs value={activeDetailTab} onValueChange={(value) => setActiveDetailTab(value as typeof activeDetailTab)}>
-            <TabsList>
-              <TabsTrigger value="all">All</TabsTrigger>
-              <TabsTrigger value="shop">Shop</TabsTrigger>
-              <TabsTrigger value="florist">Florist</TabsTrigger>
-              <TabsTrigger value="order">수발주</TabsTrigger>
-            </TabsList>
+            <div className="overflow-x-auto">
+              <TabsList className="inline-flex w-full min-w-max sm:w-auto">
+                <TabsTrigger value="all" className="flex-1 text-xs whitespace-nowrap sm:flex-initial sm:text-sm">
+                  All
+                </TabsTrigger>
+                <TabsTrigger value="shop" className="flex-1 text-xs whitespace-nowrap sm:flex-initial sm:text-sm">
+                  Shop
+                </TabsTrigger>
+                <TabsTrigger value="florist" className="flex-1 text-xs whitespace-nowrap sm:flex-initial sm:text-sm">
+                  Florist
+                </TabsTrigger>
+                <TabsTrigger value="order" className="flex-1 text-xs whitespace-nowrap sm:flex-initial sm:text-sm">
+                  수발주
+                </TabsTrigger>
+              </TabsList>
+            </div>
           </Tabs>
           <div className="flex items-center gap-2">
             <SearchInput
@@ -112,10 +122,10 @@ export function RevenueContent({ initialVerified }: RevenueContentProps) {
             <Button
               variant="ghost"
               size="icon"
-              className="h-9 w-9"
+              className="h-8 w-8 sm:h-9 sm:w-9"
               onClick={() => setIsFilterPanelOpen(!isFilterPanelOpen)}
             >
-              <Settings2 className="text-muted-foreground h-4 w-4" />
+              <Settings2 className="text-muted-foreground h-3.5 w-3.5 sm:h-4 sm:w-4" />
               <span className="sr-only">필터 설정</span>
             </Button>
           </div>

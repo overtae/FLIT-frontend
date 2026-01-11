@@ -47,17 +47,17 @@ const getTextColor = (isPast: boolean, isOpen: boolean) => {
 function TimelineItem({ schedule, isLeft, isOpen, isPastEvent, onOpenChange, selectedDate }: TimelineItemProps) {
   const dotColorClass = cn("mt-1.5 h-2 w-2 shrink-0 rounded-full transition-colors", getDotColor(isPastEvent, isOpen));
 
-  const textColorClass = cn("text-sm font-medium transition-colors", getTextColor(isPastEvent, isOpen));
+  const textColorClass = cn("text-xs font-medium transition-colors sm:text-sm", getTextColor(isPastEvent, isOpen));
 
   const containerClass = cn(
-    "mb-6 flex w-full items-center",
-    isLeft ? "justify-end pr-[50%] pl-4" : "justify-start pr-4 pl-[50%]",
+    "mb-3 flex w-full items-center sm:mb-4 md:mb-6",
+    isLeft ? "justify-end pr-[50%] pl-1 sm:pl-2 md:pl-4" : "justify-start pr-1 pl-[50%] sm:pr-2 md:pr-4",
   );
 
   const buttonClass = cn(
-    "group relative flex items-start gap-3 text-left transition-all hover:opacity-80",
+    "group w-full relative flex items-start gap-1.5 text-left transition-all hover:opacity-80 sm:gap-2 md:gap-3",
     isLeft ? "flex-row-reverse text-right" : "flex-row",
-    isLeft ? "mr-4" : "ml-4",
+    isLeft ? "mr-1 sm:mr-2 md:mr-4" : "ml-1 sm:ml-2 md:ml-4",
   );
 
   const displayTime = formatTime(schedule.startTime);
@@ -68,15 +68,15 @@ function TimelineItem({ schedule, isLeft, isOpen, isPastEvent, onOpenChange, sel
         <PopoverTrigger asChild>
           <button className={buttonClass}>
             <div className={dotColorClass} />
-            <div className="flex flex-col">
-              <span className="text-[10px] font-semibold text-gray-500">{displayTime}</span>
-              <span className={textColorClass}>{schedule.title}</span>
+            <div className="flex max-w-[calc(50%-1rem)] flex-col sm:max-w-none">
+              <span className="text-[9px] font-semibold text-gray-500 sm:text-[10px]">{displayTime}</span>
+              <span className={cn(textColorClass, "break-words")}>{schedule.title}</span>
             </div>
           </button>
         </PopoverTrigger>
 
         <PopoverContent
-          className="w-80 border-none p-0 shadow-xl"
+          className="w-[calc(100vw-2rem)] border-none p-0 shadow-xl sm:w-80"
           side="bottom"
           align={isLeft ? "end" : "center"}
           sideOffset={10}
@@ -129,14 +129,14 @@ export function ScheduleTimeline({ schedules, selectedDate }: ScheduleTimelinePr
   };
 
   return (
-    <div className="flex h-full flex-col overflow-hidden bg-transparent pt-4">
-      <div className="mb-6 flex items-center justify-center border-b border-gray-100 pb-4">
-        <h2 className="text-lg font-semibold text-gray-700">플릿일정</h2>
+    <div className="flex h-full flex-col overflow-hidden bg-transparent pt-2 sm:pt-4">
+      <div className="mb-4 flex items-center justify-center border-b border-gray-100 pb-3 sm:mb-6 sm:pb-4">
+        <h2 className="text-base font-semibold text-gray-700 sm:text-lg">플릿일정</h2>
       </div>
 
       <div className="min-h-0 w-full flex-1">
         <ScrollArea className="h-full w-full">
-          <div className="relative min-h-[400px] px-4 pt-2 pb-20">
+          <div className="relative min-h-[300px] px-2 pt-2 pb-12 sm:min-h-[400px] sm:px-4 sm:pb-20">
             <div className="absolute top-0 bottom-0 left-1/2 w-px -translate-x-1/2 border-l border-dashed border-gray-300" />
 
             {activeHours.length > 0 ? (
@@ -145,11 +145,11 @@ export function ScheduleTimeline({ schedules, selectedDate }: ScheduleTimelinePr
 
                 return (
                   <div key={hour} className="relative">
-                    <div className="relative z-10 flex justify-center py-6">
-                      <span className="bg-white px-1 text-sm font-bold text-gray-800">{hour}</span>
+                    <div className="relative z-10 flex justify-center py-4 sm:py-6">
+                      <span className="bg-white px-1 text-xs font-bold text-gray-800 sm:text-sm">{hour}</span>
                     </div>
 
-                    <div className="relative min-h-[60px]">
+                    <div className="relative min-h-[50px] sm:min-h-[60px]">
                       {hourSchedules.map((schedule, idx) => {
                         const isLeft = idx % 2 === 0;
                         const isOpen = openPopoverId === schedule.scheduleId;

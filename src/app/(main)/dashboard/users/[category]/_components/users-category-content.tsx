@@ -43,14 +43,22 @@ export function UsersCategoryContent({ category, initialVerified }: UsersCategor
   }
 
   return (
-    <div className="h-full space-y-6">
+    <div className="h-full space-y-4 sm:space-y-6">
       {category === "seceder" && (
         <Tabs defaultValue="all" className="w-full">
-          <TabsList>
-            <TabsTrigger value="all">All</TabsTrigger>
-            <TabsTrigger value="customer">Customer</TabsTrigger>
-            <TabsTrigger value="shop">Shop</TabsTrigger>
-            <TabsTrigger value="florist">Florist</TabsTrigger>
+          <TabsList className="w-full sm:w-auto">
+            <TabsTrigger value="all" className="flex-1 sm:flex-initial">
+              All
+            </TabsTrigger>
+            <TabsTrigger value="customer" className="flex-1 sm:flex-initial">
+              Customer
+            </TabsTrigger>
+            <TabsTrigger value="shop" className="flex-1 sm:flex-initial">
+              Shop
+            </TabsTrigger>
+            <TabsTrigger value="florist" className="flex-1 sm:flex-initial">
+              Florist
+            </TabsTrigger>
           </TabsList>
           <TabsContent value="all">
             <UserOverview category="all" />

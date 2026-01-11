@@ -167,12 +167,12 @@ export function AddressSearch({ value, onChange, onDetailFocus }: AddressSearchP
         </Button>
       </div>
       <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-        <DialogContent className="max-w-2xl" onOpenAutoFocus={(e) => e.preventDefault()}>
+        <DialogContent className="max-w-2xl px-2 sm:px-6" onOpenAutoFocus={(e) => e.preventDefault()}>
           <DialogHeader>
-            <DialogTitle>주소 검색</DialogTitle>
-            <DialogDescription>주소를 검색하여 선택하세요</DialogDescription>
+            <DialogTitle className="text-base sm:text-lg">주소 검색</DialogTitle>
+            <DialogDescription className="text-xs sm:text-sm">주소를 검색하여 선택하세요</DialogDescription>
           </DialogHeader>
-          <div ref={containerRef} className="h-[500px] w-full" />
+          <div ref={containerRef} className="h-[400px] w-full sm:h-[500px]" />
         </DialogContent>
       </Dialog>
     </>

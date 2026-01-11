@@ -77,15 +77,15 @@ export function CustomerDashboard() {
     );
   }
   return (
-    <div className="space-y-6">
-      <div className="grid gap-6 md:grid-cols-2">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
         <Card>
-          <CardHeader>
-            <CardTitle>성비</CardTitle>
-            <CardDescription>도넛그래프</CardDescription>
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="text-base sm:text-lg">성비</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">도넛그래프</CardDescription>
           </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+          <CardContent className="p-4 sm:p-6">
+            <ResponsiveContainer width="100%" height={250} className="sm:h-[300px]">
               <PieChart>
                 <Pie
                   data={genderData}
@@ -113,18 +113,24 @@ export function CustomerDashboard() {
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle>나이</CardTitle>
-            <CardDescription>가로막대그래프</CardDescription>
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="text-base sm:text-lg">나이</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">가로막대그래프</CardDescription>
           </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={ageData} layout="vertical">
+          <CardContent className="p-4 sm:p-6">
+            <ResponsiveContainer width="100%" height={250} className="sm:h-[300px]">
+              <BarChart data={ageData} layout="vertical" margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis type="number" tickFormatter={formatNumberShort} />
-                <YAxis dataKey="age" type="category" />
-                <Tooltip formatter={(value: number) => formatNumberShort(value)} />
-                <Legend />
+                <XAxis type="number" tickFormatter={formatNumberShort} tick={{ fontSize: 10 }} className="sm:text-xs" />
+                <YAxis
+                  dataKey="age"
+                  type="category"
+                  tick={{ fontSize: 10 }}
+                  width={40}
+                  className="sm:w-auto sm:text-xs"
+                />
+                <Tooltip formatter={(value: number) => formatNumberShort(value)} contentStyle={{ fontSize: "12px" }} />
+                <Legend wrapperStyle={{ fontSize: "12px" }} />
                 <Bar dataKey="value" fill="#8884d8" name="인원수" />
               </BarChart>
             </ResponsiveContainer>
@@ -133,26 +139,28 @@ export function CustomerDashboard() {
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>순위</CardTitle>
-          <CardDescription>테이블 → 모달로 전체 순위</CardDescription>
+        <CardHeader className="p-4 sm:p-6">
+          <CardTitle className="text-base sm:text-lg">순위</CardTitle>
+          <CardDescription className="text-xs sm:text-sm">테이블 → 모달로 전체 순위</CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="overflow-hidden rounded-md border">
-            <table className="w-full">
+        <CardContent className="p-4 sm:p-6">
+          <div className="overflow-x-auto rounded-md border">
+            <table className="w-full min-w-[300px]">
               <thead className="bg-muted">
                 <tr>
-                  <th className="px-4 py-2 text-left">순위</th>
-                  <th className="px-4 py-2 text-left">이름</th>
-                  <th className="px-4 py-2 text-right">구매금액</th>
+                  <th className="px-2 py-1.5 text-left text-xs sm:px-4 sm:py-2 sm:text-sm">순위</th>
+                  <th className="px-2 py-1.5 text-left text-xs sm:px-4 sm:py-2 sm:text-sm">이름</th>
+                  <th className="px-2 py-1.5 text-right text-xs sm:px-4 sm:py-2 sm:text-sm">구매금액</th>
                 </tr>
               </thead>
               <tbody>
                 {rankingData.map((item) => (
                   <tr key={item.rank} className="border-b">
-                    <td className="px-4 py-2">{item.rank}</td>
-                    <td className="px-4 py-2">{item.name}</td>
-                    <td className="px-4 py-2 text-right">{formatNumberShort(item.amount)}원</td>
+                    <td className="px-2 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm">{item.rank}</td>
+                    <td className="px-2 py-1.5 text-xs break-words sm:px-4 sm:py-2 sm:text-sm">{item.name}</td>
+                    <td className="px-2 py-1.5 text-right text-xs sm:px-4 sm:py-2 sm:text-sm">
+                      {formatNumberShort(item.amount)}원
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -162,18 +170,18 @@ export function CustomerDashboard() {
       </Card>
 
       <Card>
-        <CardHeader>
-          <CardTitle>카테고리별 구매 현황</CardTitle>
-          <CardDescription>쌓인 막대그래프</CardDescription>
+        <CardHeader className="p-4 sm:p-6">
+          <CardTitle className="text-base sm:text-lg">카테고리별 구매 현황</CardTitle>
+          <CardDescription className="text-xs sm:text-sm">쌓인 막대그래프</CardDescription>
         </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={ageData}>
+        <CardContent className="p-4 sm:p-6">
+          <ResponsiveContainer width="100%" height={250} className="sm:h-[300px]">
+            <BarChart data={ageData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="age" />
-              <YAxis tickFormatter={formatNumberShort} />
-              <Tooltip formatter={(value: number) => formatNumberShort(value)} />
-              <Legend />
+              <XAxis dataKey="age" tick={{ fontSize: 10 }} className="sm:text-xs" />
+              <YAxis tickFormatter={formatNumberShort} tick={{ fontSize: 10 }} className="sm:text-xs" />
+              <Tooltip formatter={(value: number) => formatNumberShort(value)} contentStyle={{ fontSize: "12px" }} />
+              <Legend wrapperStyle={{ fontSize: "12px" }} />
               <Bar dataKey="value" stackId="a" fill="#8884d8" name="인원수" />
             </BarChart>
           </ResponsiveContainer>

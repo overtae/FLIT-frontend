@@ -56,17 +56,30 @@ export function CategorySalesChart({ viewMode, selectedDate, onCategoryClick }: 
   };
 
   return (
-    <ResponsiveContainer width="100%" height={400}>
-      <BarChart data={data} margin={{ ...DEFAULT_CHART_MARGIN, top: 20 }}>
+    <ResponsiveContainer width="100%" height={300} className="sm:h-[400px]">
+      <BarChart data={data} margin={{ ...DEFAULT_CHART_MARGIN, top: 10, right: 5, left: 5, bottom: 60 }}>
         <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="label" angle={-45} textAnchor="end" height={100} />
-        <YAxis tickFormatter={formatNumberShort} width={60} />
+        <XAxis
+          dataKey="label"
+          angle={-45}
+          textAnchor="end"
+          height={80}
+          tick={{ fontSize: 10 }}
+          className="sm:h-[100px] sm:text-xs"
+        />
+        <YAxis
+          tickFormatter={formatNumberShort}
+          width={50}
+          tick={{ fontSize: 10 }}
+          className="sm:w-[60px] sm:text-xs"
+        />
         <Tooltip
           formatter={(value: number) => `${formatNumberShort(value)}원`}
           contentStyle={{
             backgroundColor: "hsl(var(--card))",
             border: "1px solid hsl(var(--border))",
             borderRadius: "0.5rem",
+            fontSize: "12px",
           }}
         />
         <Bar dataKey="value" onClick={handleBarClick} cursor="pointer">

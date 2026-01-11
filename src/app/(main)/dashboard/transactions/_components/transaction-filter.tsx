@@ -87,12 +87,12 @@ export function TransactionFilter({
           <span className="sr-only">필터 설정</span>
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="max-h-[80vh] w-[300px] overflow-y-auto p-4" align="end">
-        <div className="space-y-4">
+      <PopoverContent className="max-h-[80vh] w-[calc(100vw-2rem)] overflow-y-auto p-3 sm:w-[300px] sm:p-4" align="end">
+        <div className="space-y-3 sm:space-y-4">
           {type === "order" && (
             <>
-              <div className="space-y-3">
-                <Label className="text-sm font-medium">구분</Label>
+              <div className="space-y-2 sm:space-y-3">
+                <Label className="text-xs font-medium sm:text-sm">구분</Label>
                 {transactionTypeEntries
                   .filter(([key]) => key === "BAROGO" || key === "PICKUP" || key === "ETC")
                   .map(([typeKey, typeLabel]) => (
@@ -101,16 +101,20 @@ export function TransactionFilter({
                         id={`filter-type-${typeKey}`}
                         checked={selectedTypes.includes(typeKey as TransactionType)}
                         onCheckedChange={() => toggleType(typeKey as TransactionType)}
+                        className="h-4 w-4 sm:h-5 sm:w-5"
                       />
-                      <Label htmlFor={`filter-type-${typeKey}`} className="cursor-pointer text-sm font-normal">
+                      <Label
+                        htmlFor={`filter-type-${typeKey}`}
+                        className="cursor-pointer text-xs font-normal sm:text-sm"
+                      >
                         {typeLabel}
                       </Label>
                     </div>
                   ))}
               </div>
 
-              <div className="space-y-3">
-                <Label className="text-sm font-medium">결제방법</Label>
+              <div className="space-y-2 sm:space-y-3">
+                <Label className="text-xs font-medium sm:text-sm">결제방법</Label>
                 {paymentMethodEntries
                   .filter(([key]) => key === "FLIT" || key === "POS" || key === "BANK_TRANSFER" || key === "CARD")
                   .map(([methodKey, methodLabel]) => (
@@ -119,8 +123,12 @@ export function TransactionFilter({
                         id={`filter-payment-${methodKey}`}
                         checked={selectedPaymentMethods.includes(methodKey as PaymentMethod)}
                         onCheckedChange={() => togglePaymentMethod(methodKey as PaymentMethod)}
+                        className="h-4 w-4 sm:h-5 sm:w-5"
                       />
-                      <Label htmlFor={`filter-payment-${methodKey}`} className="cursor-pointer text-sm font-normal">
+                      <Label
+                        htmlFor={`filter-payment-${methodKey}`}
+                        className="cursor-pointer text-xs font-normal sm:text-sm"
+                      >
                         {methodLabel}
                       </Label>
                     </div>
@@ -130,16 +138,20 @@ export function TransactionFilter({
           )}
 
           {type === "canceled" && (
-            <div className="space-y-3">
-              <Label className="text-sm font-medium">환불 상태</Label>
+            <div className="space-y-2 sm:space-y-3">
+              <Label className="text-xs font-medium sm:text-sm">환불 상태</Label>
               {refundStatusEntries.map(([statusKey, statusLabel]) => (
                 <div key={statusKey} className="flex items-center space-x-2">
                   <Checkbox
                     id={`filter-refund-${statusKey}`}
                     checked={selectedRefundStatuses.includes(statusKey as RefundStatus)}
                     onCheckedChange={() => toggleRefundStatus(statusKey as RefundStatus)}
+                    className="h-4 w-4 sm:h-5 sm:w-5"
                   />
-                  <Label htmlFor={`filter-refund-${statusKey}`} className="cursor-pointer text-sm font-normal">
+                  <Label
+                    htmlFor={`filter-refund-${statusKey}`}
+                    className="cursor-pointer text-xs font-normal sm:text-sm"
+                  >
                     {statusLabel}
                   </Label>
                 </div>
@@ -147,7 +159,7 @@ export function TransactionFilter({
             </div>
           )}
 
-          <div className="flex items-center space-x-2 border-t pt-3">
+          <div className="flex items-center space-x-2 border-t pt-2 sm:pt-3">
             <Checkbox
               id="filter-date"
               checked={dateEnabled}
@@ -158,8 +170,9 @@ export function TransactionFilter({
                   onDateChange(undefined);
                 }
               }}
+              className="h-4 w-4 sm:h-5 sm:w-5"
             />
-            <Label htmlFor="filter-date" className="cursor-pointer text-sm font-normal">
+            <Label htmlFor="filter-date" className="cursor-pointer text-xs font-normal sm:text-sm">
               날짜선택
             </Label>
           </div>
@@ -173,7 +186,7 @@ export function TransactionFilter({
                   onDateChange(newDate);
                 }}
                 initialFocus
-                className="p-2"
+                className="p-1 sm:p-2"
               />
             </div>
           )}
@@ -181,7 +194,7 @@ export function TransactionFilter({
           <div className="flex flex-col gap-2 pt-2">
             <Button
               onClick={handleReset}
-              className="h-8 w-full rounded-full bg-gray-600 text-xs text-white hover:bg-gray-700"
+              className="h-7 w-full rounded-full bg-gray-600 text-xs text-white hover:bg-gray-700 sm:h-8"
             >
               Reset
             </Button>

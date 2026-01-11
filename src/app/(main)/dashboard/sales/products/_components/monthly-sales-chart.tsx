@@ -119,51 +119,57 @@ export function MonthlySalesChart({ selectedCategory, paymentMethod, onPaymentMe
   const totalAmount = monthlyData.reduce((sum, item) => sum + item.thisMonth, 0);
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
+    <div className="space-y-3 sm:space-y-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <RadioGroup
           value={paymentMethod}
           onValueChange={(value) => onPaymentMethodChange(value as typeof paymentMethod)}
         >
-          <div className="flex items-center gap-4">
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="total" id="total" />
-              <Label htmlFor="total" className="flex items-center gap-1">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-4">
+            <div className="flex items-center space-x-1.5 sm:space-x-2">
+              <RadioGroupItem value="total" id="total" className="h-4 w-4 sm:h-5 sm:w-5" />
+              <Label htmlFor="total" className="flex items-center gap-1 text-xs sm:text-sm">
                 총매출
               </Label>
             </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="card" id="card" />
-              <Label htmlFor="card">카드결제</Label>
+            <div className="flex items-center space-x-1.5 sm:space-x-2">
+              <RadioGroupItem value="card" id="card" className="h-4 w-4 sm:h-5 sm:w-5" />
+              <Label htmlFor="card" className="text-xs sm:text-sm">
+                카드결제
+              </Label>
             </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="pos" id="pos" />
-              <Label htmlFor="pos">현장결제(POS)</Label>
+            <div className="flex items-center space-x-1.5 sm:space-x-2">
+              <RadioGroupItem value="pos" id="pos" className="h-4 w-4 sm:h-5 sm:w-5" />
+              <Label htmlFor="pos" className="text-xs sm:text-sm">
+                현장결제(POS)
+              </Label>
             </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="transfer" id="transfer" />
-              <Label htmlFor="transfer">계좌이체</Label>
+            <div className="flex items-center space-x-1.5 sm:space-x-2">
+              <RadioGroupItem value="transfer" id="transfer" className="h-4 w-4 sm:h-5 sm:w-5" />
+              <Label htmlFor="transfer" className="text-xs sm:text-sm">
+                계좌이체
+              </Label>
             </div>
           </div>
         </RadioGroup>
 
-        <div className="flex items-center gap-4">
-          {selectedCategory && <span className="text-sm font-medium">{selectedCategory}</span>}
-          <span className="text-sm">This Month</span>
-          <div className="text-2xl font-bold">{formatNumberShort(totalAmount)} 원</div>
+        <div className="flex flex-wrap items-center gap-2 sm:gap-4">
+          {selectedCategory && <span className="text-xs font-medium sm:text-sm">{selectedCategory}</span>}
+          <span className="text-xs sm:text-sm">This Month</span>
+          <div className="text-lg font-bold sm:text-2xl">{formatNumberShort(totalAmount)} 원</div>
           <MonthlyCalendar
             selectedMonth={dateRange}
             onMonthSelect={(range) => {
               setDateRange(range);
             }}
             placeholder="월 선택"
-            buttonClassName="w-[150px]"
+            buttonClassName="w-full text-xs sm:w-[150px] sm:text-sm"
           />
         </div>
       </div>
 
-      <ResponsiveContainer width="100%" height={400}>
-        <AreaChart data={monthlyData} margin={DEFAULT_CHART_MARGIN}>
+      <ResponsiveContainer width="100%" height={300} className="sm:h-[400px]">
+        <AreaChart data={monthlyData} margin={{ ...DEFAULT_CHART_MARGIN, top: 5, right: 5, left: 5, bottom: 5 }}>
           <defs>
             <linearGradient id="colorThisMonth" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="var(--chart-1)" stopOpacity={0.3} />
@@ -175,16 +181,22 @@ export function MonthlySalesChart({ selectedCategory, paymentMethod, onPaymentMe
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="month" />
-          <YAxis tickFormatter={formatNumberShort} width={60} />
-          <Tooltip content={<CustomTooltip />} />
+          <XAxis dataKey="month" tick={{ fontSize: 10 }} className="sm:text-xs" />
+          <YAxis
+            tickFormatter={formatNumberShort}
+            width={50}
+            tick={{ fontSize: 10 }}
+            className="sm:w-[60px] sm:text-xs"
+          />
+          <Tooltip content={<CustomTooltip />} contentStyle={{ fontSize: "12px" }} />
           <Area
             type="monotone"
             dataKey="thisMonth"
             stroke="var(--chart-1)"
-            strokeWidth={3}
+            strokeWidth={2}
             fillOpacity={1}
             fill="url(#colorThisMonth)"
+            className="sm:stroke-[3px]"
           />
           <Area
             type="monotone"

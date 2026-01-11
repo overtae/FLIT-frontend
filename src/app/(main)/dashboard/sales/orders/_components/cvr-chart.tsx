@@ -197,12 +197,16 @@ export function CvrChart({ period, selectedDate }: CvrChartProps) {
 
   return (
     <ResponsiveContainer width="100%" height="100%">
-      <LineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+      <LineChart
+        data={data}
+        margin={{ top: 5, right: 10, left: 10, bottom: 5 }}
+        className="sm:right-[30px] sm:left-[20px]"
+      >
         <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey={xAxisKey} />
-        <YAxis tickFormatter={(value) => `${value}%`} />
+        <XAxis dataKey={xAxisKey} tick={{ fontSize: 10 }} className="sm:text-xs" />
+        <YAxis tickFormatter={(value) => `${value}%`} tick={{ fontSize: 10 }} className="sm:text-xs" />
         <Tooltip content={tooltipContent} />
-        <Legend />
+        <Legend wrapperStyle={{ fontSize: "12px" }} />
         <Line
           type="monotone"
           dataKey={period === "weekly" ? "thisWeek" : period === "monthly" ? "thisMonth" : "thisYear"}

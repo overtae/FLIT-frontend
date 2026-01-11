@@ -108,7 +108,7 @@ export function ImageUploader({ value, onChange, className, size = 200 }: ImageU
             unoptimized
           />
         )}
-        <div className="text-foreground absolute inset-0 m-auto flex h-fit w-fit items-center justify-center rounded-full bg-white px-4 py-1.5 text-sm font-semibold opacity-0 shadow-md transition-opacity group-hover:opacity-100">
+        <div className="text-foreground absolute inset-0 m-auto flex h-fit w-fit items-center justify-center rounded-full bg-white px-3 py-1 text-xs font-semibold opacity-0 shadow-md transition-opacity group-hover:opacity-100 sm:px-4 sm:py-1.5 sm:text-sm">
           {preview ? "Edit" : "Upload"}
         </div>
         <input
@@ -123,9 +123,9 @@ export function ImageUploader({ value, onChange, className, size = 200 }: ImageU
         <button
           type="button"
           onClick={handleRemove}
-          className="bg-muted-foreground text-background absolute top-[8%] right-[8%] z-10 flex h-8 w-8 items-center justify-center rounded-full shadow-md transition-opacity hover:opacity-80"
+          className="bg-muted-foreground text-background absolute top-[8%] right-[8%] z-10 flex h-6 w-6 items-center justify-center rounded-full shadow-md transition-opacity hover:opacity-80 sm:h-8 sm:w-8"
         >
-          <X className="h-5 w-5" />
+          <X className="h-4 w-4 sm:h-5 sm:w-5" />
         </button>
       )}
     </div>

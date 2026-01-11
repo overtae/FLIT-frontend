@@ -129,16 +129,16 @@ export function UserOverview({ category = "all" }: UserOverviewProps) {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4 sm:gap-6">
       {/* Top Section: Total User & Quick Stats */}
-      <div className="grid space-y-6 space-x-8 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 md:gap-8">
         {/* 1. Total User Chart */}
         <UserTotalChart category={category} />
 
         {/* 2. Quick Stats */}
-        <section className="flex flex-col justify-center gap-3">
-          <h3 className="text-xl font-bold">Quick Stats</h3>
-          <div className="grid grid-cols-4 gap-4">
+        <section className="flex flex-col justify-center gap-2 sm:gap-3">
+          <h3 className="text-base font-bold sm:text-lg md:text-xl">Quick Stats</h3>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3 md:gap-4">
             {(() => {
               const config = QUICK_STATS_LABELS[category] ?? QUICK_STATS_LABELS.all;
               const stats = [
@@ -148,11 +148,15 @@ export function UserOverview({ category = "all" }: UserOverviewProps) {
                 { key: "out", data: quickStats.out },
               ];
               return stats.map((stat, index) => (
-                <div key={stat.key} className="flex flex-col justify-center rounded-lg p-4">
-                  <p className="text-muted-foreground text-3xl">{stat.data.total.toLocaleString()}</p>
-                  <p className="text-muted-foreground mt-1 text-xs">+{stat.data.change}</p>
-                  <p className="text-muted-foreground mt-1 text-xs">{stat.data.label}</p>
-                  <p className="text-stroke-1 text-muted mt-2 text-lg font-bold tracking-wider">
+                <div key={stat.key} className="flex flex-col justify-center rounded-lg p-2 sm:p-3 md:p-4">
+                  <p className="text-muted-foreground text-lg sm:text-xl md:text-2xl lg:text-3xl">
+                    {stat.data.total.toLocaleString()}
+                  </p>
+                  <p className="text-muted-foreground mt-0.5 text-[10px] sm:mt-1 sm:text-xs">+{stat.data.change}</p>
+                  <p className="text-muted-foreground mt-0.5 text-[9px] leading-tight sm:mt-1 sm:text-[10px] md:text-xs">
+                    {stat.data.label}
+                  </p>
+                  <p className="text-stroke-1 text-muted mt-1.5 text-xs font-bold tracking-wider sm:mt-2 sm:text-sm md:text-base lg:text-lg">
                     {config.titles[index]}
                   </p>
                 </div>
@@ -163,22 +167,23 @@ export function UserOverview({ category = "all" }: UserOverviewProps) {
       </div>
 
       {/* Bottom Section: Gender & Age Group */}
-      <section className="flex h-80 flex-col gap-6">
-        <Subtitle>Gender & Age Group</Subtitle>
-        <div className="flex h-full flex-1 gap-8">
+      <section className="flex min-h-[400px] flex-col gap-3 sm:min-h-[350px] sm:gap-4 md:h-80 md:gap-6">
+        <Subtitle className="text-sm sm:text-base">Gender & Age Group</Subtitle>
+        <div className="flex min-h-[360px] flex-col gap-4 sm:min-h-[300px] sm:flex-row sm:gap-4 md:h-full md:gap-8">
           {/* Gender Donut Chart */}
-          <div className="flex h-full w-fit shrink-0 flex-col items-center justify-center">
-            <div className="h-full w-[300px] flex-1">
+          <div className="flex w-full shrink-0 flex-col items-center justify-center gap-3 sm:w-[280px] md:w-[300px]">
+            <div className="h-[200px] w-full sm:h-[220px] md:h-[240px]">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={genderData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={60}
-                    outerRadius={80}
+                    innerRadius={40}
+                    outerRadius={60}
                     paddingAngle={5}
                     dataKey="value"
+                    className="sm:innerRadius-[50px] sm:outerRadius-[70px] md:innerRadius-[60px] md:outerRadius-[80px]"
                   >
                     {genderData.map((entry, index) => (
                       <Cell key={`cell-${entry.name}`} fill={COLORS[index % COLORS.length]} />
@@ -187,31 +192,42 @@ export function UserOverview({ category = "all" }: UserOverviewProps) {
                 </PieChart>
               </ResponsiveContainer>
             </div>
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2 sm:gap-3 md:gap-4">
               {genderData.map((entry, index) => (
-                <div key={entry.name} className="flex items-center gap-2">
-                  <div className="h-3 w-3" style={{ backgroundColor: COLORS[index] ?? COLORS[0] }} />
-                  <span className="text-sm font-medium">{entry.name}</span>
-                  <span className="text-muted-foreground text-sm">{entry.value}%</span>
+                <div key={entry.name} className="flex items-center gap-1.5 sm:gap-2">
+                  <div
+                    className="h-2.5 w-2.5 rounded sm:h-3 sm:w-3"
+                    style={{ backgroundColor: COLORS[index] ?? COLORS[0] }}
+                  />
+                  <span className="text-xs font-medium sm:text-sm">{entry.name}</span>
+                  <span className="text-muted-foreground text-xs sm:text-sm">{entry.value}%</span>
                 </div>
               ))}
             </div>
           </div>
 
           {/* Age Bar Chart */}
-          <div className="flex-1">
+          <div className="flex h-[200px] w-full grow items-center justify-center sm:h-auto sm:min-h-[220px] md:min-h-0">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={ageData} margin={{ top: 20, right: 0, left: 0, bottom: 0 }}>
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
+              <BarChart data={ageData} margin={{ top: 20, right: 10, left: 10, bottom: 5 }} className="sm:top-[20px]">
+                <XAxis
+                  dataKey="name"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 9 }}
+                  className="sm:text-[10px]"
+                />
                 <Bar
                   dataKey="value"
                   fill="var(--chart-1)"
                   radius={[4, 4, 0, 0]}
-                  barSize={40}
+                  barSize={20}
+                  className="sm:barSize-[25px]"
                   label={{
                     position: "top",
                     fill: "hsl(var(--muted-foreground))",
-                    fontSize: 12,
+                    fontSize: 10,
+                    className: "sm:text-[12px]",
                     formatter: (value: number) => formatNumberShort(value),
                   }}
                 >

@@ -81,65 +81,82 @@ export function OrderDashboard() {
     );
   }
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>기간 선택</CardTitle>
+        <CardHeader className="p-4 sm:p-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <CardTitle className="text-base sm:text-lg">기간 선택</CardTitle>
             <Tabs
               value={selectedPeriod.toLowerCase()}
               onValueChange={(value) => setSelectedPeriod(value.toUpperCase() as typeof selectedPeriod)}
             >
-              <TabsList>
-                <TabsTrigger value="weekly">주간</TabsTrigger>
-                <TabsTrigger value="monthly">월간</TabsTrigger>
-                <TabsTrigger value="yearly">연간</TabsTrigger>
-              </TabsList>
+              <div className="overflow-x-auto">
+                <TabsList className="inline-flex w-full min-w-max sm:w-auto">
+                  <TabsTrigger value="weekly" className="flex-1 text-xs whitespace-nowrap sm:flex-initial sm:text-sm">
+                    주간
+                  </TabsTrigger>
+                  <TabsTrigger value="monthly" className="flex-1 text-xs whitespace-nowrap sm:flex-initial sm:text-sm">
+                    월간
+                  </TabsTrigger>
+                  <TabsTrigger value="yearly" className="flex-1 text-xs whitespace-nowrap sm:flex-initial sm:text-sm">
+                    연간
+                  </TabsTrigger>
+                </TabsList>
+              </div>
             </Tabs>
           </div>
         </CardHeader>
       </Card>
 
       <Card>
-        <CardHeader>
-          <CardTitle>CVR (구매전환율)</CardTitle>
-          <CardDescription>꺾은선그래프</CardDescription>
+        <CardHeader className="p-4 sm:p-6">
+          <CardTitle className="text-base sm:text-lg">CVR (구매전환율)</CardTitle>
+          <CardDescription className="text-xs sm:text-sm">꺾은선그래프</CardDescription>
         </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={400}>
-            <LineChart data={cvrData}>
+        <CardContent className="p-4 sm:p-6">
+          <ResponsiveContainer width="100%" height={300} className="sm:h-[400px]">
+            <LineChart data={cvrData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="period" />
-              <YAxis tickFormatter={(value) => `${value}%`} />
-              <Tooltip formatter={(value: number) => `${value}%`} />
-              <Legend />
-              <Line type="monotone" dataKey="cvr" stroke="#8884d8" name="CVR (%)" />
+              <XAxis dataKey="period" tick={{ fontSize: 10 }} className="sm:text-xs" />
+              <YAxis tickFormatter={(value) => `${value}%`} tick={{ fontSize: 10 }} className="sm:text-xs" />
+              <Tooltip formatter={(value: number) => `${value}%`} contentStyle={{ fontSize: "12px" }} />
+              <Legend wrapperStyle={{ fontSize: "12px" }} />
+              <Line
+                type="monotone"
+                dataKey="cvr"
+                stroke="#8884d8"
+                name="CVR (%)"
+                strokeWidth={1.5}
+                className="sm:stroke-[2px]"
+              />
             </LineChart>
           </ResponsiveContainer>
         </CardContent>
       </Card>
 
       <Card>
-        <CardHeader>
-          <CardTitle>검색어 트렌드 순위</CardTitle>
-          <CardDescription>keyword, search, bounce rate</CardDescription>
+        <CardHeader className="p-4 sm:p-6">
+          <CardTitle className="text-base sm:text-lg">검색어 트렌드 순위</CardTitle>
+          <CardDescription className="text-xs sm:text-sm">keyword, search, bounce rate</CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="overflow-hidden rounded-md border">
-            <table className="w-full">
+        <CardContent className="p-4 sm:p-6">
+          <div className="overflow-x-auto rounded-md border">
+            <table className="w-full min-w-[400px]">
               <thead className="bg-muted">
                 <tr>
-                  <th className="px-4 py-2 text-left">Keyword</th>
-                  <th className="px-4 py-2 text-right">Search</th>
-                  <th className="px-4 py-2 text-right">Bounce Rate</th>
+                  <th className="px-2 py-1.5 text-left text-xs sm:px-4 sm:py-2 sm:text-sm">Keyword</th>
+                  <th className="px-2 py-1.5 text-right text-xs sm:px-4 sm:py-2 sm:text-sm">Search</th>
+                  <th className="px-2 py-1.5 text-right text-xs sm:px-4 sm:py-2 sm:text-sm">Bounce Rate</th>
                 </tr>
               </thead>
               <tbody>
                 {searchTrendData.map((item) => (
                   <tr key={item.keyword} className="border-b">
-                    <td className="px-4 py-2">{item.keyword}</td>
-                    <td className="px-4 py-2 text-right">{item.search.toLocaleString()}</td>
-                    <td className="px-4 py-2 text-right">{item.bounceRate}%</td>
+                    <td className="px-2 py-1.5 text-xs break-words sm:px-4 sm:py-2 sm:text-sm">{item.keyword}</td>
+                    <td className="px-2 py-1.5 text-right text-xs sm:px-4 sm:py-2 sm:text-sm">
+                      {item.search.toLocaleString()}
+                    </td>
+                    <td className="px-2 py-1.5 text-right text-xs sm:px-4 sm:py-2 sm:text-sm">{item.bounceRate}%</td>
                   </tr>
                 ))}
               </tbody>

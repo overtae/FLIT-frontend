@@ -29,8 +29,8 @@ export function SettlementDetailContent({ settlementId, initialVerified }: Settl
   }
 
   return (
-    <div className="space-y-6">
-      <Button variant="ghost" onClick={() => router.back()} className="mb-4">
+    <div className="space-y-4 sm:space-y-6">
+      <Button variant="ghost" onClick={() => router.back()} className="mb-2 sm:mb-4">
         <ArrowLeft className="mr-2 h-4 w-4" />
         이전
       </Button>

@@ -35,18 +35,27 @@ export function CustomersContent({ initialVerified }: CustomersContentProps) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <Tabs defaultValue="gender" className="w-full">
-        <div className="flex items-center justify-between">
-          <TabsList>
-            <TabsTrigger value="gender">Gender</TabsTrigger>
-            <TabsTrigger value="age">Age</TabsTrigger>
-          </TabsList>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="overflow-x-auto">
+            <TabsList className="inline-flex w-full min-w-max sm:w-auto">
+              <TabsTrigger value="gender" className="flex-1 text-xs whitespace-nowrap sm:flex-initial sm:text-sm">
+                Gender
+              </TabsTrigger>
+              <TabsTrigger value="age" className="flex-1 text-xs whitespace-nowrap sm:flex-initial sm:text-sm">
+                Age
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
             <PopoverTrigger asChild>
-              <Button variant="outline" className="w-[200px] justify-start text-left font-normal">
-                <Calendar className="mr-2 h-4 w-4" />
+              <Button
+                variant="outline"
+                className="w-full justify-start text-left text-xs font-normal sm:w-[200px] sm:text-sm"
+              >
+                <Calendar className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 {selectedDate ? format(selectedDate, "yyyy년 MM월 dd일", { locale: ko }) : "날짜 선택"}
               </Button>
             </PopoverTrigger>
@@ -63,10 +72,10 @@ export function CustomersContent({ initialVerified }: CustomersContentProps) {
           </Popover>
         </div>
 
-        <TabsContent value="gender" className="mt-6">
+        <TabsContent value="gender" className="mt-4 sm:mt-6">
           <GenderTab selectedDate={selectedDate} />
         </TabsContent>
-        <TabsContent value="age" className="mt-6">
+        <TabsContent value="age" className="mt-4 sm:mt-6">
           <AgeTab selectedDate={selectedDate} />
         </TabsContent>
       </Tabs>

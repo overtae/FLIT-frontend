@@ -24,48 +24,48 @@ export function TransactionDetailPurchaseInfo({ transaction, category }: Transac
 
   return (
     <div>
-      <h3 className="mb-4 text-sm font-semibold">구매내역</h3>
-      <div className="space-y-4">
-        <div className="flex items-center gap-4">
-          <Label className="text-muted-foreground w-24 shrink-0 text-xs font-normal">주문번호</Label>
+      <h3 className="mb-3 text-xs font-semibold sm:mb-4 sm:text-sm">구매내역</h3>
+      <div className="space-y-3 sm:space-y-4">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+          <Label className="text-muted-foreground w-20 shrink-0 text-xs font-normal sm:w-24">주문번호</Label>
           <Input
             value={transaction.transactionNumber}
             readOnly
-            className="pointer-events-none h-9 border-gray-200 bg-gray-50 text-left text-sm"
+            className="pointer-events-none h-8 border-gray-200 bg-gray-50 text-left text-xs sm:h-9 sm:text-sm"
           />
         </div>
-        <div className="flex items-center gap-4">
-          <Label className="text-muted-foreground w-24 shrink-0 text-xs font-normal">상품명</Label>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+          <Label className="text-muted-foreground w-20 shrink-0 text-xs font-normal sm:w-24">상품명</Label>
           <Input
             value={transaction.productName}
             readOnly
-            className="pointer-events-none h-9 border-gray-200 bg-gray-50 text-left text-sm"
+            className="pointer-events-none h-8 border-gray-200 bg-gray-50 text-left text-xs sm:h-9 sm:text-sm"
           />
         </div>
-        <div className="flex items-center gap-4">
-          <Label className="text-muted-foreground w-24 shrink-0 text-xs font-normal">가격</Label>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+          <Label className="text-muted-foreground w-20 shrink-0 text-xs font-normal sm:w-24">가격</Label>
           <Input
             value={`${transaction.paymentAmount.toLocaleString()}원`}
             readOnly
-            className="pointer-events-none h-9 border-gray-200 bg-gray-50 text-left text-sm"
+            className="pointer-events-none h-8 border-gray-200 bg-gray-50 text-left text-xs sm:h-9 sm:text-sm"
           />
         </div>
         {category !== "canceled" && (
-          <div className="flex items-start gap-4">
-            <Label className="text-muted-foreground w-24 shrink-0 pt-2 text-xs font-normal">결제방법</Label>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:gap-4">
+            <Label className="text-muted-foreground w-20 shrink-0 text-xs font-normal sm:w-24 sm:pt-2">결제방법</Label>
             <div className="flex-1">
               <ToggleGroup
                 type="single"
                 variant="outline"
                 spacing={1}
                 value={selectedPaymentMethod}
-                className="flex gap-2"
+                className="flex flex-wrap gap-2"
               >
                 {paymentMethodOptions.map((option) => (
                   <ToggleGroupItem
                     key={option}
                     value={option}
-                    className={`bg-background! pointer-events-none shadow-none ${selectedPaymentMethod === option ? "border-main text-primary!" : ""}`}
+                    className={`bg-background! pointer-events-none text-xs shadow-none sm:text-sm ${selectedPaymentMethod === option ? "border-main text-primary!" : ""}`}
                   >
                     {option}
                   </ToggleGroupItem>
@@ -74,21 +74,23 @@ export function TransactionDetailPurchaseInfo({ transaction, category }: Transac
             </div>
           </div>
         )}
-        <div className="flex items-center gap-4">
-          <Label className="text-muted-foreground w-24 shrink-0 text-xs font-normal">적립금</Label>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+          <Label className="text-muted-foreground w-20 shrink-0 text-xs font-normal sm:w-24">적립금</Label>
           <Input
             value={`${transaction.reserve.toLocaleString()}원`}
             readOnly
-            className="pointer-events-none h-9 border-gray-200 bg-gray-50 text-left text-sm"
+            className="pointer-events-none h-8 border-gray-200 bg-gray-50 text-left text-xs sm:h-9 sm:text-sm"
           />
         </div>
-        <div className="flex items-start gap-4">
-          <Label className="text-muted-foreground w-24 shrink-0 pt-2 text-xs font-normal">고객 요청 사항</Label>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:gap-4">
+          <Label className="text-muted-foreground w-20 shrink-0 text-xs font-normal sm:w-24 sm:pt-2">
+            고객 요청 사항
+          </Label>
           <Textarea
             value={transaction.customerRequest ?? ""}
             readOnly
             rows={3}
-            className="pointer-events-none resize-none border-gray-200 bg-gray-50 text-left text-sm"
+            className="pointer-events-none resize-none border-gray-200 bg-gray-50 text-left text-xs sm:text-sm"
           />
         </div>
       </div>

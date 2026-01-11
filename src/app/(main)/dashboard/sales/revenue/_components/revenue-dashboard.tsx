@@ -85,15 +85,21 @@ export function RevenueDashboard({ selectedDate, onDateSelect }: RevenueDashboar
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* 헤더 */}
-      <div className="flex items-center justify-between">
-        <h2 className="text-foreground text-xl font-bold">매출현황</h2>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h2 className="text-foreground text-lg font-bold sm:text-xl">매출현황</h2>
         <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
           <PopoverTrigger asChild>
-            <Button variant="outline" className="w-[250px] justify-start text-left font-normal">
-              {selectedDate ? format(selectedDate, "yyyy년 MM월 dd일 EEEE", { locale: ko }) : "날짜 선택"}
-              <ChevronDown className="ml-auto h-4 w-4 opacity-50" />
+            <Button
+              variant="outline"
+              className="w-full justify-start text-left text-xs font-normal sm:w-[250px] sm:text-sm"
+            >
+              <span className="hidden sm:inline">
+                {selectedDate ? format(selectedDate, "yyyy년 MM월 dd일 EEEE", { locale: ko }) : "날짜 선택"}
+              </span>
+              <span className="sm:hidden">{selectedDate ? format(selectedDate, "MM/dd") : "날짜 선택"}</span>
+              <ChevronDown className="ml-auto h-3.5 w-3.5 opacity-50 sm:h-4 sm:w-4" />
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="end">
@@ -112,19 +118,19 @@ export function RevenueDashboard({ selectedDate, onDateSelect }: RevenueDashboar
       <hr />
 
       {/* 최종 업데이트 일시 */}
-      <div className="text-muted-foreground text-xs">
+      <div className="text-muted-foreground text-[10px] sm:text-xs">
         최종 업데이트 일시 : {format(new Date(dashboardData.lastUpdatedAt), "yyyy-MM-dd HH:mm")}
       </div>
 
       {/* 메인 지표 및 서브 지표 */}
-      <div className="grid grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-6">
         {/* 좌측: 총 매출액 */}
-        <div className="col-span-1 place-content-end">
-          <div className="text-foreground text-3xl font-medium">{totalRevenue.toLocaleString()} 원</div>
+        <div className="col-span-1 place-content-end sm:col-span-1">
+          <div className="text-foreground text-2xl font-medium sm:text-3xl">{totalRevenue.toLocaleString()} 원</div>
         </div>
 
         {/* 우측: 서브 지표 2열 3행 그리드 */}
-        <div className="col-span-2 grid grid-cols-2 gap-6">
+        <div className="col-span-1 grid grid-cols-1 gap-3 sm:col-span-2 sm:grid-cols-2 sm:gap-6">
           {/* 1열 */}
           <div className="flex flex-col gap-2">
             <TooltipProvider>
@@ -134,29 +140,35 @@ export function RevenueDashboard({ selectedDate, onDateSelect }: RevenueDashboar
                     className="text-secondary-foreground hover:text-main cursor-pointer"
                     onClick={() => setIsPaymentAmountTooltipOpen(!isPaymentAmountTooltipOpen)}
                   >
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="text-sm">결제금액</div>
-                      <div className="font-medium">{paymentAmount.toLocaleString()}원</div>
+                    <div className="flex items-center justify-between gap-2 sm:gap-4">
+                      <div className="text-xs sm:text-sm">결제금액</div>
+                      <div className="text-xs font-medium sm:text-sm">{paymentAmount.toLocaleString()}원</div>
                     </div>
                   </button>
                 </TooltipTrigger>
-                <TooltipContent className="text-foreground bg-card border-main min-w-64 rounded-lg border p-4 shadow-lg">
-                  <div className="flex flex-col items-center gap-3">
-                    <div className="flex w-full items-center justify-between gap-4">
-                      <div className="text-sm">카드결제</div>
-                      <div className="text-sm font-medium">{paymentAmountBreakdown.card.toLocaleString()}원</div>
+                <TooltipContent className="text-foreground bg-card border-main min-w-[200px] rounded-lg border p-3 shadow-lg sm:min-w-64 sm:p-4">
+                  <div className="flex flex-col items-center gap-2 sm:gap-3">
+                    <div className="flex w-full items-center justify-between gap-2 sm:gap-4">
+                      <div className="text-xs sm:text-sm">카드결제</div>
+                      <div className="text-xs font-medium sm:text-sm">
+                        {paymentAmountBreakdown.card.toLocaleString()}원
+                      </div>
                     </div>
-                    <div className="flex w-full items-center justify-between gap-4">
-                      <div className="text-sm">계좌이체</div>
-                      <div className="text-sm font-medium">{paymentAmountBreakdown.transfer.toLocaleString()}원</div>
+                    <div className="flex w-full items-center justify-between gap-2 sm:gap-4">
+                      <div className="text-xs sm:text-sm">계좌이체</div>
+                      <div className="text-xs font-medium sm:text-sm">
+                        {paymentAmountBreakdown.transfer.toLocaleString()}원
+                      </div>
                     </div>
-                    <div className="flex w-full items-center justify-between gap-4">
-                      <div className="text-sm">현장결제(POS)</div>
-                      <div className="text-sm font-medium">{paymentAmountBreakdown.pos.toLocaleString()}원</div>
+                    <div className="flex w-full items-center justify-between gap-2 sm:gap-4">
+                      <div className="text-xs sm:text-sm">현장결제(POS)</div>
+                      <div className="text-xs font-medium sm:text-sm">
+                        {paymentAmountBreakdown.pos.toLocaleString()}원
+                      </div>
                     </div>
                     <Button
                       size="sm"
-                      className="w-fit rounded-full px-6 text-sm"
+                      className="w-fit rounded-full px-4 text-xs sm:px-6 sm:text-sm"
                       onClick={() => setIsPaymentAmountTooltipOpen(false)}
                     >
                       OK
@@ -172,29 +184,29 @@ export function RevenueDashboard({ selectedDate, onDateSelect }: RevenueDashboar
                     className="text-foreground hover:text-main cursor-pointer"
                     onClick={() => setIsPaymentCountTooltipOpen(!isPaymentCountTooltipOpen)}
                   >
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="text-sm">결제건수</div>
-                      <div className="font-medium">{paymentCount}건</div>
+                    <div className="flex items-center justify-between gap-2 sm:gap-4">
+                      <div className="text-xs sm:text-sm">결제건수</div>
+                      <div className="text-xs font-medium sm:text-sm">{paymentCount}건</div>
                     </div>
                   </button>
                 </TooltipTrigger>
-                <TooltipContent className="text-foreground bg-card border-main min-w-64 rounded-lg border p-4 shadow-lg">
-                  <div className="flex flex-col items-center gap-3">
-                    <div className="flex w-full items-center justify-between gap-4">
-                      <div className="text-sm">카드결제</div>
-                      <div className="text-sm font-medium">{paymentCountBreakdown.card}건</div>
+                <TooltipContent className="text-foreground bg-card border-main min-w-[200px] rounded-lg border p-3 shadow-lg sm:min-w-64 sm:p-4">
+                  <div className="flex flex-col items-center gap-2 sm:gap-3">
+                    <div className="flex w-full items-center justify-between gap-2 sm:gap-4">
+                      <div className="text-xs sm:text-sm">카드결제</div>
+                      <div className="text-xs font-medium sm:text-sm">{paymentCountBreakdown.card}건</div>
                     </div>
-                    <div className="flex w-full items-center justify-between gap-4">
-                      <div className="text-sm">계좌이체</div>
-                      <div className="text-sm font-medium">{paymentCountBreakdown.transfer}건</div>
+                    <div className="flex w-full items-center justify-between gap-2 sm:gap-4">
+                      <div className="text-xs sm:text-sm">계좌이체</div>
+                      <div className="text-xs font-medium sm:text-sm">{paymentCountBreakdown.transfer}건</div>
                     </div>
-                    <div className="flex w-full items-center justify-between gap-4">
-                      <div className="text-sm">현장결제(POS)</div>
-                      <div className="text-sm font-medium">{paymentCountBreakdown.pos}건</div>
+                    <div className="flex w-full items-center justify-between gap-2 sm:gap-4">
+                      <div className="text-xs sm:text-sm">현장결제(POS)</div>
+                      <div className="text-xs font-medium sm:text-sm">{paymentCountBreakdown.pos}건</div>
                     </div>
                     <Button
                       size="sm"
-                      className="w-fit rounded-full px-6 text-sm"
+                      className="w-fit rounded-full px-4 text-xs sm:px-6 sm:text-sm"
                       onClick={() => setIsPaymentCountTooltipOpen(false)}
                     >
                       OK
@@ -203,9 +215,9 @@ export function RevenueDashboard({ selectedDate, onDateSelect }: RevenueDashboar
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-            <div className="flex items-center justify-between gap-4">
-              <div className="text-secondary-foreground text-sm">배송중</div>
-              <div className="text-foreground font-medium">{deliveryInProgress}건</div>
+            <div className="flex items-center justify-between gap-2 sm:gap-4">
+              <div className="text-secondary-foreground text-xs sm:text-sm">배송중</div>
+              <div className="text-foreground text-xs font-medium sm:text-sm">{deliveryInProgress}건</div>
             </div>
           </div>
 
@@ -218,31 +230,35 @@ export function RevenueDashboard({ selectedDate, onDateSelect }: RevenueDashboar
                     className="text-secondary-foreground hover:text-main w-full cursor-pointer"
                     onClick={() => setIsRefundCancelAmountTooltipOpen(!isRefundCancelAmountTooltipOpen)}
                   >
-                    <div className="flex w-full items-center justify-between gap-4">
-                      <div className="text-sm">환불 | 취소 금액</div>
-                      <div className="font-medium">{refundCancelAmount.toLocaleString()}원</div>
+                    <div className="flex w-full items-center justify-between gap-2 sm:gap-4">
+                      <div className="text-xs sm:text-sm">환불 | 취소 금액</div>
+                      <div className="text-xs font-medium sm:text-sm">{refundCancelAmount.toLocaleString()}원</div>
                     </div>
                   </button>
                 </TooltipTrigger>
-                <TooltipContent className="text-foreground bg-card border-main min-w-64 rounded-lg border p-4 shadow-lg">
-                  <div className="flex flex-col items-center gap-3">
-                    <div className="flex w-full items-center justify-between gap-4">
-                      <div className="text-sm">카드결제</div>
-                      <div className="text-sm font-medium">{refundCancelAmountBreakdown.card.toLocaleString()}원</div>
+                <TooltipContent className="text-foreground bg-card border-main min-w-[200px] rounded-lg border p-3 shadow-lg sm:min-w-64 sm:p-4">
+                  <div className="flex flex-col items-center gap-2 sm:gap-3">
+                    <div className="flex w-full items-center justify-between gap-2 sm:gap-4">
+                      <div className="text-xs sm:text-sm">카드결제</div>
+                      <div className="text-xs font-medium sm:text-sm">
+                        {refundCancelAmountBreakdown.card.toLocaleString()}원
+                      </div>
                     </div>
-                    <div className="flex w-full items-center justify-between gap-4">
-                      <div className="text-sm">계좌이체</div>
-                      <div className="text-sm font-medium">
+                    <div className="flex w-full items-center justify-between gap-2 sm:gap-4">
+                      <div className="text-xs sm:text-sm">계좌이체</div>
+                      <div className="text-xs font-medium sm:text-sm">
                         {refundCancelAmountBreakdown.transfer.toLocaleString()}원
                       </div>
                     </div>
-                    <div className="flex w-full items-center justify-between gap-4">
-                      <div className="text-sm">현장결제(POS)</div>
-                      <div className="text-sm font-medium">{refundCancelAmountBreakdown.pos.toLocaleString()}원</div>
+                    <div className="flex w-full items-center justify-between gap-2 sm:gap-4">
+                      <div className="text-xs sm:text-sm">현장결제(POS)</div>
+                      <div className="text-xs font-medium sm:text-sm">
+                        {refundCancelAmountBreakdown.pos.toLocaleString()}원
+                      </div>
                     </div>
                     <Button
                       size="sm"
-                      className="w-fit rounded-full px-6 text-sm"
+                      className="w-fit rounded-full px-4 text-xs sm:px-6 sm:text-sm"
                       onClick={() => setIsRefundCancelAmountTooltipOpen(false)}
                     >
                       OK
@@ -258,29 +274,29 @@ export function RevenueDashboard({ selectedDate, onDateSelect }: RevenueDashboar
                     className="text-secondary-foreground hover:text-main w-full cursor-pointer"
                     onClick={() => setIsRefundCancelCountTooltipOpen(!isRefundCancelCountTooltipOpen)}
                   >
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="text-sm">환불 | 취소 건수</div>
-                      <div className="font-medium">{refundCancelCount}건</div>
+                    <div className="flex items-center justify-between gap-2 sm:gap-4">
+                      <div className="text-xs sm:text-sm">환불 | 취소 건수</div>
+                      <div className="text-xs font-medium sm:text-sm">{refundCancelCount}건</div>
                     </div>
                   </button>
                 </TooltipTrigger>
-                <TooltipContent className="text-foreground bg-card border-main min-w-64 rounded-lg border p-4 shadow-lg">
-                  <div className="flex flex-col items-center gap-3">
-                    <div className="flex w-full items-center justify-between gap-4">
-                      <div className="text-sm">카드결제</div>
-                      <div className="text-sm font-medium">{refundCancelCountBreakdown.card}건</div>
+                <TooltipContent className="text-foreground bg-card border-main min-w-[200px] rounded-lg border p-3 shadow-lg sm:min-w-64 sm:p-4">
+                  <div className="flex flex-col items-center gap-2 sm:gap-3">
+                    <div className="flex w-full items-center justify-between gap-2 sm:gap-4">
+                      <div className="text-xs sm:text-sm">카드결제</div>
+                      <div className="text-xs font-medium sm:text-sm">{refundCancelCountBreakdown.card}건</div>
                     </div>
-                    <div className="flex w-full items-center justify-between gap-4">
-                      <div className="text-sm">계좌이체</div>
-                      <div className="text-sm font-medium">{refundCancelCountBreakdown.transfer}건</div>
+                    <div className="flex w-full items-center justify-between gap-2 sm:gap-4">
+                      <div className="text-xs sm:text-sm">계좌이체</div>
+                      <div className="text-xs font-medium sm:text-sm">{refundCancelCountBreakdown.transfer}건</div>
                     </div>
-                    <div className="flex w-full items-center justify-between gap-4">
-                      <div className="text-sm">현장결제(POS)</div>
-                      <div className="text-sm font-medium">{refundCancelCountBreakdown.pos}건</div>
+                    <div className="flex w-full items-center justify-between gap-2 sm:gap-4">
+                      <div className="text-xs sm:text-sm">현장결제(POS)</div>
+                      <div className="text-xs font-medium sm:text-sm">{refundCancelCountBreakdown.pos}건</div>
                     </div>
                     <Button
                       size="sm"
-                      className="w-fit rounded-full px-6 text-sm"
+                      className="w-fit rounded-full px-4 text-xs sm:px-6 sm:text-sm"
                       onClick={() => setIsRefundCancelCountTooltipOpen(false)}
                     >
                       OK
@@ -289,9 +305,9 @@ export function RevenueDashboard({ selectedDate, onDateSelect }: RevenueDashboar
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-            <div className="flex w-full items-center justify-between gap-4">
-              <div className="text-secondary-foreground text-sm">배송완료</div>
-              <div className="text-foreground font-medium">{deliveryCompleted}건</div>
+            <div className="flex w-full items-center justify-between gap-2 sm:gap-4">
+              <div className="text-secondary-foreground text-xs sm:text-sm">배송완료</div>
+              <div className="text-foreground text-xs font-medium sm:text-sm">{deliveryCompleted}건</div>
             </div>
           </div>
         </div>

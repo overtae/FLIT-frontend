@@ -53,8 +53,8 @@ export function TransactionDetailModal({
 
   const totalAgencyFee = transactionDetail.deliveryInformation
     ? transactionDetail.deliveryInformation.distanceDeliveryAmount +
-      (transactionDetail.deliveryInformation.rainSurcharge || 0) +
-      (transactionDetail.deliveryInformation.vat || 0)
+      (transactionDetail.deliveryInformation.rainSurcharge ?? 0) +
+      (transactionDetail.deliveryInformation.vat ?? 0)
     : 0;
 
   const handleOpenAutoFocus = (e: Event) => {
@@ -90,33 +90,33 @@ export function TransactionDetailModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         showCloseButton={false}
-        className="w-full max-w-6xl gap-0 overflow-hidden p-0 sm:max-w-6xl"
+        className="max-h-[90vh] w-[95vw]! max-w-6xl gap-0 overflow-hidden p-0"
         onOpenAutoFocus={handleOpenAutoFocus}
       >
         <DialogHeader className="sr-only">
           <DialogTitle>주문 상세 정보</DialogTitle>
         </DialogHeader>
 
-        <div className="flex max-h-[80vh] flex-col overflow-hidden">
+        <div className="flex max-h-[90vh] flex-col overflow-hidden sm:max-h-[80vh]">
           <TransactionDetailModalHeader transaction={transaction} category={category} />
 
-          <div className="custom-scrollbar flex-1 overflow-y-auto bg-white px-4 py-6 sm:px-8 sm:py-8">
+          <div className="custom-scrollbar flex-1 overflow-y-auto bg-white px-3 py-4 sm:px-8 sm:py-8">
             {isLoading ? (
               <div className="flex items-center justify-center py-12">
                 <div className="text-muted-foreground">Loading...</div>
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-x-8 gap-y-6 md:grid-cols-2 lg:grid-cols-3">
-                <div className="space-y-6">
+              <div className="grid grid-cols-1 gap-4 gap-x-8 gap-y-6 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
+                <div className="space-y-4 sm:space-y-6">
                   <TransactionDetailFloristInfo transaction={transactionDetail} />
                   <TransactionDetailCustomerInfo transaction={transactionDetail} />
                 </div>
 
-                <div className="space-y-6">
+                <div className="space-y-4 sm:space-y-6">
                   <TransactionDetailPurchaseInfo transaction={transactionDetail} category={category} />
                 </div>
 
-                <div className="space-y-6">
+                <div className="space-y-4 sm:space-y-6">
                   <TransactionDetailDeliveryInfo
                     transaction={transactionDetail}
                     category={category}
@@ -126,10 +126,10 @@ export function TransactionDetailModal({
               </div>
             )}
 
-            <div className="mt-6 flex justify-end gap-2">
+            <div className="mt-4 flex flex-col gap-2 sm:mt-6 sm:flex-row sm:justify-end">
               <Button
                 variant="secondary"
-                className="rounded-md bg-gray-300 px-6 text-white hover:bg-gray-400"
+                className="w-full rounded-md bg-gray-300 px-4 text-xs text-white hover:bg-gray-400 sm:w-auto sm:px-6 sm:text-sm"
                 onClick={handleDelete}
                 disabled={isDeleting}
               >
@@ -138,7 +138,7 @@ export function TransactionDetailModal({
               <Button
                 ref={closeButtonRef}
                 variant="outline"
-                className="rounded-md border-gray-300 bg-white px-6 text-gray-900 hover:bg-gray-50"
+                className="w-full rounded-md border-gray-300 bg-white px-4 text-xs text-gray-900 hover:bg-gray-50 sm:w-auto sm:px-6 sm:text-sm"
                 onClick={() => onOpenChange(false)}
               >
                 닫기

@@ -170,10 +170,10 @@ export function FilterPanel({ open: controlledOpen, onOpenChange }: FilterPanelP
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen} className="w-full">
       <CollapsibleContent className="data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down overflow-hidden transition-all">
-        <div className="bg-card space-y-6 rounded-md p-6">
-          <div className="grid grid-cols-7 gap-2">
-            <Label className="font-semibold">일자</Label>
-            <div className="flex items-center space-x-2">
+        <div className="bg-card space-y-4 rounded-md p-4 sm:space-y-6 sm:p-6">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-7 sm:gap-2">
+            <Label className="text-sm font-semibold sm:text-base">일자</Label>
+            <div className="flex items-center space-x-2 sm:col-span-1">
               <Checkbox
                 id="today"
                 checked={todayChecked}
@@ -188,30 +188,34 @@ export function FilterPanel({ open: controlledOpen, onOpenChange }: FilterPanelP
                   }
                   router.push(`?${params.toString()}`, { scroll: false });
                 }}
+                className="h-4 w-4 sm:h-5 sm:w-5"
               />
-              <Label htmlFor="today" className="cursor-pointer font-normal">
+              <Label htmlFor="today" className="cursor-pointer text-xs font-normal sm:text-sm">
                 오늘
               </Label>
             </div>
-            <div className="col-span-3 flex items-center space-x-2">
-              <Checkbox
-                id="dateRange"
-                checked={dateRangeChecked}
-                onCheckedChange={(checked) => {
-                  const newChecked = checked === true;
-                  setDateRangeChecked(newChecked);
-                  const params = new URLSearchParams(searchParams.toString());
-                  if (!newChecked) {
-                    params.delete("dateFrom");
-                    params.delete("dateTo");
-                    setDateRange(undefined);
-                  }
-                  router.push(`?${params.toString()}`, { scroll: false });
-                }}
-              />
-              <Label htmlFor="dateRange" className="mr-8 cursor-pointer font-normal">
-                기간 설정
-              </Label>
+            <div className="col-span-1 flex flex-col gap-2 sm:col-span-5 sm:flex-row sm:items-center sm:space-x-2">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="dateRange"
+                  checked={dateRangeChecked}
+                  onCheckedChange={(checked) => {
+                    const newChecked = checked === true;
+                    setDateRangeChecked(newChecked);
+                    const params = new URLSearchParams(searchParams.toString());
+                    if (!newChecked) {
+                      params.delete("dateFrom");
+                      params.delete("dateTo");
+                      setDateRange(undefined);
+                    }
+                    router.push(`?${params.toString()}`, { scroll: false });
+                  }}
+                  className="h-4 w-4 sm:h-5 sm:w-5"
+                />
+                <Label htmlFor="dateRange" className="mr-0 cursor-pointer text-xs font-normal sm:mr-8 sm:text-sm">
+                  기간 설정
+                </Label>
+              </div>
               <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
                 <PopoverTrigger asChild>
                   <Input
@@ -221,7 +225,7 @@ export function FilterPanel({ open: controlledOpen, onOpenChange }: FilterPanelP
                         ? `${format(dateRange.from, "yyyy.MM.dd", { locale: ko })} - ${format(dateRange.to, "yyyy.MM.dd", { locale: ko })}`
                         : ""
                     }
-                    className="w-[300px] cursor-pointer"
+                    className="w-full cursor-pointer text-xs sm:w-[300px] sm:text-sm"
                     onClick={() => setIsDatePickerOpen(true)}
                   />
                 </PopoverTrigger>
@@ -248,74 +252,86 @@ export function FilterPanel({ open: controlledOpen, onOpenChange }: FilterPanelP
             </div>
           </div>
 
-          <div className="grid grid-cols-7 gap-2 py-2">
-            <Label className="font-semibold">카테고리</Label>
-            {categories.map((category) => (
-              <div key={category} className="flex items-center space-x-2">
-                <Checkbox
-                  id={`category-${category}`}
-                  checked={selectedCategories.includes(category)}
-                  onCheckedChange={() => handleCategoryToggle(category)}
-                />
-                <Label htmlFor={`category-${category}`} className="cursor-pointer font-normal">
-                  {category}
-                </Label>
-              </div>
-            ))}
+          <div className="grid grid-cols-1 gap-3 py-2 sm:grid-cols-7 sm:gap-2">
+            <Label className="text-sm font-semibold sm:text-base">카테고리</Label>
+            <div className="col-span-1 grid grid-cols-2 gap-2 sm:col-span-6 sm:grid-cols-6 sm:gap-2">
+              {categories.map((category) => (
+                <div key={category} className="flex items-center space-x-1.5 sm:space-x-2">
+                  <Checkbox
+                    id={`category-${category}`}
+                    checked={selectedCategories.includes(category)}
+                    onCheckedChange={() => handleCategoryToggle(category)}
+                    className="h-4 w-4 sm:h-5 sm:w-5"
+                  />
+                  <Label htmlFor={`category-${category}`} className="cursor-pointer text-xs font-normal sm:text-sm">
+                    {category}
+                  </Label>
+                </div>
+              ))}
+            </div>
           </div>
 
-          <div className="grid grid-cols-7 gap-2 py-2">
-            <Label className="font-semibold">결제 방법</Label>
-            {paymentMethods.map((method) => (
-              <div key={method} className="flex items-center space-x-2">
-                <Checkbox
-                  id={`payment-${method}`}
-                  checked={selectedPaymentMethods.includes(method)}
-                  onCheckedChange={() => handlePaymentMethodToggle(method)}
-                />
-                <Label htmlFor={`payment-${method}`} className="cursor-pointer font-normal">
-                  {method}
-                </Label>
-              </div>
-            ))}
+          <div className="grid grid-cols-1 gap-3 py-2 sm:grid-cols-7 sm:gap-2">
+            <Label className="text-sm font-semibold sm:text-base">결제 방법</Label>
+            <div className="col-span-1 grid grid-cols-2 gap-2 sm:col-span-6 sm:grid-cols-6 sm:gap-2">
+              {paymentMethods.map((method) => (
+                <div key={method} className="flex items-center space-x-1.5 sm:space-x-2">
+                  <Checkbox
+                    id={`payment-${method}`}
+                    checked={selectedPaymentMethods.includes(method)}
+                    onCheckedChange={() => handlePaymentMethodToggle(method)}
+                    className="h-4 w-4 sm:h-5 sm:w-5"
+                  />
+                  <Label htmlFor={`payment-${method}`} className="cursor-pointer text-xs font-normal sm:text-sm">
+                    {method}
+                  </Label>
+                </div>
+              ))}
+            </div>
           </div>
 
-          <div className="grid grid-cols-7 gap-2 py-2">
-            <Label className="font-semibold">지역 단위</Label>
-            {regions.map((region) => (
-              <div key={region} className="flex items-center space-x-2">
-                <Checkbox
-                  id={`region-${region}`}
-                  checked={selectedRegions.includes(region)}
-                  onCheckedChange={() => handleRegionToggle(region)}
-                />
-                <Label htmlFor={`region-${region}`} className="cursor-pointer font-normal">
-                  {region}
-                </Label>
-              </div>
-            ))}
+          <div className="grid grid-cols-1 gap-3 py-2 sm:grid-cols-7 sm:gap-2">
+            <Label className="text-sm font-semibold sm:text-base">지역 단위</Label>
+            <div className="col-span-1 grid grid-cols-2 gap-2 sm:col-span-6 sm:grid-cols-6 sm:gap-2">
+              {regions.map((region) => (
+                <div key={region} className="flex items-center space-x-1.5 sm:space-x-2">
+                  <Checkbox
+                    id={`region-${region}`}
+                    checked={selectedRegions.includes(region)}
+                    onCheckedChange={() => handleRegionToggle(region)}
+                    className="h-4 w-4 sm:h-5 sm:w-5"
+                  />
+                  <Label htmlFor={`region-${region}`} className="cursor-pointer text-xs font-normal sm:text-sm">
+                    {region}
+                  </Label>
+                </div>
+              ))}
+            </div>
           </div>
 
-          <div className="grid grid-cols-7 gap-2 py-2">
-            <Label className="font-semibold">주문 현황</Label>
-            {orderStatuses.map((status) => (
-              <div key={status} className="flex items-center space-x-2">
-                <Checkbox
-                  id={`status-${status}`}
-                  checked={selectedOrderStatuses.includes(status)}
-                  onCheckedChange={() => handleOrderStatusToggle(status)}
-                />
-                <Label htmlFor={`status-${status}`} className="cursor-pointer font-normal">
-                  {status}
-                </Label>
-              </div>
-            ))}
+          <div className="grid grid-cols-1 gap-3 py-2 sm:grid-cols-7 sm:gap-2">
+            <Label className="text-sm font-semibold sm:text-base">주문 현황</Label>
+            <div className="col-span-1 grid grid-cols-2 gap-2 sm:col-span-6 sm:grid-cols-6 sm:gap-2">
+              {orderStatuses.map((status) => (
+                <div key={status} className="flex items-center space-x-1.5 sm:space-x-2">
+                  <Checkbox
+                    id={`status-${status}`}
+                    checked={selectedOrderStatuses.includes(status)}
+                    onCheckedChange={() => handleOrderStatusToggle(status)}
+                    className="h-4 w-4 sm:h-5 sm:w-5"
+                  />
+                  <Label htmlFor={`status-${status}`} className="cursor-pointer text-xs font-normal sm:text-sm">
+                    {status}
+                  </Label>
+                </div>
+              ))}
+            </div>
           </div>
 
-          <div className="flex justify-end gap-2 pt-4">
+          <div className="flex justify-end gap-2 pt-3 sm:pt-4">
             <Button
               variant="outline"
-              className="bg-background border-primary text-primary hover:text-primary-dark hover:bg-gray-100"
+              className="bg-background border-primary text-primary hover:text-primary-dark text-xs hover:bg-gray-100 sm:text-sm"
               onClick={handleReset}
             >
               Reset

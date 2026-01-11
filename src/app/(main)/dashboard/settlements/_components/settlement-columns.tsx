@@ -78,7 +78,7 @@ export function createSettlementColumns({ onDownload }: CreateSettlementColumnsP
       cell: ({ row }) => {
         const settlement = row.original;
         return (
-          <span>
+          <span className="text-xs break-words sm:text-sm">
             {settlement.nickname} ({settlement.loginId})
           </span>
         );
@@ -87,17 +87,19 @@ export function createSettlementColumns({ onDownload }: CreateSettlementColumnsP
     {
       accessorKey: "phoneNumber",
       header: "번호",
+      cell: ({ row }) => <span className="text-xs sm:text-sm">{row.getValue("phoneNumber")}</span>,
     },
     {
       accessorKey: "mail",
       header: "mail",
+      cell: ({ row }) => <span className="text-xs break-words sm:text-sm">{row.getValue("mail")}</span>,
     },
     {
       accessorKey: "totalSales",
       header: "총매출",
       cell: ({ row }) => {
         const amount = row.original.totalSales;
-        return <span>{amount.toLocaleString()}원</span>;
+        return <span className="text-xs sm:text-sm">{amount.toLocaleString()}원</span>;
       },
     },
     {
@@ -105,7 +107,7 @@ export function createSettlementColumns({ onDownload }: CreateSettlementColumnsP
       header: "수수료",
       cell: ({ row }) => {
         const amount = row.original.commission;
-        return <span>{amount.toLocaleString()}원</span>;
+        return <span className="text-xs sm:text-sm">{amount.toLocaleString()}원</span>;
       },
     },
     {
@@ -113,7 +115,7 @@ export function createSettlementColumns({ onDownload }: CreateSettlementColumnsP
       header: "수수료 제외",
       cell: ({ row }) => {
         const amount = row.original.totalSales - row.original.commission;
-        return <span>{amount.toLocaleString()}원</span>;
+        return <span className="text-xs sm:text-sm">{amount.toLocaleString()}원</span>;
       },
     },
     {
@@ -121,7 +123,7 @@ export function createSettlementColumns({ onDownload }: CreateSettlementColumnsP
       header: "배달료",
       cell: ({ row }) => {
         const amount = row.original.deliveryAmount;
-        return <span>{amount.toLocaleString()}원</span>;
+        return <span className="text-xs sm:text-sm">{amount.toLocaleString()}원</span>;
       },
     },
     {

@@ -83,20 +83,20 @@ export function SettlementCalendar({
   };
 
   return (
-    <div className={cn("mx-auto flex w-full flex-col gap-4 p-4", className)}>
+    <div className={cn("mx-auto flex w-full flex-col gap-3 p-2 sm:gap-4 sm:p-4", className)}>
       <div className="flex items-center justify-between">
-        <Button variant="ghost" size="icon" onClick={prevMonth} className="h-8 w-8">
-          <ChevronLeft className="h-4 w-4" />
+        <Button variant="ghost" size="icon" onClick={prevMonth} className="h-7 w-7 sm:h-8 sm:w-8">
+          <ChevronLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
         </Button>
-        <span className="text-lg font-semibold">{format(currentMonth, "yyyy년 M월")}</span>
-        <Button variant="ghost" size="icon" onClick={nextMonth} className="h-8 w-8">
-          <ChevronRight className="h-4 w-4" />
+        <span className="text-sm font-semibold sm:text-base md:text-lg">{format(currentMonth, "yyyy년 M월")}</span>
+        <Button variant="ghost" size="icon" onClick={nextMonth} className="h-7 w-7 sm:h-8 sm:w-8">
+          <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
         </Button>
       </div>
 
-      <div className="grid flex-1 grid-cols-7 gap-1">
+      <div className="grid flex-1 grid-cols-7 gap-0.5 sm:gap-1">
         {weekDays.map((day) => (
-          <div key={day} className="flex items-center justify-center text-xs font-medium text-gray-500">
+          <div key={day} className="flex items-center justify-center text-[10px] font-medium text-gray-500 sm:text-xs">
             {day}
           </div>
         ))}
@@ -117,7 +117,7 @@ export function SettlementCalendar({
                 onDateSelect(date);
               }}
               className={cn(
-                "relative mx-auto flex aspect-square h-auto w-fit flex-col items-center justify-center rounded-full px-4 text-sm transition-colors",
+                "relative mx-auto flex aspect-square h-auto w-fit flex-col items-center justify-center rounded-full px-2 text-xs transition-colors sm:px-3 sm:text-sm",
                 isCurrentDay && "border-main text-main border",
                 !isCurrentDay && "hover:bg-main/10",
                 isSelected && "bg-main hover:bg-main/80 font-semibold text-white",
@@ -126,7 +126,7 @@ export function SettlementCalendar({
             >
               <span>{format(date, "d")}</span>
               {hasSettlement && (
-                <div className="absolute top-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-red-500" />
+                <div className="absolute top-0.5 left-1/2 h-0.5 w-0.5 -translate-x-1/2 rounded-full bg-red-500 sm:top-1 sm:h-1 sm:w-1" />
               )}
             </button>
           );
