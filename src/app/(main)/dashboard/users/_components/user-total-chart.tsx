@@ -7,6 +7,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { formatNumberShort } from "@/lib/chart-utils";
 import { formatDate } from "@/lib/format-date";
 import { getUserStatisticsTotal, getSecederStatisticsTotal } from "@/service/user.service";
 import type { Period, UserType } from "@/types/user.type";
@@ -50,7 +51,7 @@ const CustomTooltip = ({ active, payload, coordinate, period }: CustomTooltipPro
         const label = entry.dataKey === "current" ? data.date : data.lastDate;
         return (
           <p key={entry.dataKey} className="text-primary-foreground text-sm">
-            {formatDate(label, dateFormat)}: {value.toLocaleString()}
+            {formatDate(label, dateFormat)}: {formatNumberShort(value)}
           </p>
         );
       })}
@@ -178,7 +179,7 @@ export function UserTotalChart({ category }: UserTotalChartProps) {
                   }
                 }}
               />
-              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
+              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12 }} tickFormatter={formatNumberShort} />
               <Tooltip
                 content={<CustomTooltip period={period} />}
                 cursor={{ stroke: "var(--primary)", strokeWidth: 1 }}

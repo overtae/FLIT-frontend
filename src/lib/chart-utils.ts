@@ -11,15 +11,20 @@ export function formatYAxisValue(value: number): string {
   return value.toString();
 }
 
-export function formatYAxisValueShort(value: number): string {
-  if (value >= 100000000) {
-    return `${Math.round(value / 100000000)}억`;
+export function formatNumberShort(value: number): string {
+  const absValue = Math.abs(value);
+
+  if (absValue >= 1000000000000) {
+    const jo = value / 1000000000000;
+    return `${jo.toFixed(1)}조`;
   }
-  if (value >= 10000) {
-    return `${Math.round(value / 10000)}만`;
+  if (absValue >= 100000000) {
+    const eok = value / 100000000;
+    return `${eok.toFixed(1)}억`;
   }
-  if (value >= 1000) {
-    return `${Math.round(value / 1000)}천`;
+  if (absValue >= 100000) {
+    const man = value / 10000;
+    return `${man.toFixed(1)}만`;
   }
   return value.toString();
 }

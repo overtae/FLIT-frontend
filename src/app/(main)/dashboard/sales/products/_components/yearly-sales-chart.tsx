@@ -18,7 +18,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DEFAULT_CHART_MARGIN, formatYAxisValueShort } from "@/lib/chart-utils";
+import { DEFAULT_CHART_MARGIN, formatNumberShort } from "@/lib/chart-utils";
 import { getProductNetYearly, getProductNetQuarter } from "@/service/sales.service";
 
 import { QuarterDetailModal } from "./quarter-detail-modal";
@@ -129,8 +129,8 @@ export function YearlySalesChart(_props: YearlySalesChartProps) {
           <BarChart data={quarterlyData} margin={{ ...DEFAULT_CHART_MARGIN, top: 20 }}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="quarter" />
-            <YAxis tickFormatter={formatYAxisValueShort} width={60} />
-            <Tooltip formatter={(value: number) => `${value.toLocaleString()}원`} />
+            <YAxis tickFormatter={formatNumberShort} width={60} />
+            <Tooltip formatter={(value: number) => `${formatNumberShort(value)}원`} />
             <Legend />
             <Bar dataKey="card" stackId="a" fill="var(--chart-1)" name="카드" />
             <Bar dataKey="pos" stackId="a" fill="var(--chart-2)" name="현장결제" />
@@ -180,8 +180,8 @@ export function YearlySalesChart(_props: YearlySalesChartProps) {
           <LineChart data={yearlyComparisonData} margin={DEFAULT_CHART_MARGIN}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="year" />
-            <YAxis tickFormatter={formatYAxisValueShort} width={60} />
-            <Tooltip formatter={(value: number) => `${value.toLocaleString()}원`} />
+            <YAxis tickFormatter={formatNumberShort} width={60} />
+            <Tooltip formatter={(value: number) => `${formatNumberShort(value)}원`} />
             <Line
               type="monotone"
               dataKey="value"

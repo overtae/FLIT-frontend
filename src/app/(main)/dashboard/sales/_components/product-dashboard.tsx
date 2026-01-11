@@ -18,6 +18,7 @@ import {
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { formatNumberShort } from "@/lib/chart-utils";
 import { getProductCategory, getProductNet, getProductNetYearly } from "@/service/sales.service";
 import type { ProductCategoryResponse, ProductNetResponse, ProductNetYearlyResponse } from "@/types/sales.type";
 
@@ -69,8 +70,8 @@ export function ProductDashboard() {
             <BarChart data={categoryData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="label" />
-              <YAxis />
-              <Tooltip />
+              <YAxis tickFormatter={formatNumberShort} />
+              <Tooltip formatter={(value: number) => formatNumberShort(value)} />
               <Legend />
               <Bar dataKey="value" fill="#8884d8" name="매출" />
             </BarChart>
@@ -104,8 +105,8 @@ export function ProductDashboard() {
             <LineChart data={dailyRevenue}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="date" />
-              <YAxis />
-              <Tooltip />
+              <YAxis tickFormatter={formatNumberShort} />
+              <Tooltip formatter={(value: number) => formatNumberShort(value)} />
               <Legend />
               <Line type="monotone" dataKey="value" stroke="#8884d8" name="순매출" />
             </LineChart>
@@ -123,8 +124,8 @@ export function ProductDashboard() {
             <ComposedChart data={yearlyData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="year" />
-              <YAxis />
-              <Tooltip />
+              <YAxis tickFormatter={formatNumberShort} />
+              <Tooltip formatter={(value: number) => formatNumberShort(value)} />
               <Legend />
               <Bar dataKey="value" fill="#8884d8" name="순매출" />
               <Line type="monotone" dataKey="value" stroke="#ff7300" name="순매출 추이" />

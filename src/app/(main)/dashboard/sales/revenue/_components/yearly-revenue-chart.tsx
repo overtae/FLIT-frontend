@@ -18,7 +18,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DEFAULT_CHART_MARGIN, formatYAxisValueShort } from "@/lib/chart-utils";
+import { DEFAULT_CHART_MARGIN, formatNumberShort } from "@/lib/chart-utils";
 import { getRevenueNetYearly, getRevenueNetQuarter } from "@/service/sales.service";
 
 import { YearlyDetailModal } from "./yearly-detail-modal";
@@ -34,10 +34,11 @@ interface CustomTooltipProps {
 
 function CustomBarTooltip({ active, payload, label }: CustomTooltipProps) {
   if (active && payload && payload.length > 0) {
+    const value = payload[0].value ?? 0;
     return (
       <div className="bg-card border-border rounded-lg border p-2 shadow-lg">
         <p className="font-semibold">{label}</p>
-        <p className="text-sm">{payload[0].value?.toLocaleString()}원</p>
+        <p className="text-sm">{formatNumberShort(typeof value === "number" ? value : 0)}원</p>
       </div>
     );
   }
@@ -46,10 +47,11 @@ function CustomBarTooltip({ active, payload, label }: CustomTooltipProps) {
 
 function CustomLineTooltip({ active, payload, label }: CustomTooltipProps) {
   if (active && payload && payload.length > 0) {
+    const value = payload[0].value ?? 0;
     return (
       <div className="bg-card border-border rounded-lg border p-2 shadow-lg">
         <p className="font-semibold">{label}년</p>
-        <p className="text-sm">{payload[0].value?.toLocaleString()}원</p>
+        <p className="text-sm">{formatNumberShort(typeof value === "number" ? value : 0)}원</p>
       </div>
     );
   }
@@ -74,7 +76,7 @@ function CustomLabel({ x, y, value, onClick }: CustomLabelProps) {
             onClick={onClick}
             className="bg-primary text-primary-foreground cursor-pointer rounded-lg px-3 py-1 text-sm font-semibold shadow-lg transition-opacity hover:opacity-90"
           >
-            {value.toLocaleString()}원
+            {formatNumberShort(value)}원
           </button>
         </div>
       </foreignObject>
@@ -159,12 +161,12 @@ export function YearlyRevenueChart() {
           <BarChart data={quarterlyData} margin={{ ...DEFAULT_CHART_MARGIN, top: 20 }}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="quarter" />
-            <YAxis tickFormatter={formatYAxisValueShort} width={60} />
+            <YAxis tickFormatter={formatNumberShort} width={60} />
             <Tooltip content={<CustomBarTooltip />} />
             <Bar
               dataKey="amount"
               radius={[4, 4, 0, 0]}
-              label={{ position: "top", formatter: (value: number) => `${value.toLocaleString()}원` }}
+              label={{ position: "top", formatter: (value: number) => `${formatNumberShort(value)}원` }}
             >
               {quarterlyData.map((entry) => (
                 <Cell key={`cell-${entry.quarter}`} fill="var(--chart-2)" />
@@ -192,7 +194,7 @@ export function YearlyRevenueChart() {
           <LineChart data={yearlyComparisonData} margin={DEFAULT_CHART_MARGIN}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="year" />
-            <YAxis tickFormatter={formatYAxisValueShort} width={60} />
+            <YAxis tickFormatter={formatNumberShort} width={60} />
             <Tooltip content={<CustomLineTooltip />} />
             <Line
               type="monotone"

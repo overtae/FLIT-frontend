@@ -19,6 +19,7 @@ import {
 } from "date-fns";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
+import { formatNumberShort } from "@/lib/chart-utils";
 import { getOrderCvr } from "@/service/sales.service";
 import type { OrderPeriod } from "@/types/sales.type";
 
@@ -199,7 +200,7 @@ export function CvrChart({ period, selectedDate }: CvrChartProps) {
       <LineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
         <CartesianGrid strokeDasharray="3 3" />
         <XAxis dataKey={xAxisKey} />
-        <YAxis />
+        <YAxis tickFormatter={(value) => `${value}%`} />
         <Tooltip content={tooltipContent} />
         <Legend />
         <Line

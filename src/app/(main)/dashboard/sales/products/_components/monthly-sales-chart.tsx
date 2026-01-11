@@ -9,7 +9,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Label } from "@/components/ui/label";
 import { MonthlyCalendar } from "@/components/ui/monthly-calendar";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { DEFAULT_CHART_MARGIN, formatYAxisValueShort } from "@/lib/chart-utils";
+import { DEFAULT_CHART_MARGIN, formatNumberShort } from "@/lib/chart-utils";
 import { getProductNet } from "@/service/sales.service";
 
 interface MonthlySalesChartProps {
@@ -38,8 +38,8 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
     return (
       <div className="border-primary bg-primary text-primary-foreground rounded-lg border p-3 shadow-lg">
         <p className="mb-2 font-semibold">{month}</p>
-        <p className="text-sm">This Month: {firstValue.toLocaleString()}원</p>
-        <p className="text-sm">Last Month: {secondValue.toLocaleString()}원</p>
+        <p className="text-sm">This Month: {formatNumberShort(firstValue)}원</p>
+        <p className="text-sm">Last Month: {formatNumberShort(secondValue)}원</p>
       </div>
     );
   }
@@ -150,7 +150,7 @@ export function MonthlySalesChart({ selectedCategory, paymentMethod, onPaymentMe
         <div className="flex items-center gap-4">
           {selectedCategory && <span className="text-sm font-medium">{selectedCategory}</span>}
           <span className="text-sm">This Month</span>
-          <div className="text-2xl font-bold">{totalAmount.toLocaleString()} 원</div>
+          <div className="text-2xl font-bold">{formatNumberShort(totalAmount)} 원</div>
           <MonthlyCalendar
             selectedMonth={dateRange}
             onMonthSelect={(range) => {
@@ -176,7 +176,7 @@ export function MonthlySalesChart({ selectedCategory, paymentMethod, onPaymentMe
           </defs>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="month" />
-          <YAxis tickFormatter={formatYAxisValueShort} width={60} />
+          <YAxis tickFormatter={formatNumberShort} width={60} />
           <Tooltip content={<CustomTooltip />} />
           <Area
             type="monotone"

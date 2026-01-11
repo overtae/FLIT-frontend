@@ -11,7 +11,7 @@ import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { DEFAULT_CHART_MARGIN, formatYAxisValueShort } from "@/lib/chart-utils";
+import { DEFAULT_CHART_MARGIN, formatNumberShort } from "@/lib/chart-utils";
 import { getProductNet } from "@/service/sales.service";
 
 interface DailySalesChartProps {
@@ -40,8 +40,8 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
     return (
       <div className="border-primary bg-primary text-primary-foreground rounded-lg border p-3 shadow-lg">
         <p className="mb-2 font-semibold">{date}일</p>
-        <p className="text-sm">This Week: {firstValue.toLocaleString()}원</p>
-        <p className="text-sm">Last Week: {secondValue.toLocaleString()}원</p>
+        <p className="text-sm">This Week: {formatNumberShort(firstValue)}원</p>
+        <p className="text-sm">Last Week: {formatNumberShort(secondValue)}원</p>
       </div>
     );
   }
@@ -141,7 +141,7 @@ export function DailySalesChart({ selectedCategory, paymentMethod, onPaymentMeth
         <div className="flex items-center gap-4">
           {selectedCategory && <span className="text-sm font-medium">{selectedCategory}</span>}
           <span className="text-sm">Today</span>
-          <div className="text-2xl font-bold">{totalAmount.toLocaleString()} 원</div>
+          <div className="text-2xl font-bold">{formatNumberShort(totalAmount)} 원</div>
           <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
             <PopoverTrigger asChild>
               <Button variant="outline" size="sm" className="w-[200px] justify-start text-left font-normal">
@@ -179,7 +179,7 @@ export function DailySalesChart({ selectedCategory, paymentMethod, onPaymentMeth
           </defs>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="date" />
-          <YAxis tickFormatter={formatYAxisValueShort} width={60} />
+          <YAxis tickFormatter={formatNumberShort} width={60} />
           <Tooltip content={<CustomTooltip />} />
           <Area
             type="monotone"

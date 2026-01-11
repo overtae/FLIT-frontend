@@ -6,6 +6,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { formatNumberShort } from "@/lib/chart-utils";
 import { getOrderCvr, getOrderKeywordTrend } from "@/service/sales.service";
 
 export function OrderDashboard() {
@@ -109,8 +110,8 @@ export function OrderDashboard() {
             <LineChart data={cvrData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="period" />
-              <YAxis />
-              <Tooltip />
+              <YAxis tickFormatter={(value) => `${value}%`} />
+              <Tooltip formatter={(value: number) => `${value}%`} />
               <Legend />
               <Line type="monotone" dataKey="cvr" stroke="#8884d8" name="CVR (%)" />
             </LineChart>

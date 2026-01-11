@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, Tooltip, XAxis } from "recharts";
 
 import { Subtitle } from "@/components/ui/subtitle";
+import { formatNumberShort } from "@/lib/chart-utils";
 import { getUserStatisticsOverview, getSecederStatisticsOverview } from "@/service/user.service";
 import type { UserType } from "@/types/user.type";
 
@@ -209,7 +210,12 @@ export function UserOverview({ category = "all" }: UserOverviewProps) {
                   fill="var(--chart-1)"
                   radius={[4, 4, 0, 0]}
                   barSize={40}
-                  label={{ position: "top", fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+                  label={{
+                    position: "top",
+                    fill: "hsl(var(--muted-foreground))",
+                    fontSize: 12,
+                    formatter: (value: number) => formatNumberShort(value),
+                  }}
                 >
                   {ageData.map((entry, index) => (
                     <Cell key={`cell-${entry.name}`} fill={COLORS[index % COLORS.length]} />

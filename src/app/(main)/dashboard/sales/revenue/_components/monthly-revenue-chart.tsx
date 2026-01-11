@@ -11,7 +11,7 @@ import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { DEFAULT_CHART_MARGIN, formatYAxisValueShort } from "@/lib/chart-utils";
+import { DEFAULT_CHART_MARGIN, formatNumberShort } from "@/lib/chart-utils";
 import { getRevenueNet } from "@/service/sales.service";
 
 interface MonthlyRevenueChartProps {
@@ -39,8 +39,8 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
     return (
       <div className="bg-primary text-primary-foreground rounded-lg p-3 shadow-lg">
         <p className="mb-1 font-semibold">{date}일</p>
-        <p className="text-sm">This Week : {firstValue.toLocaleString()}원</p>
-        <p className="text-sm">Last Week : {secondValue.toLocaleString()}원</p>
+        <p className="text-sm">This Week : {formatNumberShort(firstValue)}원</p>
+        <p className="text-sm">Last Week : {formatNumberShort(secondValue)}원</p>
       </div>
     );
   }
@@ -171,7 +171,7 @@ export function MonthlyRevenueChart({ paymentMethod, onPaymentMethodChange }: Mo
           </defs>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="date" />
-          <YAxis tickFormatter={formatYAxisValueShort} width={60} />
+          <YAxis tickFormatter={formatNumberShort} width={60} />
           <Tooltip content={<CustomTooltip />} />
           <Area
             type="monotone"

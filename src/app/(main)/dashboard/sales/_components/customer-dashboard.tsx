@@ -17,6 +17,7 @@ import {
 } from "recharts";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatNumberShort } from "@/lib/chart-utils";
 import { getCustomerGender, getCustomerAge } from "@/service/sales.service";
 
 const COLORS = ["#0088FE", "#00C49F"];
@@ -120,9 +121,9 @@ export function CustomerDashboard() {
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={ageData} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis type="number" />
+                <XAxis type="number" tickFormatter={formatNumberShort} />
                 <YAxis dataKey="age" type="category" />
-                <Tooltip />
+                <Tooltip formatter={(value: number) => formatNumberShort(value)} />
                 <Legend />
                 <Bar dataKey="value" fill="#8884d8" name="인원수" />
               </BarChart>
@@ -151,7 +152,7 @@ export function CustomerDashboard() {
                   <tr key={item.rank} className="border-b">
                     <td className="px-4 py-2">{item.rank}</td>
                     <td className="px-4 py-2">{item.name}</td>
-                    <td className="px-4 py-2 text-right">{item.amount.toLocaleString()}원</td>
+                    <td className="px-4 py-2 text-right">{formatNumberShort(item.amount)}원</td>
                   </tr>
                 ))}
               </tbody>
@@ -170,8 +171,8 @@ export function CustomerDashboard() {
             <BarChart data={ageData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="age" />
-              <YAxis />
-              <Tooltip />
+              <YAxis tickFormatter={formatNumberShort} />
+              <Tooltip formatter={(value: number) => formatNumberShort(value)} />
               <Legend />
               <Bar dataKey="value" stackId="a" fill="#8884d8" name="인원수" />
             </BarChart>
