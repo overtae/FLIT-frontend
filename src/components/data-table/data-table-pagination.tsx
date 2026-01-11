@@ -15,6 +15,7 @@ interface DataTablePaginationProps<TData> {
   className?: string;
   sectionSize?: number;
   forceUpdateKey?: string | number;
+  pageCount?: number;
 }
 
 export function DataTablePagination<TData>({
@@ -24,16 +25,10 @@ export function DataTablePagination<TData>({
   className,
   sectionSize = 5,
   forceUpdateKey,
+  pageCount: externalPageCount,
 }: DataTablePaginationProps<TData>) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [, forceUpdate] = React.useReducer((x) => x + 1, 0);
-
-  React.useEffect(() => {
-    if (forceUpdateKey !== undefined) {
-      forceUpdate();
-    }
-  }, [forceUpdateKey]);
 
   const urlPage = React.useMemo(
     () => (searchParams.get("page") ? parseInt(searchParams.get("page")!, 10) - 1 : 0),
@@ -41,8 +36,14 @@ export function DataTablePagination<TData>({
   );
 
   const paginationState = table.getState().pagination;
-  const pageCount = Math.max(table.getPageCount(), 1);
-  const currentPage = urlPage >= 0 && urlPage < pageCount ? urlPage : paginationState.pageIndex;
+  const pageCount = React.useMemo(
+    () => Math.max(externalPageCount ?? table.getPageCount(), 1),
+    [externalPageCount, table, forceUpdateKey],
+  );
+  const currentPage = React.useMemo(
+    () => (urlPage >= 0 && urlPage < pageCount ? urlPage : paginationState.pageIndex),
+    [urlPage, pageCount, paginationState.pageIndex],
+  );
 
   const currentSection = React.useMemo(() => Math.floor(currentPage / sectionSize), [currentPage, sectionSize]);
   const sectionStartPage = React.useMemo(() => currentSection * sectionSize, [currentSection, sectionSize]);

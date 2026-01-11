@@ -103,6 +103,21 @@ const regions = [
   "인천시 남동구",
 ];
 
+const categories: Array<"FLOWER" | "PLANTS" | "WREATH" | "SCENOGRAPHY" | "REGULAR_DELIVERY"> = [
+  "FLOWER",
+  "PLANTS",
+  "WREATH",
+  "SCENOGRAPHY",
+  "REGULAR_DELIVERY",
+];
+const paymentMethods: Array<"CARD" | "CASH" | "BANK_TRANSFER" | "ETC"> = ["CARD", "CASH", "BANK_TRANSFER", "ETC"];
+const orderStatuses: Array<"REGISTER" | "PROGRESS" | "COMPLETED" | "CANCELED"> = [
+  "REGISTER",
+  "PROGRESS",
+  "COMPLETED",
+  "CANCELED",
+];
+
 export const mockRevenueDetails: RevenueDetailItem[] = Array.from({ length: 150 }, (_, i) => {
   const name = customerNames[i % customerNames.length];
   const date = new Date();
@@ -118,8 +133,59 @@ export const mockRevenueDetails: RevenueDetailItem[] = Array.from({ length: 150 
     salesAmount: Math.floor(Math.random() * 200000) + 30000,
     canceledAmount: i % 10 === 0 ? Math.floor(Math.random() * 50000) : 0,
     refundAmount: i % 15 === 0 ? Math.floor(Math.random() * 30000) : 0,
+    category: categories[i % categories.length],
+    paymentMethod: paymentMethods[i % paymentMethods.length],
+    status: orderStatuses[i % orderStatuses.length],
+    orderDate: date.toISOString().split("T")[0],
   };
 });
+
+export function generateRevenueDetails(userType?: "SHOP" | "FLORIST" | "ORDERING"): RevenueDetailItem[] {
+  const count = 150;
+  const items: RevenueDetailItem[] = [];
+
+  for (let i = 0; i < count; i++) {
+    const name = customerNames[i % customerNames.length];
+    const date = new Date();
+    date.setDate(date.getDate() - (i % 30));
+
+    let nickname = `고객${String.fromCharCode(65 + (i % 26))}`;
+    let loginId = `customer${String(i + 1).padStart(3, "0")}`;
+
+    if (userType === "SHOP") {
+      nickname = `Shop${String.fromCharCode(65 + (i % 26))}`;
+      loginId = `shop${String(i + 1).padStart(3, "0")}`;
+    } else if (userType === "FLORIST") {
+      nickname = `Florist${String.fromCharCode(65 + (i % 26))}`;
+      loginId = `florist${String(i + 1).padStart(3, "0")}`;
+    } else if (userType === "ORDERING") {
+      nickname = `Order${String.fromCharCode(65 + (i % 26))}`;
+      loginId = `order${String(i + 1).padStart(3, "0")}`;
+    }
+
+    items.push({
+      transactionId: i + 1,
+      name,
+      nickname,
+      loginId,
+      phoneNumber: `010-${String(Math.floor(Math.random() * 10000)).padStart(4, "0")}-${String(Math.floor(Math.random() * 10000)).padStart(4, "0")}`,
+      address: regions[i % regions.length],
+      salesAmount: Math.floor(Math.random() * 200000) + 30000,
+      canceledAmount: i % 10 === 0 ? Math.floor(Math.random() * 50000) : 0,
+      refundAmount: i % 15 === 0 ? Math.floor(Math.random() * 30000) : 0,
+      category: categories[i % categories.length],
+      paymentMethod: paymentMethods[i % paymentMethods.length],
+      status: orderStatuses[i % orderStatuses.length],
+      orderDate: date.toISOString().split("T")[0],
+    });
+  }
+
+  if (userType) {
+    return items.filter(() => Math.random() > 0.3);
+  }
+
+  return items;
+}
 
 export function generateProductCategory(category: "GROUP" | "PRODUCT"): ProductCategoryResponse[] {
   if (category === "GROUP") {
@@ -210,7 +276,21 @@ export function generateProductNetQuarterDetail(): ProductNetQuarterDetailRespon
 }
 
 const productNames = ["장미 꽃다발", "튤립 꽃다발", "동양난", "서양난", "꽃바구니", "화환", "공간연출", "정기배송"];
-const paymentMethods = ["CARD", "BANK_TRANSFER", "POS", "CASH", "ETC"];
+const productPaymentMethods = ["CARD", "BANK_TRANSFER", "POS", "CASH", "ETC"];
+const productOrderStatuses: Array<"REGISTER" | "PROGRESS" | "COMPLETED" | "CANCELED"> = [
+  "REGISTER",
+  "PROGRESS",
+  "COMPLETED",
+  "CANCELED",
+];
+
+const categoryProductMap: Record<string, string[]> = {
+  FLOWER: ["장미 꽃다발", "튤립 꽃다발", "꽃바구니"],
+  PLANTS: ["동양난", "서양난"],
+  WREATH: ["화환"],
+  SCENOGRAPHY: ["공간연출"],
+  REGULAR_DELIVERY: ["정기배송"],
+};
 
 export const mockProductDetails: ProductDetailItem[] = Array.from({ length: 150 }, (_, i) => {
   const name = customerNames[i % customerNames.length];
@@ -226,9 +306,52 @@ export const mockProductDetails: ProductDetailItem[] = Array.from({ length: 150 
     address: regions[i % regions.length],
     productName: productNames[i % productNames.length],
     amount: Math.floor(Math.random() * 200000) + 30000,
-    paymentMethod: paymentMethods[i % paymentMethods.length],
+    paymentMethod: productPaymentMethods[i % productPaymentMethods.length],
+    status: productOrderStatuses[i % productOrderStatuses.length],
+    orderDate: date.toISOString().split("T")[0],
   };
 });
+
+export function generateProductDetails(
+  category: "ALL" | "FLOWER" | "PLANTS" | "WREATH" | "SCENOGRAPHY" | "REGULAR_DELIVERY" | null,
+): ProductDetailItem[] {
+  const count = 150;
+  const items: ProductDetailItem[] = [];
+
+  for (let i = 0; i < count; i++) {
+    const name = customerNames[i % customerNames.length];
+    const date = new Date();
+    date.setDate(date.getDate() - (i % 30));
+
+    let productName: string;
+    if (category && category !== "ALL" && categoryProductMap[category]) {
+      const categoryProducts = categoryProductMap[category];
+      productName = categoryProducts[i % categoryProducts.length];
+    } else {
+      productName = productNames[i % productNames.length];
+    }
+
+    items.push({
+      transactionId: i + 1,
+      name,
+      nickname: `고객${String.fromCharCode(65 + (i % 26))}`,
+      loginId: `customer${String(i + 1).padStart(3, "0")}`,
+      phoneNumber: `010-${String(Math.floor(Math.random() * 10000)).padStart(4, "0")}-${String(Math.floor(Math.random() * 10000)).padStart(4, "0")}`,
+      address: regions[i % regions.length],
+      productName,
+      amount: Math.floor(Math.random() * 200000) + 30000,
+      paymentMethod: productPaymentMethods[i % productPaymentMethods.length],
+      status: productOrderStatuses[i % productOrderStatuses.length],
+      orderDate: date.toISOString().split("T")[0],
+    });
+  }
+
+  if (category && category !== "ALL") {
+    return items.filter(() => Math.random() > 0.3);
+  }
+
+  return items;
+}
 
 export function generateCustomerGender(): CustomerGenderResponse {
   return {

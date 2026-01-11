@@ -121,7 +121,7 @@ export function RevenueContent({ initialVerified }: RevenueContentProps) {
           </div>
         </div>
         <FilterPanel open={isFilterPanelOpen} onOpenChange={setIsFilterPanelOpen} />
-        <RevenueDetailTable />
+        <RevenueDetailTable category={activeDetailTab} />
       </div>
     </div>
   );

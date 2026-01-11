@@ -89,6 +89,10 @@ export interface RevenueDetailItem {
   salesAmount: number;
   canceledAmount: number;
   refundAmount: number;
+  category?: Category;
+  paymentMethod?: "CARD" | "CASH" | "BANK_TRANSFER" | "ETC";
+  status?: "REGISTER" | "PROGRESS" | "COMPLETED" | "CANCELED";
+  orderDate?: string;
 }
 
 export interface ProductCategoryParams {
@@ -182,6 +186,8 @@ export interface ProductDetailItem {
   productName: string;
   amount: number;
   paymentMethod: string;
+  status?: "REGISTER" | "PROGRESS" | "COMPLETED" | "CANCELED";
+  orderDate?: string;
 }
 
 export interface CustomerGenderParams {

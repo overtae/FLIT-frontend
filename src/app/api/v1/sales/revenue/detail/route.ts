@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { mockRevenueDetails } from "@/data/sales";
+import { generateRevenueDetails } from "@/data/sales";
 import { fetchWithAuth } from "@/lib/api/client";
 import { USE_MOCK_DATA } from "@/lib/api/config";
 
@@ -8,7 +8,20 @@ export async function GET(request: NextRequest) {
   try {
     if (USE_MOCK_DATA) {
       await new Promise((resolve) => setTimeout(resolve, 300));
-      return NextResponse.json(mockRevenueDetails);
+
+      const { searchParams } = new URL(request.url);
+      const category = searchParams.get("category");
+      const userType =
+        category === "shop"
+          ? "SHOP"
+          : category === "florist"
+            ? "FLORIST"
+            : category === "order"
+              ? "ORDERING"
+              : undefined;
+
+      const data = generateRevenueDetails(userType);
+      return NextResponse.json(data);
     }
 
     const { searchParams } = new URL(request.url);

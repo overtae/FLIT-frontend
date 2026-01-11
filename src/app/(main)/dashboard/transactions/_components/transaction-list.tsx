@@ -151,8 +151,9 @@ export function TransactionList({ category, subCategory }: TransactionListProps)
         selectedPaymentMethods,
         selectedRefundStatuses,
         selectedDate: selectedDate?.toISOString(),
+        pageIndex,
       }),
-    [search, selectedTypes, selectedPaymentMethods, selectedRefundStatuses, selectedDate],
+    [search, selectedTypes, selectedPaymentMethods, selectedRefundStatuses, selectedDate, pageIndex],
   );
 
   const handleTypesChange = useCallback(
@@ -226,7 +227,7 @@ export function TransactionList({ category, subCategory }: TransactionListProps)
 
   const { table, rowSelection } = useDataTableInstance({
     data: paginatedData,
-    columns: columns as any,
+    columns: columns,
     getRowId: (row) => row.transactionId.toString(),
     manualPagination: true,
     pageCount,
@@ -296,6 +297,8 @@ export function TransactionList({ category, subCategory }: TransactionListProps)
         <div className="border-t px-4 py-4">
           <DataTablePagination
             table={table}
+            pageCount={pageCount}
+            forceUpdateKey={filterKey}
             leftSlot={
               <Button
                 variant="outline"

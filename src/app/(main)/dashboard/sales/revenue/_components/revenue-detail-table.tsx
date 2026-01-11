@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState, useEffect, useCallback } from "react";
 
 import { useSearchParams } from "next/navigation";
 
@@ -11,32 +11,41 @@ import { DataTablePagination } from "@/components/data-table/data-table-paginati
 import { DataTableWithSelection } from "@/components/data-table/data-table-with-selection";
 import { Button } from "@/components/ui/button";
 import { useDataTableInstance } from "@/hooks/use-data-table-instance";
+import { useFilteredPagination } from "@/hooks/use-filtered-pagination";
 import { getRevenueDetail } from "@/service/sales.service";
 import type { RevenueDetailItem } from "@/types/sales.type";
 
 import { revenueColumns } from "./columns.revenue";
 
-export function RevenueDetailTable() {
+interface RevenueDetailTableProps {
+  category: "all" | "shop" | "florist" | "order";
+}
+
+export function RevenueDetailTable({ category }: RevenueDetailTableProps) {
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(true);
   const [allRevenueDetails, setAllRevenueDetails] = useState<RevenueDetailItem[]>([]);
 
-  const pageIndex = parseInt(searchParams.get("page") ?? "1", 10) - 1;
-  const pageSize = parseInt(searchParams.get("pageSize") ?? "10", 10);
+  const urlPage = useMemo(() => {
+    const pageParam = searchParams.get("page");
+    return pageParam ? parseInt(pageParam, 10) - 1 : 0;
+  }, [searchParams]);
+  const urlPageSize = useMemo(() => {
+    const pageSizeParam = searchParams.get("pageSize");
+    return pageSizeParam ? parseInt(pageSizeParam, 10) : 10;
+  }, [searchParams]);
 
   useEffect(() => {
     const fetchRevenueDetails = async () => {
       try {
         setIsLoading(true);
         const params: Parameters<typeof getRevenueDetail>[0] = {};
-        if (searchParams.get("page")) params.page = parseInt(searchParams.get("page")!, 10);
-        if (searchParams.get("size")) params.size = parseInt(searchParams.get("size")!, 10);
-        if (searchParams.get("startDate")) params.startDate = searchParams.get("startDate")!;
-        if (searchParams.get("endDate")) params.endDate = searchParams.get("endDate")!;
-        if (searchParams.get("category")) params.category = searchParams.get("category") as any;
-        if (searchParams.get("paymentMethod")) params.paymentMethod = searchParams.get("paymentMethod") as any;
-        if (searchParams.get("region")) params.region = searchParams.get("region") as any;
-        if (searchParams.get("status")) params.status = searchParams.get("status") as any;
+
+        if (category !== "all") {
+          params.category = category as any;
+        } else {
+          params.category = "ALL";
+        }
 
         const data = await getRevenueDetail(params);
         setAllRevenueDetails(data);
@@ -49,30 +58,140 @@ export function RevenueDetailTable() {
     };
 
     fetchRevenueDetails();
-  }, [searchParams]);
+  }, [category]);
 
-  const filteredData = useMemo(() => {
-    let filtered = [...allRevenueDetails];
+  const getRegionFromAddress = useCallback((address: string): string => {
+    if (address.includes("서울")) return "서울";
+    if (address.includes("경기")) return "경기";
+    if (address.includes("인천")) return "인천";
+    return "기타";
+  }, []);
 
-    const search = searchParams.get("search");
-    if (search) {
-      const searchLower = search.toLowerCase();
-      filtered = filtered.filter(
-        (item) => item.nickname.toLowerCase().includes(searchLower) || item.loginId.toLowerCase().includes(searchLower),
-      );
-    }
+  const filterFn = useMemo(
+    () => (item: RevenueDetailItem) => {
+      const search = searchParams.get("search");
+      if (search && search.trim()) {
+        const searchLower = search.toLowerCase();
+        const matchesSearch =
+          item.nickname.toLowerCase().includes(searchLower) || item.loginId.toLowerCase().includes(searchLower);
+        if (!matchesSearch) return false;
+      }
 
-    return filtered;
-  }, [allRevenueDetails, searchParams]);
+      const filterCategories = searchParams.get("categories");
+      if (filterCategories && filterCategories !== "전체") {
+        const categoryMap: Record<string, "FLOWER" | "PLANTS" | "WREATH" | "SCENOGRAPHY" | "REGULAR_DELIVERY"> = {
+          꽃: "FLOWER",
+          식물: "PLANTS",
+          화환: "WREATH",
+          공간연출: "SCENOGRAPHY",
+          정기배송: "REGULAR_DELIVERY",
+        };
+        const categories = filterCategories.split(",").filter((c) => c !== "전체");
+        if (categories.length > 0) {
+          const mappedCategories = categories
+            .map((c) => categoryMap[c])
+            .filter((c): c is "FLOWER" | "PLANTS" | "WREATH" | "SCENOGRAPHY" | "REGULAR_DELIVERY" => !!c);
+          if (mappedCategories.length > 0 && item.category && !mappedCategories.includes(item.category)) {
+            return false;
+          }
+        }
+      }
 
-  const paginatedData = useMemo(() => {
-    const start = pageIndex * pageSize;
-    const end = start + pageSize;
-    return filteredData.slice(start, end);
-  }, [filteredData, pageIndex, pageSize]);
+      const filterPaymentMethods = searchParams.get("paymentMethods");
+      if (filterPaymentMethods && filterPaymentMethods !== "전체") {
+        const paymentMethodMap: Record<string, "CARD" | "CASH" | "BANK_TRANSFER" | "ETC"> = {
+          카드: "CARD",
+          POS: "CARD",
+          현금: "CASH",
+          "계좌 이체": "BANK_TRANSFER",
+          기타: "ETC",
+        };
+        const methods = filterPaymentMethods.split(",").filter((m) => m !== "전체");
+        if (methods.length > 0) {
+          const mappedMethods = methods
+            .map((m) => paymentMethodMap[m])
+            .filter((m): m is "CARD" | "CASH" | "BANK_TRANSFER" | "ETC" => !!m);
+          if (mappedMethods.length > 0 && item.paymentMethod && !mappedMethods.includes(item.paymentMethod)) {
+            return false;
+          }
+        }
+      }
 
-  const total = filteredData.length;
-  const pageCount = Math.ceil(total / pageSize);
+      const filterRegions = searchParams.get("regions");
+      if (filterRegions && filterRegions !== "전체") {
+        const regions = filterRegions.split(",").filter((r) => r !== "전체");
+        if (regions.length > 0) {
+          const itemRegion = getRegionFromAddress(item.address);
+          if (!regions.includes(itemRegion)) return false;
+        }
+      }
+
+      const filterOrderStatuses = searchParams.get("orderStatuses");
+      if (filterOrderStatuses && filterOrderStatuses !== "전체") {
+        const statusMap: Record<string, "REGISTER" | "PROGRESS" | "COMPLETED" | "CANCELED"> = {
+          접수: "REGISTER",
+          배송중: "PROGRESS",
+          배송완료: "COMPLETED",
+          주문취소: "CANCELED",
+        };
+        const statuses = filterOrderStatuses.split(",").filter((s) => s !== "전체");
+        if (statuses.length > 0) {
+          const mappedStatuses = statuses
+            .map((s) => statusMap[s])
+            .filter((s): s is "REGISTER" | "PROGRESS" | "COMPLETED" | "CANCELED" => !!s);
+          if (mappedStatuses.length > 0 && item.status && !mappedStatuses.includes(item.status)) {
+            return false;
+          }
+        }
+      }
+
+      const dateFrom = searchParams.get("dateFrom");
+      const dateTo = searchParams.get("dateTo");
+      if (dateFrom && dateTo && item.orderDate) {
+        const orderDate = new Date(item.orderDate);
+        const fromDate = new Date(dateFrom);
+        const toDate = new Date(dateTo);
+        toDate.setHours(23, 59, 59, 999);
+        if (orderDate < fromDate || orderDate > toDate) {
+          return false;
+        }
+      }
+
+      return true;
+    },
+    [searchParams, getRegionFromAddress],
+  );
+
+  const { paginatedData, pageCount, pageIndex, pageSize, setPageIndex, setPageSize, resetPagination } =
+    useFilteredPagination({
+      data: allRevenueDetails,
+      filterFn,
+      initialPageIndex: urlPage,
+      initialPageSize: urlPageSize,
+    });
+
+  useEffect(() => {
+    setPageIndex(urlPage);
+  }, [setPageIndex, urlPage]);
+
+  useEffect(() => {
+    setPageSize(urlPageSize);
+  }, [setPageSize, urlPageSize]);
+
+  const filterKey = useMemo(
+    () =>
+      JSON.stringify({
+        search: searchParams.get("search"),
+        categories: searchParams.get("categories"),
+        paymentMethods: searchParams.get("paymentMethods"),
+        regions: searchParams.get("regions"),
+        orderStatuses: searchParams.get("orderStatuses"),
+        dateFrom: searchParams.get("dateFrom"),
+        dateTo: searchParams.get("dateTo"),
+        pageIndex,
+      }),
+    [searchParams, pageIndex],
+  );
 
   const columns = useMemo(() => revenueColumns, []);
 
@@ -85,6 +204,10 @@ export function RevenueDetailTable() {
     defaultPageIndex: pageIndex,
     defaultPageSize: pageSize,
   });
+
+  useEffect(() => {
+    table.setPagination({ pageIndex, pageSize });
+  }, [table, pageIndex, pageSize]);
 
   const handleDownloadAll = () => {
     const filteredRows = table.getFilteredRowModel().rows;
@@ -117,20 +240,28 @@ export function RevenueDetailTable() {
   }
 
   return (
-    <div className="min-h-screen space-y-4">
-      <div className="overflow-hidden rounded-md border">
-        <DataTableWithSelection table={table} rowSelection={rowSelection} />
+    <div className="flex min-h-full flex-col space-y-4">
+      <div className="flex-1 rounded-md">
+        <DataTableWithSelection table={table} rowSelection={rowSelection} filterKey={filterKey} />
       </div>
-
-      <DataTablePagination
-        table={table}
-        leftSlot={
-          <Button variant="outline" onClick={handleDownloadAll} disabled={Object.keys(rowSelection).length === 0}>
-            <Download className="mr-2 h-4 w-4" />
-            전체 다운로드
-          </Button>
-        }
-      />
+      <div className="border-t px-4 py-4">
+        <DataTablePagination
+          table={table}
+          pageCount={pageCount}
+          forceUpdateKey={filterKey}
+          leftSlot={
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDownloadAll}
+              disabled={Object.keys(rowSelection).length === 0}
+            >
+              <Download className="mr-2 h-4 w-4" />
+              전체 다운로드
+            </Button>
+          }
+        />
+      </div>
     </div>
   );
 }

@@ -48,6 +48,9 @@ export function ProductsContent({ initialVerified }: ProductsContentProps) {
   const [paymentMethod, setPaymentMethod] = useState<"total" | "card" | "pos" | "transfer">("total");
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [searchInput, setSearchInput] = useState(searchParams.get("search") ?? "");
+  const [activeDetailTab, setActiveDetailTab] = useState<
+    "all" | "flower" | "plant" | "wreath" | "space" | "subscription"
+  >("all");
 
   if (!initialVerified) {
     return (
@@ -143,7 +146,11 @@ export function ProductsContent({ initialVerified }: ProductsContentProps) {
 
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <Tabs defaultValue="all" className="w-auto">
+          <Tabs
+            value={activeDetailTab}
+            onValueChange={(value) => setActiveDetailTab(value as typeof activeDetailTab)}
+            className="w-auto"
+          >
             <TabsList>
               <TabsTrigger value="all">All</TabsTrigger>
               <TabsTrigger value="flower">꽃</TabsTrigger>
@@ -181,7 +188,7 @@ export function ProductsContent({ initialVerified }: ProductsContentProps) {
           </div>
         </div>
         <FilterPanel open={isFilterModalOpen} onOpenChange={setIsFilterModalOpen} />
-        <SalesDetailTable />
+        <SalesDetailTable category={activeDetailTab} />
       </div>
     </div>
   );
