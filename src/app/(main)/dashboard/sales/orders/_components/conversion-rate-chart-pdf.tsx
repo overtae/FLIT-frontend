@@ -9,7 +9,6 @@ import type { OrderPeriod } from "@/types/sales.type";
 
 interface ConversionRateChartProps {
   period: "weekly" | "monthly" | "yearly";
-  className?: string;
 }
 
 const periodLabels = {
@@ -24,7 +23,7 @@ const periodMap: Record<"weekly" | "monthly" | "yearly", OrderPeriod> = {
   yearly: "YEARLY",
 };
 
-export function ConversionRateChart({ period, className }: ConversionRateChartProps) {
+export function ConversionRateChartPdf({ period }: ConversionRateChartProps) {
   const [data, setData] = useState<{ current: number; last: number }>({ current: 0, last: 0 });
   const [isLoading, setIsLoading] = useState(true);
   const periodLabel = periodLabels[period];
@@ -59,8 +58,8 @@ export function ConversionRateChart({ period, className }: ConversionRateChartPr
   }
 
   return (
-    <div className="flex flex-col items-center justify-center space-y-4">
-      <div className={className ?? "relative h-64 w-64"}>
+    <div className="flex h-auto w-full flex-col items-center justify-center space-y-4">
+      <div className="relative h-40 w-40">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
@@ -79,7 +78,7 @@ export function ConversionRateChart({ period, className }: ConversionRateChartPr
           </PieChart>
         </ResponsiveContainer>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <div className="text-4xl font-bold">{data.current}%</div>
+          <div className="text-md font-bold">{data.current}%</div>
           <div className="text-muted-foreground text-xs">{periodLabel}</div>
         </div>
       </div>

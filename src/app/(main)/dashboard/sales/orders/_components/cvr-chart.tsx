@@ -79,7 +79,7 @@ function CustomTooltip({
 
           return (
             <p key={entryName || String(entryValue)} className="text-sm">
-              {periodLabel}: {entryValue}%
+              {periodLabel}: {Number(entryValue).toFixed(2)}%
             </p>
           );
         })}

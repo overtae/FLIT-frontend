@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 import { format } from "date-fns";
 import { ko } from "date-fns/locale";
-import { Calendar } from "lucide-react";
+import html2canvas from "html2canvas-pro";
+import jsPDF from "jspdf";
+import { Calendar, Download } from "lucide-react";
 
 import { PasswordVerification } from "@/components/password-verification";
 import { Button } from "@/components/ui/button";
@@ -12,16 +14,17 @@ import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-import { ConversionRateChart } from "../orders/_components/conversion-rate-chart";
-import { CvrChart } from "../orders/_components/cvr-chart";
-import { SearchTrendTable } from "../orders/_components/search-trend-table";
-
 import {
   Tabs as OTabs,
   TabsContent as OTabsContent,
   TabsList as OTabsList,
   TabsTrigger as OTabsTrigger,
-} from "./sales-tabs";
+} from "../../_components/sales-tabs";
+
+import { ConversionRateChart } from "./conversion-rate-chart";
+import { CvrChart } from "./cvr-chart";
+import { OrdersReportPDF } from "./orders-report-pdf";
+import { SearchTrendTable } from "./search-trend-table";
 
 interface OrdersContentProps {
   initialVerified: boolean;
@@ -32,6 +35,47 @@ export function OrdersContent({ initialVerified }: OrdersContentProps) {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const [activeChartTab, setActiveChartTab] = useState<"cvr" | "search">("cvr");
+  const reportRef = useRef<HTMLDivElement>(null);
+
+  const periodLabel = selectedPeriod === "weekly" ? "주간" : selectedPeriod === "monthly" ? "월간" : "연간";
+  const fileName = `orders-report-${periodLabel}-${selectedDate?.toISOString().split("T")[0] ?? "all"}.pdf`;
+  const targetRef = useRef<HTMLDivElement>(null);
+
+  const handleDownloadPdf = async () => {
+    if (!targetRef.current) return;
+
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      const canvas = await html2canvas(targetRef.current, {
+        useCORS: true,
+        logging: false,
+        backgroundColor: "#ffffff",
+        scale: 2,
+      });
+
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 10;
+      const contentWidth = pageWidth - margin * 2;
+      const imgHeight = (canvas.height * contentWidth) / canvas.width;
+
+      if (imgHeight > pageHeight - margin * 2) {
+        const ratio = (pageHeight - margin * 2) / imgHeight;
+        const adjustedWidth = contentWidth * ratio;
+        const adjustedHeight = imgHeight * ratio;
+        pdf.addImage(imgData, "PNG", margin, margin, adjustedWidth, adjustedHeight);
+      } else {
+        pdf.addImage(imgData, "PNG", margin, margin, contentWidth, imgHeight);
+      }
+
+      pdf.save(fileName);
+    } catch (error) {
+      console.error("PDF 생성 실패:", error);
+    }
+  };
 
   if (!initialVerified) {
     return (
@@ -46,18 +90,37 @@ export function OrdersContent({ initialVerified }: OrdersContentProps) {
 
   return (
     <div className="flex min-h-screen flex-col space-y-6 pb-24">
-      <Tabs
-        value={selectedPeriod}
-        onValueChange={(value) => setSelectedPeriod(value as "weekly" | "monthly" | "yearly")}
-      >
-        <TabsList>
-          <TabsTrigger value="weekly">Weekly</TabsTrigger>
-          <TabsTrigger value="monthly">Monthly</TabsTrigger>
-          <TabsTrigger value="yearly">Yearly</TabsTrigger>
-        </TabsList>
-      </Tabs>
+      <div className="flex items-center justify-between">
+        <Tabs
+          value={selectedPeriod}
+          onValueChange={(value) => setSelectedPeriod(value as "weekly" | "monthly" | "yearly")}
+        >
+          <TabsList>
+            <TabsTrigger value="weekly">Weekly</TabsTrigger>
+            <TabsTrigger value="monthly">Monthly</TabsTrigger>
+            <TabsTrigger value="yearly">Yearly</TabsTrigger>
+          </TabsList>
+        </Tabs>
+        <Button onClick={handleDownloadPdf} variant="outline" size="sm">
+          <Download className="mr-2 h-4 w-4" />
+          리포트 다운로드
+        </Button>
+      </div>
 
-      <div className="grid flex-1 grid-cols-5 gap-6 pt-24 pb-32">
+      <div
+        ref={targetRef}
+        style={{
+          position: "absolute",
+          left: "-9999px",
+          top: 0,
+          width: "210mm",
+          height: "auto",
+        }}
+      >
+        <OrdersReportPDF period={selectedPeriod} selectedDate={selectedDate} />
+      </div>
+
+      <div ref={reportRef} data-report-content className="grid flex-1 grid-cols-5 gap-6 pt-24 pb-32">
         <div className="col-span-2 flex h-full w-full items-center justify-center">
           <ConversionRateChart period={selectedPeriod} />
         </div>
