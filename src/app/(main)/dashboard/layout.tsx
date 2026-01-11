@@ -33,11 +33,15 @@ export default function Layout({ children }: Readonly<{ children: ReactNode }>) 
 
   return (
     <SidebarProvider defaultOpen>
-      <AppSidebar variant={sidebarVariant} collapsible={sidebarCollapsible} className="top-12! h-[calc(100vh-3rem)]!" />
+      <AppSidebar
+        variant={sidebarVariant}
+        collapsible={sidebarCollapsible}
+        className="top-12! z-40 h-[calc(100vh-3rem)]!"
+      />
       <header
         data-navbar-style={navbarStyle}
         className={cn(
-          "text-sidebar fixed top-0 right-0 left-0 z-20 flex h-12 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear",
+          "text-sidebar fixed top-0 right-0 left-0 z-50 flex h-12 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear",
           "data-[navbar-style=sticky]:bg-sidebar-foreground data-[navbar-style=sticky]:overflow-hidden data-[navbar-style=sticky]:backdrop-blur-md",
           "group-has-data-[collapsible=icon]/sidebar-wrapper:h-12",
         )}

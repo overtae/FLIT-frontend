@@ -7,6 +7,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { formatDate } from "@/lib/format-date";
 import { getUserStatisticsTotal, getSecederStatisticsTotal } from "@/service/user.service";
 import type { Period, UserType } from "@/types/user.type";
 
@@ -17,19 +18,39 @@ interface ChartDataPoint {
   lastDate: string;
 }
 
-const CustomTooltip = ({ active, payload }: TooltipProps<number, string>) => {
-  if (!active || !payload || payload.length === 0) return null;
+interface CustomTooltipProps extends TooltipProps<number, string> {
+  period: "last-week" | "last-month" | "last-year";
+}
+
+const CustomTooltip = ({ active, payload, coordinate, period }: CustomTooltipProps) => {
+  if (!active || !payload || payload.length === 0 || !coordinate) return null;
 
   const data = payload[0].payload as ChartDataPoint;
+  const currentEntry = payload.find((entry) => entry.dataKey === "current");
+
+  if (!currentEntry) return null;
+
+  const getDateFormat = () => {
+    if (period === "last-week") {
+      return "MMM dd";
+    } else if (period === "last-month") {
+      return "yyyy MMM";
+    } else {
+      return "yyyy";
+    }
+  };
+
+  const dateFormat = getDateFormat();
 
   return (
-    <div className="bg-card rounded-lg border p-3 shadow-md">
+    <div className="bg-primary relative w-28 rounded-lg border p-3">
+      <div className="bg-primary absolute -bottom-1.5 left-1/2 h-3 w-3 -translate-x-1/2 rotate-45" />
       {payload.map((entry) => {
         const value = entry.value ?? 0;
         const label = entry.dataKey === "current" ? data.date : data.lastDate;
         return (
-          <p key={entry.dataKey} className="text-sm" style={{ color: entry.color }}>
-            {label}: {value.toLocaleString()}
+          <p key={entry.dataKey} className="text-primary-foreground text-sm">
+            {formatDate(label, dateFormat)}: {value.toLocaleString()}
           </p>
         );
       })}
@@ -139,29 +160,52 @@ export function UserTotalChart({ category }: UserTotalChartProps) {
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={totalUserData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+            <LineChart data={totalUserData} margin={{ top: 50, right: 10, left: -20, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
-              <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} dy={10} />
+              <XAxis
+                dataKey="date"
+                axisLine={false}
+                tickLine={false}
+                tick={{ fontSize: 12 }}
+                dy={10}
+                tickFormatter={(value) => {
+                  if (period === "last-week") {
+                    return formatDate(value, "MMM dd");
+                  } else if (period === "last-month") {
+                    return formatDate(value, "MMM");
+                  } else {
+                    return formatDate(value, "yyyy");
+                  }
+                }}
+              />
               <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip
+                content={<CustomTooltip period={period} />}
+                cursor={{ stroke: "var(--primary)", strokeWidth: 1 }}
+                allowEscapeViewBox={{ x: true, y: true }}
+                offset={-56}
+                position={{ y: -25 }}
+              />
               <Line
                 type="monotone"
                 dataKey="current"
                 stroke="var(--primary)"
                 strokeWidth={2}
-                dot={{ r: 4, fill: "var(--primary)" }}
-                activeDot={{ r: 6 }}
+                dot={false}
+                activeDot={{ r: 6, fill: "var(--primary)" }}
                 name="current"
               />
-              <Line
-                type="monotone"
-                dataKey="last"
-                stroke="var(--muted-foreground)"
-                strokeWidth={2}
-                dot={{ r: 4, fill: "var(--muted-foreground)" }}
-                activeDot={{ r: 6 }}
-                name="last"
-              />
+              {period !== "last-year" && (
+                <Line
+                  type="monotone"
+                  dataKey="last"
+                  stroke="var(--muted-foreground)"
+                  strokeWidth={2}
+                  dot={false}
+                  activeDot={false}
+                  name="last"
+                />
+              )}
             </LineChart>
           </ResponsiveContainer>
         )}

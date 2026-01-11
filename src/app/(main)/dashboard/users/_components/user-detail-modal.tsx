@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { Download } from "lucide-react";
 
@@ -15,17 +15,16 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import { SERVICE_CONFIG } from "@/config/service-config";
 import { getInitials } from "@/lib/utils";
-import { getUser, updateUserGrade, deleteUser } from "@/service/user.service";
+import { deleteUser, getUser, updateUserGrade } from "@/service/user.service";
 import type { User, UserDetail } from "@/types/user.type";
 
 interface UserDetailModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   user: User | null;
-  category?: string;
 }
 
-export function UserDetailModal({ open, onOpenChange, user, category = "all" }: UserDetailModalProps) {
+export function UserDetailModal({ open, onOpenChange, user }: UserDetailModalProps) {
   const [userDetail, setUserDetail] = useState<UserDetail | null>(null);
   const [selectedGrade, setSelectedGrade] = useState<string>("GREEN");
   const [isLoading, setIsLoading] = useState(false);
@@ -53,11 +52,11 @@ export function UserDetailModal({ open, onOpenChange, user, category = "all" }: 
   }, [user, open]);
 
   const gradeEntries = useMemo(() => {
-    if (category === "customer") {
+    if (userDetail?.type?.startsWith("CUSTOMER_")) {
       return Object.entries(SERVICE_CONFIG.customerGrade);
     }
     return Object.entries(SERVICE_CONFIG.grade);
-  }, [category]);
+  }, [userDetail?.type]);
 
   const userTypeLabel = useMemo(() => {
     if (!userDetail) return "";
@@ -80,32 +79,85 @@ export function UserDetailModal({ open, onOpenChange, user, category = "all" }: 
       };
     }
 
-    const firstColumnFields: Array<{ label: string; value: string; isTextarea?: boolean }> = [
-      { label: "구분", value: userTypeLabel },
-      { label: "이름", value: userDetail.name },
-      { label: "닉네임(ID)", value: userDetail.nickname },
-      { label: "전화번호", value: userDetail.phoneNumber },
-      { label: "Mail", value: userDetail.mail },
-      { label: "회사주소", value: userDetail.address, isTextarea: true },
-      { label: "상세주소", value: userDetail.detailAddress ?? "" },
-    ];
+    const isSeceder = !!userDetail.secedeDate;
+    const userType = userDetail.type;
 
-    const secondColumnFields: Array<{ label: string; value: string; hasDownload?: boolean }> = [
-      {
-        label: "사업자 번호",
-        value: userDetail.businessNumber ?? "",
-        hasDownload: !!userDetail.businessLicenseUrl,
-      },
-      { label: "가입일자", value: userDetail.joinDate },
-      { label: "최근 접속일", value: userDetail.lastLoginDate },
-      { label: "최근 구매일", value: userDetail.lastPurchaseDate ?? "" },
-    ];
+    let firstColumnFields: Array<{ label: string; value: string; isTextarea?: boolean }> = [];
+    let secondColumnFields: Array<{ label: string; value: string; hasDownload?: boolean; fileName?: string }> = [];
+
+    if (userType === "CUSTOMER_INDIVIDUAL") {
+      firstColumnFields = [
+        { label: "구분", value: userTypeLabel },
+        { label: "이름", value: userDetail.name },
+        { label: "닉네임(ID)", value: userDetail.nickname },
+        { label: "전화번호", value: userDetail.phoneNumber },
+        { label: "Mail", value: userDetail.mail },
+        { label: "주소", value: userDetail.address, isTextarea: true },
+        { label: "상세주소", value: userDetail.detailAddress },
+      ];
+
+      secondColumnFields = [
+        { label: "가입일자", value: userDetail.joinDate },
+        { label: "최근 접속일", value: userDetail.lastLoginDate || "-" },
+        { label: "최근 구매일", value: userDetail.lastPurchaseDate ?? "-" },
+      ];
+    } else if (userType === "CUSTOMER_OWNER") {
+      firstColumnFields = [
+        { label: "구분", value: userTypeLabel },
+        { label: "이름", value: userDetail.name },
+        { label: "닉네임(ID)", value: userDetail.nickname },
+        { label: "전화번호", value: userDetail.phoneNumber },
+        { label: "Mail", value: userDetail.mail },
+        { label: "회사주소", value: userDetail.address, isTextarea: true },
+        { label: "상세주소", value: userDetail.detailAddress },
+      ];
+
+      secondColumnFields = [
+        { label: "사업자번호", value: userDetail.businessNumber ?? "-" },
+        { label: "가입일자", value: userDetail.joinDate },
+        { label: "최근 접속일", value: userDetail.lastLoginDate || "-" },
+        { label: "최근 구매일", value: userDetail.lastPurchaseDate ?? "-" },
+      ];
+    } else {
+      firstColumnFields = [
+        { label: "구분", value: userTypeLabel },
+        { label: "이름", value: userDetail.name },
+        { label: "닉네임(ID)", value: userDetail.nickname },
+        { label: "전화번호", value: userDetail.phoneNumber },
+        { label: "Mail", value: userDetail.mail },
+        { label: "주소", value: userDetail.address, isTextarea: true },
+        { label: "상세주소", value: userDetail.detailAddress },
+      ];
+
+      const businessLicenseFileName = userDetail.businessLicenseUrl
+        ? (userDetail.businessLicenseUrl.split("/").pop() ?? "사업자등록증")
+        : "";
+
+      secondColumnFields = [
+        { label: "사업자번호", value: userDetail.businessNumber ?? "-" },
+        {
+          label: "사업자등록증",
+          value: businessLicenseFileName,
+          hasDownload: !!userDetail.businessLicenseUrl,
+          fileName: businessLicenseFileName,
+        },
+        { label: "최근 접속일", value: userDetail.lastLoginDate || "-" },
+        { label: "최근 등록일", value: userDetail.joinDate },
+      ];
+    }
+
+    if (isSeceder) {
+      secondColumnFields.push({
+        label: "탈퇴일자",
+        value: userDetail.secedeDate ?? "-",
+      });
+    }
 
     return { firstColumnFields, secondColumnFields };
   }, [userDetail, userTypeLabel]);
 
   const handleGradeUpdate = async () => {
-    if (!userDetail || selectedGrade === userDetail.grade.toUpperCase()) return;
+    if (!userDetail || selectedGrade === userDetail.grade.toUpperCase() || userDetail.secedeDate) return;
 
     try {
       setIsUpdating(true);
@@ -249,7 +301,14 @@ export function UserDetailModal({ open, onOpenChange, user, category = "all" }: 
                             readOnly
                             className="pointer-events-none h-9 flex-1 border-gray-200 bg-gray-50 pr-8 text-center text-sm"
                           />
-                          <Download className="text-muted-foreground absolute top-2.5 right-2 h-4 w-4 cursor-pointer" />
+                          <Download
+                            className="text-muted-foreground absolute top-2.5 right-2 h-4 w-4 cursor-pointer"
+                            onClick={() => {
+                              if (userDetail.businessLicenseUrl) {
+                                window.open(userDetail.businessLicenseUrl, "_blank");
+                              }
+                            }}
+                          />
                         </div>
                       ) : (
                         <Input

@@ -8,22 +8,18 @@ import { Button } from "@/components/ui/button";
 import { getInitials } from "@/lib/utils";
 import type { User } from "@/types/user.type";
 
-export const getUserColumns = (onViewDetail: (user: User) => void): ColumnDef<User>[] => [
+export const getUserColumns = (onViewDetail: (user: User) => void, category?: string): ColumnDef<User>[] => [
   {
     accessorKey: "grade",
     header: "등급",
     cell: ({ row }) => {
-      const grade: string = row.getValue("grade");
+      const grade: string = row.getValue("grade") || "";
       let variant: "default" | "secondary" | "destructive" | "outline" = "outline";
 
-      // Simple mapping for badge variants based on grade name
-      if (["VIP", "Gold", "Red"].includes(grade))
-        variant = "destructive"; // Red-ish
-      else if (["Silver", "Yellow", "Orange"].includes(grade))
-        variant = "secondary"; // Gray/Yellow-ish
-      else variant = "outline"; // Green/Free
+      if (["VIP", "Gold", "Red"].includes(grade)) variant = "destructive";
+      else if (["Silver", "Yellow", "Orange"].includes(grade)) variant = "secondary";
+      else variant = "outline";
 
-      // Custom styling to match screenshot colors roughly if Badge supports className
       return (
         <Badge variant={variant} className="font-normal">
           {grade}
@@ -74,12 +70,16 @@ export const getUserColumns = (onViewDetail: (user: User) => void): ColumnDef<Us
   {
     accessorKey: "lastLoginDate",
     header: "Latest",
-    cell: ({ row }) => <span className="text-muted-foreground text-sm">{row.getValue("lastLoginDate")}</span>,
+    cell: ({ row }) => <span className="text-muted-foreground text-sm">{row.getValue("lastLoginDate") ?? "-"}</span>,
   },
   {
-    accessorKey: "joinDate",
-    header: "가입일자",
-    cell: ({ row }) => <span className="text-muted-foreground text-sm">{row.getValue("joinDate")}</span>,
+    id: "date",
+    header: category === "seceder" ? "탈퇴일자" : "가입일자",
+    cell: ({ row }) => {
+      const user = row.original;
+      const isSeceder = !!user.secedeDate;
+      return <span className="text-muted-foreground text-sm">{isSeceder ? user.secedeDate : user.joinDate}</span>;
+    },
   },
   {
     id: "actions",
@@ -101,7 +101,3 @@ export const getUserColumns = (onViewDetail: (user: User) => void): ColumnDef<Us
     },
   },
 ];
-
-// Keep existing export for backward compatibility if needed, or remove it.
-// Since I'm refactoring UserList, I can remove it or update it to use a dummy handler.
-export const userColumns = getUserColumns(() => {});

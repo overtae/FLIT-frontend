@@ -1,9 +1,9 @@
+import { SERVICE_CONFIG } from "@/config/service-config";
 import type {
   User,
   UserDetail,
   UserStatisticsTotalResponse,
   UserStatisticsOverviewResponse,
-  SecederUser,
   UserSettlement,
 } from "@/types/user.type";
 
@@ -65,8 +65,8 @@ export const mockUsers: User[] = Array.from({ length: 150 }, (_, i) => {
   };
 });
 
-export const mockUserDetails: Record<number, UserDetail> = Object.fromEntries(
-  mockUsers.slice(0, 50).map((user, i) => {
+export const mockUserDetails: Record<number, UserDetail> = Object.fromEntries([
+  ...mockUsers.slice(0, 50).map((user, i) => {
     const type = userTypes[i % userTypes.length];
     const joinDate = new Date(user.joinDate);
     const lastPurchaseDate = new Date();
@@ -90,17 +90,68 @@ export const mockUserDetails: Record<number, UserDetail> = Object.fromEntries(
       },
     ];
   }),
-);
+  ...Array.from({ length: 120 }, (_, i) => {
+    const name = names[i % names.length];
+    const type = userTypes[i % userTypes.length];
+    const secedeDate = new Date();
+    secedeDate.setDate(secedeDate.getDate() - (i % 90));
+    const joinDate = new Date(secedeDate);
+    joinDate.setMonth(joinDate.getMonth() - (12 + (i % 12)));
+    const lastPurchaseDate = new Date();
+    lastPurchaseDate.setDate(lastPurchaseDate.getDate() - (i % 15));
 
-export const mockSecederUsers: SecederUser[] = Array.from({ length: 120 }, (_, i) => {
+    const availableGrades = type.startsWith("CUSTOMER_")
+      ? Object.keys(SERVICE_CONFIG.customerGrade)
+      : Object.keys(SERVICE_CONFIG.grade);
+    const grade = availableGrades[i % availableGrades.length];
+
+    return [
+      1000 + i + 1,
+      {
+        userId: 1000 + i + 1,
+        type,
+        grade,
+        profileImageUrl: "/avatars/arhamkhnz.png",
+        name,
+        nickname: `탈퇴${name}(${String(i + 1).padStart(3, "0")})`,
+        loginId: `seceder${String(i + 1).padStart(3, "0")}`,
+        mail: `seceder${i + 1}@example.com`,
+        address: regions[i % regions.length],
+        detailAddress: `${Math.floor(Math.random() * 100)}동 ${Math.floor(Math.random() * 100)}호`,
+        phoneNumber: `010-${String(Math.floor(Math.random() * 10000)).padStart(4, "0")}-${String(Math.floor(Math.random() * 10000)).padStart(4, "0")}`,
+        lastLoginDate: "",
+        joinDate: joinDate.toISOString().split("T")[0],
+        secedeDate: secedeDate.toISOString().split("T")[0],
+        ...(type === "CUSTOMER_INDIVIDUAL" && {
+          lastPurchaseDate: lastPurchaseDate.toISOString().split("T")[0],
+        }),
+        ...((type === "CUSTOMER_OWNER" || type === "SHOP" || type === "FLORIST") && {
+          businessNumber: `${String(Math.floor(Math.random() * 1000)).padStart(3, "0")}-${String(Math.floor(Math.random() * 100)).padStart(2, "0")}-${String(Math.floor(Math.random() * 100000)).padStart(5, "0")}`,
+        }),
+        ...((type === "SHOP" || type === "FLORIST") && {
+          businessLicenseUrl: `https://example.com/license-${1000 + i + 1}.jpg`,
+        }),
+      },
+    ];
+  }),
+]);
+
+export const mockSecederUsers: User[] = Array.from({ length: 120 }, (_, i) => {
   const name = names[i % names.length];
+  const type = userTypes[i % userTypes.length];
   const secedeDate = new Date();
   secedeDate.setDate(secedeDate.getDate() - (i % 90));
   const joinDate = new Date(secedeDate);
   joinDate.setMonth(joinDate.getMonth() - (12 + (i % 12)));
 
+  const availableGrades = type.startsWith("CUSTOMER_")
+    ? Object.keys(SERVICE_CONFIG.customerGrade)
+    : Object.keys(SERVICE_CONFIG.grade);
+  const grade = availableGrades[i % availableGrades.length];
+
   return {
     userId: 1000 + i + 1,
+    grade,
     profileImageUrl: "/avatars/arhamkhnz.png",
     name,
     nickname: `탈퇴${name}(${String(i + 1).padStart(3, "0")})`,
@@ -108,22 +159,31 @@ export const mockSecederUsers: SecederUser[] = Array.from({ length: 120 }, (_, i
     mail: `seceder${i + 1}@example.com`,
     address: regions[i % regions.length],
     phoneNumber: `010-${String(Math.floor(Math.random() * 10000)).padStart(4, "0")}-${String(Math.floor(Math.random() * 10000)).padStart(4, "0")}`,
-    secedeDate: secedeDate.toISOString().split("T")[0],
+    lastLoginDate: "",
     joinDate: joinDate.toISOString().split("T")[0],
+    secedeDate: secedeDate.toISOString().split("T")[0],
   };
 });
 
 export function generateUserStatisticsTotal(period: "WEEK" | "MONTH" | "YEAR" = "MONTH"): UserStatisticsTotalResponse {
-  const dateCount: number = 5;
-  const isMonthly: boolean = period === "MONTH";
+  const dateCountMap: Record<"WEEK" | "MONTH" | "YEAR", number> = {
+    WEEK: 7,
+    MONTH: 12,
+    YEAR: 5,
+  };
+  const dateCount = dateCountMap[period];
 
   const dates = Array.from({ length: dateCount }, (_, i) => {
     const date = new Date();
-    if (isMonthly) {
+    if (period === "WEEK") {
+      date.setDate(date.getDate() - (dateCount - 1 - i));
+    } else if (period === "MONTH") {
       date.setMonth(date.getMonth() - (dateCount - 1 - i));
       date.setDate(1);
     } else {
-      date.setDate(date.getDate() - (dateCount - 1 - i));
+      date.setFullYear(date.getFullYear() - (dateCount - 1 - i));
+      date.setMonth(0);
+      date.setDate(1);
     }
     return date.toISOString().split("T")[0];
   });

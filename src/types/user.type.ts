@@ -54,6 +54,7 @@ export interface User {
   phoneNumber: string;
   lastLoginDate: string;
   joinDate: string;
+  secedeDate?: string;
 }
 
 export interface UserDetail {
@@ -73,6 +74,7 @@ export interface UserDetail {
   lastLoginDate: string;
   lastPurchaseDate?: string;
   joinDate: string;
+  secedeDate?: string;
 }
 
 export interface UpdateUserGradeRequest {
@@ -95,17 +97,4 @@ export interface SecederListParams {
   type?: "ALL" | "CUSTOMER" | "SHOP" | "FLORIST";
   name?: string;
   secedeDate?: string;
-}
-
-export interface SecederUser {
-  userId: number;
-  profileImageUrl: string;
-  name: string;
-  nickname: string;
-  loginId: string;
-  mail: string;
-  address: string;
-  phoneNumber: string;
-  secedeDate: string;
-  joinDate: string;
 }

@@ -14,7 +14,7 @@ import { Subtitle } from "@/components/ui/subtitle";
 import { useDataTableInstance } from "@/hooks/use-data-table-instance";
 import { useFilteredPagination } from "@/hooks/use-filtered-pagination";
 import { getUsers, getSecederUsers } from "@/service/user.service";
-import type { User, SecederUser } from "@/types/user.type";
+import type { User } from "@/types/user.type";
 
 import { getUserColumns } from "./user-columns";
 import { UserDetailModal } from "./user-detail-modal";
@@ -35,7 +35,7 @@ export function UserList({ category = "all" }: UserListProps) {
     return pageSizeParam ? parseInt(pageSizeParam, 10) : 10;
   }, [searchParams]);
 
-  const [allUsers, setAllUsers] = useState<(User | SecederUser)[]>([]);
+  const [allUsers, setAllUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [selectedGrades, setSelectedGrades] = useState<string[]>([]);
@@ -69,44 +69,40 @@ export function UserList({ category = "all" }: UserListProps) {
     setIsModalOpen(true);
   };
 
-  const columns = useMemo(() => getUserColumns(handleViewDetail), []);
+  const columns = useMemo(() => getUserColumns(handleViewDetail, category), [category]);
 
   const filterFn = useMemo(
-    () => (user: User | SecederUser) => {
+    () => (user: User) => {
       if (search.trim()) {
         const searchLower = search.toLowerCase();
         const matchesSearch =
           user.name.toLowerCase().includes(searchLower) ||
           user.nickname.toLowerCase().includes(searchLower) ||
-          ("loginId" in user && user.loginId.toLowerCase().includes(searchLower)) ||
-          ("mail" in user && user.mail.toLowerCase().includes(searchLower)) ||
-          ("phoneNumber" in user && user.phoneNumber.includes(search));
+          user.loginId.toLowerCase().includes(searchLower) ||
+          user.mail.toLowerCase().includes(searchLower) ||
+          user.phoneNumber.includes(search);
         if (!matchesSearch) return false;
       }
 
       if (category !== "seceder" && selectedGrades.length > 0) {
-        if ("grade" in user) {
-          const userGradeUpper = user.grade.toUpperCase();
-          if (!selectedGrades.includes(userGradeUpper)) {
-            return false;
-          }
+        const userGradeUpper = user.grade.toUpperCase();
+        if (!selectedGrades.includes(userGradeUpper)) {
+          return false;
         }
       }
 
       if (selectedDate) {
         if (category === "seceder") {
-          if ("secedeDate" in user) {
+          if (user.secedeDate) {
             const date = new Date(user.secedeDate);
             if (!isSameDay(date, selectedDate)) {
               return false;
             }
           }
         } else {
-          if ("joinDate" in user) {
-            const date = new Date(user.joinDate);
-            if (!isSameDay(date, selectedDate)) {
-              return false;
-            }
+          const date = new Date(user.joinDate);
+          if (!isSameDay(date, selectedDate)) {
+            return false;
           }
         }
       }
@@ -133,7 +129,7 @@ export function UserList({ category = "all" }: UserListProps) {
   }, [setPageSize, urlPageSize]);
 
   const { table } = useDataTableInstance({
-    data: paginatedData as User[],
+    data: paginatedData,
     columns: columns,
     getRowId: (row) => row.userId.toString(),
     manualPagination: true,
@@ -184,7 +180,7 @@ export function UserList({ category = "all" }: UserListProps) {
         </div>
       </div>
 
-      <UserDetailModal open={isModalOpen} onOpenChange={setIsModalOpen} user={selectedUser} category={category} />
+      <UserDetailModal open={isModalOpen} onOpenChange={setIsModalOpen} user={selectedUser} />
     </>
   );
 }

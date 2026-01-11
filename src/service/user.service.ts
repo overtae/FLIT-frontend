@@ -11,7 +11,6 @@ import type {
   UserSettlementParams,
   UserSettlement,
   SecederListParams,
-  SecederUser,
 } from "@/types/user.type";
 
 export async function getUserStatisticsTotal(params?: UserStatisticsTotalParams): Promise<UserStatisticsTotalResponse> {
@@ -147,7 +146,7 @@ export async function getUserSettlement(userId: number, params?: UserSettlementP
   return response.json();
 }
 
-export async function getSecederUsers(params?: SecederListParams): Promise<SecederUser[]> {
+export async function getSecederUsers(params?: SecederListParams): Promise<User[]> {
   const searchParams = new URLSearchParams();
   if (params?.page) searchParams.append("page", params.page.toString());
   if (params?.size) searchParams.append("size", params.size.toString());
