@@ -184,7 +184,6 @@ export function UserOverview({ category = "all" }: UserOverviewProps) {
                       <Cell key={`cell-${entry.name}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip content={null} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -204,7 +203,6 @@ export function UserOverview({ category = "all" }: UserOverviewProps) {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={ageData} margin={{ top: 20, right: 0, left: 0, bottom: 0 }}>
                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
-                <Tooltip content={null} />
                 <Bar
                   dataKey="value"
                   fill="var(--chart-1)"
